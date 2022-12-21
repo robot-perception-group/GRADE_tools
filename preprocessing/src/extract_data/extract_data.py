@@ -6,7 +6,7 @@ from cv_bridge import CvBridge
 from PIL import Image
 
 
-def extract_data(config, NOISY_FLAG):
+def extract_data(config):
     # Define CV bridge for image transfer
     cv_bridge = CvBridge()
     
@@ -15,36 +15,32 @@ def extract_data(config, NOISY_FLAG):
     
     SAVE_IMAGE = False
     SAVE_FILE = False
-    if config['extract_bag']['save_images']['enable'].get():
+    if config['save_images']['enable'].get():
         SAVE_IMAGE = True 
         save_image_topics = config['extract_bag']['save_images']['topics'].get()
         
-    if config['extract_bag']['save_files']['enable'].get():
+    if config['save_files']['enable'].get():
         SAVE_FILE = True 
         save_file_topics = config['extract_bag']['save_files']['topics'].get()
     
     '''Define Directories'''
-    if NOISY_FLAG:
-        bag_suffix = '/noisy_bags/'
+    #'reindex' for outputting original data, 'noisy' for outputting noisy data
+    bag_dir = config['path'].get()
+    if 'noisy' in bag_dir:
         dir_suffix = '_noisy/'
     else:
-        bag_suffix = '/reindex_bags/'
         dir_suffix = '/'
     
-    # Define Folder Name
-    #'reindex' for outputting original data, 'noisy' for outputting noisy data
-    bag_dir = config['path'].get() + bag_suffix
-    
     if SAVE_FILE:
-        imu_camera_dir = config['path'].get() + '/data/imu_camera' + dir_suffix
-        imu_body_dir = config['path'].get() + '/data/imu_body' + dir_suffix
-        odom_dir = config['path'].get() + '/data/odom' + dir_suffix
+        imu_camera_dir = bag_dir + '/../data/imu_camera' + dir_suffix
+        imu_body_dir = bag_dir  + '/../data/imu_body' + dir_suffix
+        odom_dir = bag_dir  + '/../data/odom' + dir_suffix
         
     if SAVE_IMAGE:
-        rgb_1_dir = config['path'].get() + '/data/rgb' + dir_suffix # output resized rgb image (640X480)
-        depth_1_dir = config['path'].get() + '/data/depth' + dir_suffix # output resized depth image (640X480)
-        rgb_2_dir = config['path'].get() + '/data/rgb_occluded' + dir_suffix # output resized rgb image (640X480)
-        depth_2_dir = config['path'].get() + '/data/depth_occluded' + dir_suffix # output resized depth image (640X480)
+        rgb_1_dir = bag_dir  + '/../data/rgb' + dir_suffix # output resized rgb image (640X480)
+        depth_1_dir = bag_dir  + '/../data/depth' + dir_suffix # output resized depth image (640X480)
+        rgb_2_dir = bag_dir  + '/../data/rgb_occluded' + dir_suffix # output resized rgb image (640X480)
+        depth_2_dir = bag_dir  + '/../data/depth_occluded' + dir_suffix # output resized depth image (640X480)
     
     # Check the existence of rosbags
     if not os.path.exists(bag_dir):
@@ -71,7 +67,7 @@ def extract_data(config, NOISY_FLAG):
     index_dep_1 = 0
     index_dep_2 = 0
     
-    DEPTH_FACTOR = config['camera']['config']['depth_factor'].get()
+    DEPTH_FACTOR = config['save_images']['depth_factor'].get()
     
     
     print("\n ==========  STAGE 1: Load all RGB Timestamps / Save Images  ==========")

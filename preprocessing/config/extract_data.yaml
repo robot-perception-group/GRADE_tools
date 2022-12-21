@@ -1,0 +1,32 @@
+save_images:
+  {
+    "enable": True,
+    "depth_factor": 1000.0,
+    "topics": # image topics that need to be output as files
+      [
+        "/my_robot_0/camera_link/0/rgb/image_raw",
+        "/my_robot_0/camera_link/1/rgb/image_raw",
+        "/my_robot_0/camera_link/0/depth/image_raw",
+        "/my_robot_0/camera_link/1/depth/image_raw",
+      ],
+  }
+save_files:
+  {
+    "enable": True,
+    "topics": # file topics that need to be output as files
+      [
+        "/my_robot_0/odom",
+        "/my_robot_0/imu_camera",
+        "/my_robot_0/imu_body",
+      ],
+  }
+topics: # topic name that will be read from bags
+  {
+    "rgb_topic_1": "/my_robot_0/camera_link/0/rgb/image_raw",
+    "rgb_topic_2": "/my_robot_0/camera_link/1/rgb/image_raw",
+    "depth_topic_1": "/my_robot_0/camera_link/0/depth/image_raw",
+    "depth_topic_2": "/my_robot_0/camera_link/1/depth/image_raw",
+    "odom_topic": "/my_robot_0/odom",
+    "imu_camera_topic": "/my_robot_0/imu_camera",
+    "imu_body_topic": "/my_robot_0/imu_body",
+  }

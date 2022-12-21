@@ -5,7 +5,7 @@ This document will help you processing the data recorded during the experiments 
 There are many options.
 
 The first choice you need to make is if you want to process the rosbags or the full size data (the saved `npy` files).
-In the first case go to [1](), in the latter go to [2]().
+In the first case go to [ROSBAG Processing](#rosbag-processing), in the latter go to [File Processing](#file-processing).
 
 In practice, given an input folder, the script can:
 - select the correct section of the rosbags (after the `starting_experiment` signal)
@@ -28,7 +28,8 @@ IIRC if noisy is true we'll have _noisy appended and possibly different folders.
 Where is the MAIN output folder specified?
 ______
 
-## 1. ROSBAG Processing
+<h2 id="rosbag-processing">1. ROSBAG Processing</h3>
+
 
 ```bash
 ./process_data.sh -t bag -p [PATH_TO_YOUR_DATA]
@@ -42,7 +43,7 @@ ______
 - Reindex Bags will be saved in `/reindex_bags` folder
 - Noisy Bags will be saved in `/noisy_bags` folder
 
-## 2. File Processing
+<h2 id="file-processing">2. File Processing</h3>
 
 ```bash
 ./process_data.sh -t file -p [PATH_TO_YOUR_DATA]/Viewport
