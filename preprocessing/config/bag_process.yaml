@@ -32,7 +32,9 @@ time_correction: {
 
 # IMU params
 imu: {
-    "noise_model": "gaussian", # https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
+    # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
+    "enable": True, # if add noise
+    "noise_model": "gaussian", # or groundtruth
     "config":
       {
         "frequency": 240.0,
@@ -50,10 +52,11 @@ imu: {
 # Camera Params
 camera: {
     "pointcloud": False, # Flag to generate point cloud
-    "noise_model": "realsense",
+    "noise_model": "realsense", # kinect (not complete -- need to mask the rgb), gaussian, groundtruth
     "config":
       {
-        "maximum_depth": 3.5,
+        "maximum_depth": 3.5, # maximum depth used while adding noise, use negative to disable. It will become nan
+        "time_correction_maximum_depth": 3.5, # maximum depth used while correcting the time, use negative to disable. It will become nan
         "subpixel": 0.2,
         "maximum_depth_variance": 10.0,
         "flatten_distance": 0,

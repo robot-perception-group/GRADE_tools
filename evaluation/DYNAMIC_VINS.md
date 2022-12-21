@@ -32,7 +32,7 @@
   git checkout a621ff  # revert
   ```
 
-  `gedit sophus/so2.cpp`: Modify `sophus/so2.cpp` as
+  Modify `sophus/so2.cpp` as
 
   ```
   SO2::SO2()
@@ -50,31 +50,50 @@
 
 ### 2. Installation
 
+We will use a modified fork. The edit has been made to avoid crashing of the program when tracking was lost.
+`yolo_ros` is also already included in this forked repo.
+
 ```bash
-cd catkin_ws/src
+cd {your workspace}/src
 # clone modified fork
 git clone git@github.com:robot-perception-group/Dynamic-VINS.git
 
 # install python dependencies
-sudo apt install ros-noetic-ros-numpy
-sudo apt install python3-pip
-pip3 install --upgrade pip
-conda create -n dvins python=3.6
-conda activate dvins
+sudo apt install ros-noetic-ros-numpy python3-pip
+python3 -m pip install --upgrade pip
+```
+
+We suggest to use a virtual env. You can do that either with `conda` or `python-venv`.
+
+```
+sudo apt install python3.8-venv
+python3 -m venv /path/to/venv
+source /path/to/venv/bin/activate
 # install pytorch with CUDA based on your device (or conda install)
 pip3 install torch torchvision --extra-index-url https://download.pytorch.org/whl/cu113
-pip3 install -r yolo_ros/requirements.txt
+pip3 install -r /{your-catkin}/src/Dynamic-VINS/yolo_ros/requirements.txt # you may need to remove an opecv-python from the file
+pip3 install python3-empy
+```
 
+#### Note that the build process need to be made while sourcing the venv/conda environment.
+```
 # build
-cd ..
+cd {your_catkin}
 catkin_make
 source devel/setup.bash
 ```
 
-- Change Python Path at **Line 1** of `yolo_ros/src/demo_service_server.py` to your conda environment.
-- Make sure that packages `camera_model` and `vins_estimator` are using the OpenCV from ROS (version 4.2) instead of other OpenCV built from source, otherwise it will fail when loading `/EstimatorNodelet`.
+- Change Python Path at **Line 1** of `/{your-catkin}/src/Dynamic-VINS/yolo_ros/src/demo_service_server.py` to your venv/conda environment.
+- Make sure that packages `camera_model` and `vins_estimator` in `Dynamic-VINS` are using the OpenCV from ROS (version 4.2) instead of other OpenCV built from source, otherwise it will fail when loading `/EstimatorNodelet`.
 
 ### 3. Run
+
+#### Be sure to source the venv/conda environment.
+
+When you launch the estimator you need to wait to see `service mode : yolo_service` appearing in the terminal.
+That indicates that yolo has been loaded and is ready.
+
+Estimation process may be delayed. Slowing down the rosbag play speed may improve it.
 
 - Visual Inertial Odometry:
   ```bash
@@ -86,21 +105,23 @@ source devel/setup.bash
   rosbag play /dataset/*.bag --clock
   ```
 - Visual Odometry:
-  `bash
+  ```bash
   roslaunch vins_estimator tum_rgbd_pytorch_mpi.launch \
   rgb:="/my_robot_0/camera_link/0/rgb/image_raw" \
   depth:="/my_robot_0/camera_link/0/depth/image_raw"
   roslaunch vins_estimator vins_rviz.launch
   rosbag play /dataset/*.bag --clock
-  `
-  > - Start playing bags after `vins_estimator` and `yolo_ros` nodes are initialized
-  > - Estimation process may be delayed. Slowing down the rosbag play speed may improve it.
-- Save Estimated Result during experiments:
+  ```
+  
+- To save Estimated Result during experiments:
   ```bash
   rosbag record /my_robot_0/camera/pose \
+              /my_robot_0/odom \
               /vins_estimator/camera_pose \
               /vins_estimator/init_map_time -O result.bag
   ```
+#### Known issues:
+- `Service call failed: service [/yolo_service] responded with an error: error processing request: 'Upsample' object has no attribute 'recompute_scale_factor'` look [here](https://github.com/openai/DALL-E/issues/54) how to solve this.
 
 ### 4. Evaluation
 
@@ -112,3 +133,13 @@ source devel/setup.bash
     - `-f|--file` refers to the recorded rosbag that contains the gt/estimated poses
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
+  
+### 5. Run your own data
+
+Change the parameters in `{catkin_ws}/src/Dynamic-VINS/vins_estimator/launch/openloris/openloris_vio_pytorch_mpi.launch` or `{catkin_ws}/src/Dynamic-VINS/vins_estimator/launch/tum_rgbd/tum_rgbd_pytorch_mpi.launch`
+
+Especially `imu/image/depth topic, estimate_td, image_width, image_height, projection-parameters, extrinsicTranslation/Rotation`.
+
+For more information follow the README in the forked/official repo. 
+
+Note that you may want to change `output_dynavins` in `output_pose.py` to account for your extrinsics and your topics.

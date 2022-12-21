@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-    data_dir = "/home/cxu/kyle/mpi-data/exp1/"
-    imu_dir = "/home/cxu/kyle/mpi-data/exp1/Viewport0_occluded/imu_body/"
-    imu_noisy_dir = "/home/cxu/kyle/mpi-data/exp1/Viewport0_occluded/imu_body_noisy/"
+    data_dir = ""
+    imu_dir = ""
+    imu_noisy_dir = ""
     
     '''Run once and Load the data from error.npy file'''
     files = os.listdir(data_dir)

@@ -33,7 +33,7 @@ class SensorModel:
                 self.noise_model = 'groundtruth'
                 
             elif type == 'camera' or type == 'pointcloud':
-                if noise_model in ['gaussian_depth_noise', 'kinect', 'realsense']:
+                if noise_model in ['gaussian', 'kinect', 'realsense']:
                     self.noise_model = noise_model
                     self.maximum_depth = config['maximum_depth']
                     self.maximum_depth_variance = config['maximum_depth_variance']
@@ -128,8 +128,10 @@ class SensorModel:
                 z = z[mask]
                 if self.noise_model == "kinect":
                     rgb = rgb[mask]
-                
-        return x, y, z, depth
+        if self.noise_model == "kinect":
+            return x, y, z, depth, rgb
+        else:
+            return x, y, z, depth
         
     def depth_to_3d(self, img_depth):
         ''' Create point cloud from depth image and camera params. Returns a single array for x, y and z coords '''

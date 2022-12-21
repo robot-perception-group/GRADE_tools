@@ -267,7 +267,6 @@ class AddNoise:
                     topic_type = 'imu'
                     
                     if topic not in self.noise_models:
-                        # import ipdb; ipdb.set_trace()
                         # todo check noise model is valid and correctly init
                         self.noise_models[topic] = sensor_model.SensorModel(topic_type, self.config[topic_type]['noise_model'].get(),
                                                                     self.config[topic_type]['config'].get(), self.seed)
@@ -284,13 +283,13 @@ class AddNoise:
                     topic_type = 'camera'
                     
                     if topic not in self.noise_models:
-                        # import ipdb; ipdb.set_trace()
                         # todo check noise model is valid and correctly init
                         self.noise_models[topic] = sensor_model.SensorModel(topic_type, self.config[topic_type]['noise_model'].get(),
                                                                     self.config[topic_type]['config'].get(), self.seed)
                         
                     data = sensor_model.Image(self.bridge.imgmsg_to_cv2(msg, 'passthrough'),  pointcloud_enable=self.pointcloud_enable)
                     x, y, z, depth = self.noise_models[topic].callback(data)
+                    # todo finish up kinect case with correct image
                     
                     '''Debug for visualization of PCD'''
                     # if '/1/' in topic and t.to_sec()>5.0:

@@ -30,11 +30,7 @@ if __name__ == '__main__':
         
         
     model = AddNoise(config)
-    
-    # Process the viewport 0
-    viewport0 = config['path'].get() + '/Viewport0'
-    model.play_files(viewport0)
-    
+
     # Process the viewport 0 with occulusion
-    viewport1 = config['path'].get() + '/Viewport0_occluded'
+    viewport1 = config['path'].get()
     model.play_files(viewport1)

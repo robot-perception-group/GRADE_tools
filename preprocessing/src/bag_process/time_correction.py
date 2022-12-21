@@ -26,7 +26,7 @@ class ReIndex:
 
         self.tf_seq = 0 # initial the tf message sequence number
         self.duration = config['time_correction']['duration'].get()
-        self.maximum_depth = config['camera']['config']['maximum_depth'].get()
+        self.maximum_depth = config['camera']['config']['time_correction_maximum_depth'].get()
         
         # Define requried topic name from CONFIG files
         self.initial_topics()

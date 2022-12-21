@@ -45,7 +45,7 @@ ______
 ## 2. File Processing
 
 ```bash
-./process_data.sh -t file -p [PATH_TO_YOUR_DATA_FOLDER]
+./process_data.sh -t file -p [PATH_TO_YOUR_DATA]/Viewport
 ```
 
 - Customized parameters are defined in `config/file_process.yaml`
@@ -58,3 +58,8 @@ ______
   - Set `camera/output_img` to `True` to generate **Original and Noisy Depth Images** in \*.png files (1920X1080)
   - Set `blur/enable` to `True` to generate **Blurry RGB Images** in \*.png files (1920X1080)
   - Set `imu/enable` to `True` to generate **Noisy IMU Data** in \*.npy files
+
+#### Example
+```bash
+./process_data.sh -t file -p ~/exp/Viewport0/
+```

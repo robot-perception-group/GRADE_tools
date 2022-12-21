@@ -53,7 +53,7 @@
   ```
 
 ### 4. Evaluation
-
+# TODO FIX THIS PRE-FIXED path
 - Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
   ```bash
   ./evaluate.sh -t rtabmap (-s 0.0) (-e 60.0)

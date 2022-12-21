@@ -20,8 +20,9 @@ def output_gt_pose(args):
     bags = os.listdir(os.path.join(bag_dir))
     bags.sort()
 
-    f1 = open("gt_pose.txt", "w")
-    f1 = open("gt_pose.txt", "a")
+    outdir = args.od
+
+    f1 = open(os.path.join(outdir, "gt_pose.txt"), "w")
 
     TOPIC_CHECK = False
     
@@ -53,7 +54,7 @@ def output_gt_pose(args):
     else:
         raise ValueError(
             'Ground Truth Pose Topic does not exist in the input rosbag...')
-
+    f1.close()
 
 def output_dynavins(args):
     """
@@ -67,15 +68,13 @@ def output_dynavins(args):
     :output estimated_pose_dynavins.txt: estimated camera pose from Dynamic-VINS
     """
     bag = rosbag.Bag(args.path)
+    outdir = args.od
 
-    f1 = open("estimated_pose_dynavins.txt", "w")
-    f2 = open("gt_pose_dynavins.txt", "w")
-
-    f1 = open("estimated_pose_dynavins.txt", "a")
-    f2 = open("gt_pose_dynavins.txt", "a")
+    f1 = open(os.path.join(outdir,"estimated_pose_dynavins.txt"), "w")
+    f2 = open(os.path.join(outdir,"gt_pose_dynavins.txt"), "w")
 
     ts_init = None
-    ts_start = args.stard_time
+    ts_start = args.start_time
     ts_stop = args.end_time
 
     max_difference = args.max_difference
@@ -162,7 +161,8 @@ def output_dynavins(args):
 
             f2.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' %
                      (ts, p.x, p.y, p.z, q.x, q.y, q.z, q.w))
-
+    f1.close()
+    f2.close()
 
 def output_tartan_gt(args):
     """
@@ -174,8 +174,8 @@ def output_tartan_gt(args):
     
     :output gt_pose_tartan.txt: ground truth pose [p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
-    f1 = open("gt_pose_tartan.txt", "w")
-    f1 = open("gt_pose_tartan.txt", "a")
+    outdir = args.od
+    f1 = open(os.path.join(outdir, "gt_pose_tartan.txt"), "w")
 
     with open(args.path) as f:
         data = f.readlines()
@@ -204,6 +204,7 @@ def output_tartan_gt(args):
             f1.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' %
                      (p[0], p[1], p[2], q.x, q.y, q.z, q.w))
             pose_id += 1
+    f1.close()
 
 
 def output_tartan(args):
@@ -216,8 +217,8 @@ def output_tartan(args):
     :output estimated_pose_tartan.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
     # Transform the tartan format result to the tum format result for evaluation
-    f1 = open("estimated_pose_tartan.txt", "w")
-    f1 = open("estimated_pose_tartan.txt", "a")
+    outdir = args.od
+    f1 = open(os.path.join(outdir, "estimated_pose_tartan.txt"), "w")
 
     ts = 0.0
 
@@ -233,6 +234,7 @@ def output_tartan(args):
                  (ts, T[0], T[1], T[2], T[3], T[4], T[5], T[6]))
 
         ts += 1/args.image_freq
+    f1.close()
 
 
 def output_sf(args):
@@ -244,8 +246,9 @@ def output_sf(args):
     
     :output estimated_pose_sf.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
-    f1 = open("estimated_pose_sf.txt", "w")
-    f1 = open("estimated_pose_sf.txt", "a")
+    outdir = args.od
+
+    f1 = open(os.path.join(outdir, "estimated_pose_sf.txt"), "w")
 
     f1.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' %
              (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0))
@@ -263,6 +266,7 @@ def output_sf(args):
                  (ts, T[1], T[2], T[3], T[4], T[5], T[6], T[7]))
 
         ts += 1/args.image_freq
+    f1.close()
 
 
 def output_vdo_gt(args):
@@ -279,12 +283,12 @@ def output_vdo_gt(args):
     bags = os.listdir(os.path.join(bag_dir))
     bags.sort()
 
-    # for VDO SLAM
-    f1 = open("gt_pose_vdo.txt", "w")
-    f3 = open("times.txt", "w")
+    outdir = args.od
 
-    f1 = open("gt_pose_vdo.txt", "a")
-    f3 = open("times.txt", "a")
+    # for VDO SLAM
+    f1 = open(os.path.join(outdir,"gt_pose_vdo.txt", "w"))
+    f3 = open(os.path.join(outdir, "times.txt", "w"))
+
 
     ts_list = []
 
@@ -327,6 +331,8 @@ def output_vdo_gt(args):
                     f1.write('%.6f  ' % T[i])
                 f1.write('\n')
                 frame_index += 1
+    f1.close()
+    f3.close()
 
 
 def output_vdo(args):
@@ -339,8 +345,8 @@ def output_vdo(args):
     :output estimated_pose_vdo.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
     # for VDO SLAM
-    f1 = open("estimated_pose_vdo.txt", "w")
-    f1 = open("estimated_pose_vdo.txt", "a")
+    outdir = args.outdir
+    f1 = open(os.path.join(outdir,"estimated_pose_vdo.txt", "w"))
 
     # # Obtain the initial transformation from map to world
     # with open("pose_gt_mat.txt") as f:
@@ -368,12 +374,14 @@ def output_vdo(args):
 
         f1.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' %
                  (t, T[0, 3], T[1, 3], T[2, 3], q[0], q[1], q[2], q[3]))
+    f1.close()
 
 
 if __name__ == '__main__':
     # Define parser arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="path to the desired rosbags")
+    parser.add_argument("--od", type=str, help="path to the desired outdir")
     parser.add_argument("--type", type=str, help="type to output different results")
     parser.add_argument("--topic", type=str, help="camera pose topic")
     parser.add_argument("--start_time", type=float, default=0.0, help="start time")

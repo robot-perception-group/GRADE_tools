@@ -133,7 +133,8 @@ class AddNoise:
             
             data = sensor_model.Image(depth)
             _, _, _, depth = noise_model.callback(data)
-            
+            # todo finish up kinect case with correct image
+
             # output npy files
             np.save(self.depth_noisy_dir + file, depth)
             

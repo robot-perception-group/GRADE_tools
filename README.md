@@ -28,7 +28,10 @@ ___
 ## Additional scripts
 - IMU visualization to check eventual spikes and smoothness of the IMU data, as well as the added noise 
   # *CX TODO check* [here]()
+  For this script you need to specify `[data,imu,imu_noisy]_dir` in lines 6:8 of the python code.
+  
 - Timestamp verification script that will output plots and stats to check whether the original bags have sorted stamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here]()
+  
 ___
 ## Citation
 Please, if you find this work useful, cite us:

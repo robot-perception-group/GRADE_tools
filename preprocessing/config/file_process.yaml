@@ -36,8 +36,9 @@ topics: # topic name that will be processed and saved in the new bags # TODO Why
     "imu_body_topic": "/my_robot_0/imu_body",
   }
 imu: {
+  # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
     "enable": True, # if add noise
-    "noise_model": "gaussian", # https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
+    "noise_model": "gaussian", # or groundtruth
     "config":
       {
         "frequency": 240.0,
@@ -54,7 +55,7 @@ imu: {
 camera: {
     "enable": True,
     "output_img": True, # transfer the npy file to png image
-    "noise_model": "realsense",
+    "noise_model": "realsense", # kinect (not complete -- need to mask the rgb), gaussian, groundtruth
     "config":
       {
         "depth_factor": 1000.0,
@@ -64,7 +65,7 @@ camera: {
         "maximum_depth_variance": 10.0,
         "flatten_distance": 0,
         "camera_params": [1920, 1080, 977.7309, 898.4482, 960, 540],
-        "hfov": 88,
+        "hfov": 88.95,
       },
   }
 blur:
