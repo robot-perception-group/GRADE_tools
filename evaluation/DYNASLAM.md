@@ -4,7 +4,7 @@
 
 - Ubuntu 20.04
 - C++ 11
-- gcc/g++ 4.8 **[Recommended]**
+- gcc/g++ 4.8 **[Recommended, it is an old repo. We provide info on how to build and install it locally such that you can keep multiple installations.]**
 - Eigen 3
 - [Pangolin-0.5](https://github.com/robot-perception-group/Pangolin)
 - OpenCV 2.4.11 or 2.4.13 **[Recommended]**

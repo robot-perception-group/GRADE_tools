@@ -38,3 +38,20 @@ Please, if you find this work useful, cite us:
 ```
 
 ```
+---
+## Acknowledgments
+We would like to thank [Chenghao Xu](https://github.com/Kyle-Xu001) for the support, testing and development of many building pieces of this code.
+
+[rotors_simulator](https://github.com/ethz-asl/rotors_simulator) for the piece of code that we integrated to add noise to the IMU readings.
+
+Please refer also to the official implementations of 
+- [RTABMAP](https://github.com/introlab/rtabmap)
+- [Dynamic-VINS](https://github.com/HITSZ-NRSL/Dynamic-VINS)
+- [YOLO_ROS](https://github.com/hirokiyokoyama/yolo_ros)
+- [DynaSLAM](https://github.com/BertaBescos/DynaSLAM)
+- [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2)
+- [STATICFUSION](https://github.com/raluca-scona/staticfusion)
+- [TartanVO](https://github.com/castacks/tartanvo)
+- [VDO_SLAM](https://github.com/halajun/VDO_SLAM)
+
+for any update or issue that you have regarding their code. We may be able to help, but please check them out :) 
