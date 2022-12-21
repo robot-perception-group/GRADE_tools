@@ -8,7 +8,7 @@ Find more information about the GRADE by looking at the [paper]()
 
 # CX-TODO add links below
 
-## (Pre)Processing
+## (Pre)Processing - add noise, reorder ...
 The first step you need to do is the pre-processing of the experiment data.
 You can find all the necessary information [here]().
 This will guide you on adding noise to the data, limit the depth, and much more.
