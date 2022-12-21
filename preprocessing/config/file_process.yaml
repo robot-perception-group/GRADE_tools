@@ -1,0 +1,81 @@
+seed: 5
+extract_bag: # TODO why this is not in a different yaml?
+  {
+    "enable": False, # extract raw data from rosbag
+    "noisy": False, # if extract noisy bags
+    "save_images":
+      {
+        "enable": True,
+        "topics": # image topics that need to be output as files
+          [
+            "/my_robot_0/camera_link/0/rgb/image_raw",
+            "/my_robot_0/camera_link/1/rgb/image_raw",
+            "/my_robot_0/camera_link/0/depth/image_raw",
+            "/my_robot_0/camera_link/1/depth/image_raw",
+          ],
+      },
+    "save_files":
+      {
+        "enable": True,
+        "topics": # file topics that need to be output as files
+          [
+            "/my_robot_0/odom",
+            "/my_robot_0/imu_camera",
+            "/my_robot_0/imu_body",
+          ],
+      },
+  }
+topics: # topic name that will be processed and saved in the new bags # TODO Why in the file process we need to save new bags?
+  {
+    "rgb_topic_1": "/my_robot_0/camera_link/0/rgb/image_raw",
+    "rgb_topic_2": "/my_robot_0/camera_link/1/rgb/image_raw",
+    "depth_topic_1": "/my_robot_0/camera_link/0/depth/image_raw",
+    "depth_topic_2": "/my_robot_0/camera_link/1/depth/image_raw",
+    "odom_topic": "/my_robot_0/odom",
+    "imu_camera_topic": "/my_robot_0/imu_camera",
+    "imu_body_topic": "/my_robot_0/imu_body",
+  }
+imu: {
+    "enable": True, # if add noise
+    "noise_model": "gaussian", # https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
+    "config":
+      {
+        "frequency": 240.0,
+        "gyro_bias_corr_time": 1000.0,
+        "gyro_noise_density": 0.0003394,
+        "gyro_random_walk": 0.000038785,
+        "accel_bias_corr_time": 300,
+        "accel_noise_density": 0.004,
+        "accel_random_walk": 0.006,
+        "gyro_turn_bias": 0.0087,
+        "accel_turn_bias": 0.1960,
+      },
+  }
+camera: {
+    "enable": True,
+    "output_img": True, # transfer the npy file to png image
+    "noise_model": "realsense",
+    "config":
+      {
+        "depth_factor": 1000.0,
+        "minimum_depth": 0.01,
+        "maximum_depth": 3.5,
+        "subpixel": 0.2,
+        "maximum_depth_variance": 10.0,
+        "flatten_distance": 0,
+        "camera_params": [1920, 1080, 977.7309, 898.4482, 960, 540],
+        "hfov": 88,
+      },
+  }
+blur:
+  {
+    "enable": True,
+    "config":
+      {
+        "num_imu_sample": 10,
+        "exposure_time": 0.02,
+        "num_pose": 30,
+        "readout_mean": 0.015,
+        "readout_std": 0.006,
+      },
+  }

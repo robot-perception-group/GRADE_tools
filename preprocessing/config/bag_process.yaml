@@ -1,0 +1,80 @@
+seed: 5 # Random Seed Params
+noise: True # Flag to have in output Noisy Bags
+topics: # topic name / publish frequency
+  {
+    "rgb_topic":
+      {
+        "/my_robot_0/camera_link/0/rgb/image_raw": 30.0,
+        "/my_robot_0/camera_link/1/rgb/image_raw": 30.0,
+      },
+    "depth_topic":
+      {
+        "/my_robot_0/camera_link/0/depth/image_raw": 30.0,
+        "/my_robot_0/camera_link/1/depth/image_raw": 30.0,
+      },
+    "camera_info_topic":
+      {
+        "/my_robot_0/camera_link/0/camera_info": 30.0,
+        "/my_robot_0/camera_link/1/camera_info": 30.0,
+      },
+    "tf_topic": { "/tf": 120.0 },
+    "odom_topic": { "/my_robot_0/odom": 60.0 },
+    "imu_camera_topic": { "/my_robot_0/imu_camera": 240.0 },
+    "imu_body_topic": { "/my_robot_0/imu_body": 240.0 },
+    "pose_camera_topic": { "/my_robot_0/camera/pose": 60.0 },
+    "signal_topic": { "/starting_experiment" }, # the topic that gets published when we start recording npy files
+  }
+time_correction: {
+    "enable": True, # Flag to ReIndex the receive timestamp of each message
+    "duration": 60.0, # Define the original experiment time length in seconds
+    "base_frame_id": "my_robot_0/yaw_link", # TODO -- explain this seperate the base frame from the TF tree. This is useful if the SLAM system directly outputs an estimated odometry TF like in RTABMap
+  }
+
+# IMU params
+imu: {
+    "noise_model": "gaussian", # https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
+    "config":
+      {
+        "frequency": 240.0,
+        "gyro_bias_corr_time": 1000.0,
+        "gyro_noise_density": 0.0003394,
+        "gyro_random_walk": 0.000038785,
+        "accel_bias_corr_time": 300,
+        "accel_noise_density": 0.004,
+        "accel_random_walk": 0.006,
+        "gyro_turn_bias": 0.0087,
+        "accel_turn_bias": 0.1960,
+      },
+  }
+
+# Camera Params
+camera: {
+    "pointcloud": False, # Flag to generate point cloud
+    "noise_model": "realsense",
+    "config":
+      {
+        "maximum_depth": 3.5,
+        "subpixel": 0.2,
+        "maximum_depth_variance": 10.0,
+        "flatten_distance": 0,
+        "camera_params": [640, 480, 325.9103, 399.3103, 320, 240], #[WIDTH, HEIGHT, FX, FY, CX, CY]
+        "hfov": 88.95,
+      },
+  }
+
+# Image Blur Params (output to noisy bags only if `noise` flag is TRUE)
+blur:
+  {
+    "enable": True,
+    "config":
+      {
+        "num_imu_sample": 10,
+        "exposure_time": 0.02,
+        "num_pose": 30,
+        "readout_mean": 0.015, # rolling shutter params
+        "readout_std": 0.006,
+      },
+  }
+
+# Remap the output topic names
+mapping: {}
