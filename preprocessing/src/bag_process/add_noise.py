@@ -83,7 +83,7 @@ class AddNoise:
                 print(topic_name)
                 
                 
-    def blur_preprocess(self, bag):
+    def blur_preprocess(self):
         # Load Blur Parameters 
         self.imu_cam_ts = []
         self.rgb_0_ts = []
@@ -100,39 +100,47 @@ class AddNoise:
         self.blur_1 = blur_model.Blur(self.config, self.seed)
         
         '''First Loop: Generate new Timestamp and Interpolation for IMU data''' 
-        for topic, msg, t in bag.read_messages(topics=self.topics):              
-            if topic == self.imu_camera_topic :
-                # Define the timestamp for all imu_camera data
-                t_imu = t.to_sec()
-                self.imu_cam_ts.append(t_imu)
-                
-                # Define the imu camera data
-                omega = msg.angular_velocity
-                acc = msg.linear_acceleration
-                self.camera_imus.append([omega.x, omega.y, omega.z, acc.x, acc.y, acc.z])
-                
-            if topic == self.rgb_topic_0:
-                t_img = t.to_sec()
-                self.rgb_0_ts.append(t_img)
+        for bag in self.bags:
+            if '.bag' not in bag or 'orig' in bag:
+                continue
             
-            if topic == self.rgb_topic_1:
-                t_img = t.to_sec()
-                self.rgb_1_ts.append(t_img)
+            print('Preprocssing ',bag,'for Motion Blur')
+            
+            bag_path = os.path.join(self.bag_dir,'reindex_bags', bag)
+            bag = rosbag.Bag(bag_path)
+            
+            for topic, msg, t in bag.read_messages(topics=self.topics):              
+                if topic == self.imu_camera_topic :
+                    # Define the timestamp for all imu_camera data
+                    t_imu = t.to_sec()
+                    self.imu_cam_ts.append(t_imu)
+                    
+                    # Define the imu camera data
+                    omega = msg.angular_velocity
+                    acc = msg.linear_acceleration
+                    self.camera_imus.append([omega.x, omega.y, omega.z, acc.x, acc.y, acc.z])
+                    
+                if topic == self.rgb_topic_0:
+                    t_img = t.to_sec()
+                    self.rgb_0_ts.append(t_img)
                 
-            '''Calculate the Initial Velocity for Each Frame'''
-            if topic == self.odom_topic:
-                t_odom = t.to_sec()
-                self.odom_ts.append(t_odom)
-                
-                self.odom_lin_vels.append([msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])
-                
-            if topic == self.pose_camera_topic:
-                t_pose_cam = t.to_sec()
-                self.pose_ts.append(t_pose_cam)
-                
-                rot = Quaternion([msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]).rotation_matrix
-                self.camera_poses.append(rot)
-        
+                if topic == self.rgb_topic_1:
+                    t_img = t.to_sec()
+                    self.rgb_1_ts.append(t_img)
+                    
+                '''Calculate the Initial Velocity for Each Frame'''
+                if topic == self.odom_topic:
+                    t_odom = t.to_sec()
+                    self.odom_ts.append(t_odom)
+                    
+                    self.odom_lin_vels.append([msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])
+                    
+                if topic == self.pose_camera_topic:
+                    t_pose_cam = t.to_sec()
+                    self.pose_ts.append(t_pose_cam)
+                    
+                    rot = Quaternion([msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]).rotation_matrix
+                    self.camera_poses.append(rot)
         
         '''Interpolte IMU data for each RGB Frame'''
         self.blur_0.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_0_ts)
@@ -204,7 +212,10 @@ class AddNoise:
     #     return msg
     
     
-    def play_bags(self):        
+    def play_bags(self):
+        if self.blur_enable == True:
+            self.blur_preprocess()
+            
         for bag in self.bags:
             if '.bag' not in bag or 'orig' in bag:
                 continue
@@ -217,8 +228,6 @@ class AddNoise:
             # Noisy rosbags
             w_bag = rosbag.Bag(os.path.join(self.noisy_bag_dir,
                                             f"{bag.filename.split('/')[-1][:-4]}_noisy.bag"), "w")
-            if self.blur_enable == True:
-                self.blur_preprocess(bag)
                     
             '''Create New ROS bags'''
             for topic, msg, t in bag.read_messages(topics=self.topics):
