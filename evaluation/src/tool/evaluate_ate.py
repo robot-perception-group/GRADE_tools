@@ -207,16 +207,17 @@ if __name__=="__main__":
     # Define the stop timestamp
     with open(args.first_file) as f:
         data = f.readlines()
-        ts_gt_final = float(data[-1].split(' ')[0])
+        ts_gt_final = float((data[-1].split(' ')[0]).replace(",","."))
     
     ts_end = min(args.end_time, ts_gt_final)
         
     with open(args.second_file) as f:
         data = f.readlines()
-        
         total_time_missing = 0.
         for d in data:
-            ts_ = float(d.split(' ')[0])
+            if "timestamp" in d.split(' ')[0]: continue
+
+            ts_ = float((d.split(' ')[0]).replace(",","."))
             # Start from the "start_time"
             if ts_ < ts:
                 continue
