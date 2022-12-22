@@ -11,11 +11,15 @@ Please refer to [https://wiki.ros.org/noetic/Installation/Ubuntu](https://wiki.r
 #### NOTE:
 Experiments have been run by using a `roscore` and setting `use_sim_time` true.
 
+To install libraries locally (suggested) you can use `-D CMAKE_INSTALL_PREFIX=../install`.
+Remember that at that point each program using that library needs to be manually linked through the `CMakeLists.txt` file, usually specifying `PATH ...` in the `find_package` calls.
+
+As per the python packages, we leave to the reader the choice if they want to run them in virtual environments or not.
+
 ### Extract Ground Truth Pose Data
 
 `gt_pose.txt` is required by multiple SLAM methods. Run following command to generate desired gt-pose data.
 
-We leave to the user where to generate those files and how to run the following evaluations.
 
 #### NOTE, if --od is left empty the default is the local one. Be aware of possible overwritings.
 - Default Ground Truth Pose File
