@@ -381,7 +381,7 @@ if __name__ == '__main__':
     # Define parser arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="path to the desired rosbags")
-    parser.add_argument("--od", type=str, help="path to the desired outdir")
+    parser.add_argument("--od", type=str, help="path to the desired outdir", default=".")
     parser.add_argument("--type", type=str, help="type to output different results")
     parser.add_argument("--topic", type=str, help="camera pose topic")
     parser.add_argument("--start_time", type=float, default=0.0, help="start time")

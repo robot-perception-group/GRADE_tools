@@ -80,6 +80,8 @@ then
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type staticfusion --path $FILE --od $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt ${OD}/estimated_pose_sf.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
     mv $FILE ${OD}
+    BASEDIR=$(dirname $FILE)
+    mv ${BASEDIR}/sf-* ${OD}
 elif [[ $TYPE == "dynaslam" ]];
 then
   python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \

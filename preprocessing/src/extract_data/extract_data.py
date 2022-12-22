@@ -30,7 +30,7 @@ def extract_data(config):
         dir_suffix = '_noisy/'
     else:
         dir_suffix = '/'
-    import ipdb; ipdb.set_trace()
+
     out_dir = config['out_dir'].get()
     if out_dir=="":
         out_dir = bag_dir
