@@ -29,8 +29,8 @@ def output_gt_pose(args):
     '''Generating Camera gt-pose'''
     for bag in bags:
         # Ignore the nonbag files/folder
-        if '.bag' not in bag or '.orig' in bag:
-            print("[WARNING] Exist \'.orig.bag\' when extracting data from rosbag... ")
+        if not bag.endswith('.bag'):
+            # print(f"[WARNING] {bag} not being processed... ")
             continue
 
         print("Playing bag", bag)

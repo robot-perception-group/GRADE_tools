@@ -73,6 +73,10 @@ then
     mv $FILE ${OD}
 elif [[ $TYPE == "staticfusion" ]];
 then
+    python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \
+                                  --path ${GB} \
+                                  --topic /my_robot_0/camera/pose \
+                                  --od ${OD}
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type staticfusion --path $FILE --od $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt ${OD}/estimated_pose_sf.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
     mv $FILE ${OD}
@@ -86,6 +90,10 @@ then
   mv $FILE $OD/
 elif [[ $TYPE == "orbslam2" ]];
 then
+  python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \
+                                  --path ${GB} \
+                                  --topic /my_robot_0/camera/pose \
+                                  --od ${OD}
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt $FILE  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
     mv $FILE ${OD}
 elif [[ $TYPE == "vdo" ]];

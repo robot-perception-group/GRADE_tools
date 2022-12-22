@@ -153,14 +153,15 @@ As a suggestion, you should use a virtualenv. Instructions will not include that
 - Estimated result will be saved in `CameraTrajectory.txt` at `DynaSLAM` folder
 - Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
   ```bash
-  ./evaluate.sh -t dynaslam -f ESTIMATED_RESULT_TXT (-o OUTPUTDIR) (-s 0.0) (-e 60.0)
+  ./evaluate.sh -t dynaslam -f ESTIMATED_RESULT_TXT -g GROUNTRUTH_BAG (-o OUTPUTDIR) (-s 0.0) (-e 60.0)
   ```
     - `-t|--type` refers to the SLAM method type
     - `-f|--file` refers to the estimated result from DynaSLAM method
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
     - `-o|--od` refers to the output directory
-  
+    - `-g|--gb` refers to the bags from which you want to extract the groundtruth
+
 ### 5. Run on your own data
 You can run on your own data. 
 The main thing you need to take care is the association that you can obtain with
