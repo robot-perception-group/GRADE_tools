@@ -45,9 +45,16 @@ ______
 
 <h2 id="file-processing">2. File Processing</h3>
 
-```bash
-./process_data.sh -t file -p [PATH_TO_YOUR_DATA]/Viewport
-```
+- Extract Data from Rosbag
+
+  ```bash
+  ./process_data.sh -t extract -p [PATH_TO_YOUR_DATA]
+  ```
+
+- Processing Data Files
+  ```bash
+  ./process_data.sh -t file -p [PATH_TO_YOUR_DATA]/Viewport
+  ```
 
 - Customized parameters are defined in `config/file_process.yaml`
   - #TODO this is a bit confusing, both why saving from bags is included in processing and there is little explanation on what is "extract data". Be a bit more wordy pls.

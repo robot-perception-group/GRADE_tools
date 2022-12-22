@@ -45,4 +45,7 @@ then
 elif [[ $TYPE == "file" ]];
 then
      python3 src/file_process/play_files.py --path $FOLDER  --config config/file_process.yaml
+elif [[ $TYPE == "extract" ]];
+then
+     python3 src/extract_data/play_bags.py --path $FOLDER  --config config/extract_data.yaml
 fi

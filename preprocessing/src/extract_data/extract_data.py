@@ -17,11 +17,11 @@ def extract_data(config):
     SAVE_FILE = False
     if config['save_images']['enable'].get():
         SAVE_IMAGE = True 
-        save_image_topics = config['extract_bag']['save_images']['topics'].get()
+        save_image_topics = config['save_images']['topics'].get()
         
     if config['save_files']['enable'].get():
         SAVE_FILE = True 
-        save_file_topics = config['extract_bag']['save_files']['topics'].get()
+        save_file_topics = config['save_files']['topics'].get()
     
     '''Define Directories'''
     #'reindex' for outputting original data, 'noisy' for outputting noisy data
