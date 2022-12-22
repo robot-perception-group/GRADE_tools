@@ -49,8 +49,11 @@ done
 if [[ $TYPE == "rtabmap" ]];
 then
     # TODO FIX THIS PRE-FIXED path
-    rtabmap-report --poses ~/.ros/rtabmap.db
-    python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ~/.ros/rtabmap_gt.txt ~/.ros/rtabmap_slam.txt  --verbose --plot result.png --start_time $ST --end_time $ET # -- umeyama True
+    BASEDIR=$(dirname $FILE)
+    rtabmap-report --poses $FILE
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${BASEDIR}/rtabmap_gt.txt ${BASEDIR}/rtabmap_slam.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    mv ${BASEDIR}/rtabmap_gt.txt ${OD}
+    mv ${BASEDIR}/rtabmap_slam.txt ${OD}
 elif [[ $TYPE == "dynavins" ]];
 then
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type dynavins --path $FILE --st $ST --et $ET --od $OD

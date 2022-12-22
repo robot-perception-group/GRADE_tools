@@ -3,7 +3,7 @@
 ### 1. Prerequisites
 
 - Ubuntu 20.04
-- OpenCV-3.4.16 (**with non-free modules**)
+- OpenCV-3.4.16 (**with non-free modules**), optional if building from source
 - ROS Noetic
 
 ### 2. Installation
@@ -14,55 +14,63 @@
   cd ~/catkin_ws/src # Your workspace
   catkin_init_workspace
   ```
-- Install Required Dependencies:
+- Install from apt **this limits a bit the usage**:
+  ```bash
+  sudo apt install ros-noetic-rtabmap ros-noetic-rtabmap-ros
+  ```
+- Install from source **outside your ROS workspace**:
+  
+  You can customize this however you want. E.g. installing GTSAM, nonfree opencv libraries, libpointmatcher etc.
+  Follow [this](https://github.com/eliabntt/irotate_active_slam/blob/noetic/INSTALL.md#:~:text=follow%20this%20README-,Install%20GTSAM4,-.x%20either%20from) for more insight.
   ```bash
   sudo apt install ros-noetic-rtabmap ros-noetic-rtabmap-ros
   sudo apt remove ros-noetic-rtabmap ros-noetic-rtabmap-ros
-  sudo apt install ros-noetic-libg2o
-  ```
-- Install RTAB-Map Standalone Libraries **outside your ROS workspace**:
-
-  ```bash
-  cd ~
-  git clone https://github.com/introlab/rtabmap.git rtabmap
+  git clone https://github.com/introlab/rtabmap.git rtabmap # outside catkin
   cd rtabmap/build
   cmake ..
   make -j
   sudo make install
   ```
 
-- Install RTAB-Map ROS Package in your ROS workspace:
+- Install RTAB-Map ROS Package in your catkin workspace:
   ```bash
-  cd ~/catkin_ws
-  git clone https://github.com/introlab/rtabmap_ros.git src/rtabmap
+  cd your_catkin_ws/src
+  git clone https://github.com/introlab/rtabmap_ros.git
+  cd ..
   catkin_make
   source devel/setup.bash
   ```
 
+- Copy/move the `GRADE-eval/evaluation/launch/rtabmap_test.launch` in `your_catkin_ws/src/rtabmap_ros/launch/`
+
 ### 3. Run
 
-- Download provided `rtabmap_test.launch` from [here](https://github.com/Kyle-Xu001/Synthetic-Robotic-Data-Generation/blob/main/launch/rtabmap_test.launch) to your `rtabmap_ros/launch` folder.
+Assuming roscore is running and `use_sim_time` is `True`
 - Launch RTAB-Map Node:
   ```bash
   roslaunch rtabmap_ros rtabmap_test.launch
   ```
 - Play rosbags in another terminal:
   ```bash
-  rosparam set use_sim_time True
   rosbag play /dataset/*.bag --clock
   ```
 
 ### 4. Evaluation
-# TODO FIX THIS PRE-FIXED path
+By default `rtabmap_ros` will save the database is `.ros/rtabmap.db`.
+
+Please change it in the config file or move it after running the experiment if you desire something different.
+
 - Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
   ```bash
-  ./evaluate.sh -t rtabmap (-s 0.0) (-e 60.0)
+  ./evaluate.sh -t rtabmap -f .ros/rtabmap.db -od OUTPUT_DIR (-s 0.0) (-e 60.0)
   ```
     - `-t|--type` refers to the SLAM method type
+    - `-f|--file` refers to the RTABMAP database
+    - `-o|--od` refers to the output dir. Default to `.`
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
-- (Optional) Output the Absolute Trajecotry Error (ATE) using the following command:
-  ```bash
-  rtabmap-report --poses ~/.ros/rtabmap.db
-  ```
-  > The estimated pose `rtabmap_slam.txt` and ground truth pose `rtabmap_gt.txt` results will be saved in `~/.ros`.
+
+  The resulting files will be placed in the `od` if specified. You can find the `rtabmap_gt.txt` `rtabmap_slam.txt` and the plot.
+
+### 5. Run on your own data
+Simply change the topics in the launch file and follow plenty of instructions of RTABMap official repo.
