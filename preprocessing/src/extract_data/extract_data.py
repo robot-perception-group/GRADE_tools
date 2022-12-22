@@ -38,7 +38,7 @@ def extract_data(config):
     if SAVE_FILE:
         imu_camera_dir = os.path.join(out_dir,'data/imu_camera' + dir_suffix)
         imu_body_dir = os.path.join(out_dir,'data/imu_body' + dir_suffix)
-        odom_dir = os.path.join(out_dir,'data/odom' + dir_suffix)
+        odom_dir = os.path.join(out_dir,'data/odom') # Odom data does not have noisy version
         
     if SAVE_IMAGE:
         rgb_1_dir = os.path.join(out_dir,'data/rgb' + dir_suffix) # output rgb image
@@ -47,10 +47,10 @@ def extract_data(config):
         depth_2_dir = os.path.join(out_dir,'data/depth_occluded' + dir_suffix) # output depth image
     
     # Check the existence of rosbags
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
     if not os.path.exists(bag_dir):
         raise ValueError('Please refer to a correct rosbag folder')
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     
     # Create the output directories
     dirs = [imu_camera_dir, imu_body_dir, odom_dir, rgb_1_dir, rgb_2_dir, depth_1_dir, depth_2_dir]
