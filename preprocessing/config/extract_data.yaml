@@ -1,3 +1,4 @@
+out_dir: "" # specify output dir. Leave empty to use the rosbag dir
 save_images:
   {
     "enable": True,

@@ -30,19 +30,25 @@ def extract_data(config):
         dir_suffix = '_noisy/'
     else:
         dir_suffix = '/'
+    import ipdb; ipdb.set_trace()
+    out_dir = config['out_dir'].get()
+    if out_dir=="":
+        out_dir = bag_dir
 
     if SAVE_FILE:
-        imu_camera_dir = os.path.join(bag_dir,'data/imu_camera' + dir_suffix)
-        imu_body_dir = os.path.join(bag_dir,'data/imu_body' + dir_suffix)
-        odom_dir = os.path.join(bag_dir,'data/odom' + dir_suffix)
+        imu_camera_dir = os.path.join(out_dir,'data/imu_camera' + dir_suffix)
+        imu_body_dir = os.path.join(out_dir,'data/imu_body' + dir_suffix)
+        odom_dir = os.path.join(out_dir,'data/odom' + dir_suffix)
         
     if SAVE_IMAGE:
-        rgb_1_dir = os.path.join(bag_dir,'data/rgb' + dir_suffix) # output rgb image
-        depth_1_dir = os.path.join(bag_dir,'data/depth' + dir_suffix) # output depth image
-        rgb_2_dir = os.path.join(bag_dir,'data/rgb_occluded' + dir_suffix) # output rgb image
-        depth_2_dir = os.path.join(bag_dir,'data/depth_occluded' + dir_suffix) # output depth image
+        rgb_1_dir = os.path.join(out_dir,'data/rgb' + dir_suffix) # output rgb image
+        depth_1_dir = os.path.join(out_dir,'data/depth' + dir_suffix) # output depth image
+        rgb_2_dir = os.path.join(out_dir,'data/rgb_occluded' + dir_suffix) # output rgb image
+        depth_2_dir = os.path.join(out_dir,'data/depth_occluded' + dir_suffix) # output depth image
     
     # Check the existence of rosbags
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     if not os.path.exists(bag_dir):
         raise ValueError('Please refer to a correct rosbag folder')
     
