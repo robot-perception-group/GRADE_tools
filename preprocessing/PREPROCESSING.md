@@ -28,8 +28,7 @@ IIRC if noisy is true we'll have _noisy appended and possibly different folders.
 Where is the MAIN output folder specified?
 ______
 
-<h2 id="rosbag-processing">1. ROSBAG Processing</h3>
-
+## 1. ROSBAG Processing
 
 ```bash
 ./process_data.sh -t bag -p [PATH_TO_YOUR_DATA]
@@ -43,15 +42,15 @@ ______
 - Reindex Bags will be saved in `/reindex_bags` folder
 - Noisy Bags will be saved in `/noisy_bags` folder
 
-<h2 id="file-processing">2. File Processing</h3>
-
+## 2. Data extraction
 - Extract Data from Rosbag
 
   ```bash
-  ./process_data.sh -t extract -p [PATH_TO_YOUR_DATA]
+  ./process_data.sh -t extract -p [PATH_TO_YOUR_BAGS]
   ```
 
-- Processing Data Files
+## 3. File Processing
+
   ```bash
   ./process_data.sh -t file -p [PATH_TO_YOUR_DATA]/Viewport
   ```
