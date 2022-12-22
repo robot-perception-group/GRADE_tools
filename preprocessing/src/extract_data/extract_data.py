@@ -38,7 +38,7 @@ def extract_data(config):
     if SAVE_FILE:
         imu_camera_dir = os.path.join(out_dir,'data/imu_camera' + dir_suffix)
         imu_body_dir = os.path.join(out_dir,'data/imu_body' + dir_suffix)
-        odom_dir = os.path.join(out_dir,'data/odom') # Odom data does not have noisy version
+        odom_dir = os.path.join(out_dir,'data/odom/') # Odom data does not have noisy version
         
     if SAVE_IMAGE:
         rgb_1_dir = os.path.join(out_dir,'data/rgb' + dir_suffix) # output rgb image
