@@ -4,7 +4,6 @@ import confuse
 
 import sys
 sys.path.append(sys.path[0][:-13])
-from preprocessing.src.extract_data.extract_data import extract_data
 from add_noise import AddNoise
 
 if __name__ == '__main__':
