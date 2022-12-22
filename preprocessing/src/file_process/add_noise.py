@@ -41,7 +41,7 @@ class AddNoise:
         # Initialize Data Directory
         self.imu_camera_dir = os.path.join(self.config['raw_data_dir'].get(),"imu_camera/")
         self.imu_body_dir = os.path.join(self.config['raw_data_dir'].get(),"imu_body/")
-        self.odom_dir = os.path.join(self.config['raw_data_dir'].get(),"imu_odom/")
+        self.odom_dir = os.path.join(self.config['raw_data_dir'].get(),"odom/")
         
         # Define Output Directory
         self.out_dir = self.config['out_dir'].get()

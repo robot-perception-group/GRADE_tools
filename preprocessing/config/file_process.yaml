@@ -1,6 +1,6 @@
 seed: 5
 raw_data_dir: '/home/cxu/new_data/exp1/data' # specify the path to raw IMU-body/IMU-camera/odom from DATA EXTRACTION
-out_dir: ''
+out_dir: ''  # specify output dir. Leave empty to use the rosbag dir
 imu: {
   # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
     "enable": True, # if add noise

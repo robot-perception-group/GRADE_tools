@@ -1,0 +1,9 @@
+# pip install -r requirements.txt
+
+# Base ----------------------------------------
+numpy
+matplotlib
+opencv-python
+PyYAML
+confuse
+pyquaternion
