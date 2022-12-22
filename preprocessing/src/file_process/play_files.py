@@ -12,15 +12,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Isaac bag player")
     parser.add_argument("--path", type=str, help="Directory of Expriment Folder")
     parser.add_argument("--config", type=str, help="Config File for File Process")
-    parser.add_argument("--output", type=str, default=None, help="Output Path for Processed Files")
     args, _ = parser.parse_known_args()
 
     # load configuration file
     config = confuse.Configuration("IsaacBag", __name__)
     config.set_file(args.config)
     config.set_args(args)
-        
-    model = AddNoise(config)
 
-    # Process the viewport 0 with occulusion
+    # Process the viewport files
+    model = AddNoise(config)
     model.play_files()

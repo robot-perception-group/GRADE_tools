@@ -39,10 +39,14 @@ class AddNoise:
             self.DEPTH_FACTOR = self.config['camera']['config']['depth_factor'].get()
         
         # Initialize Data Directory
-        self.imu_camera_dir = self.path + "/../data/imu_camera/"
-        self.imu_body_dir = self.path + "/../data/imu_body/"
-        self.odom_dir = self.path + "/../data/odom/"
-            
+        self.imu_camera_dir = self.config['raw_data_dir'].get() + "/imu_camera/"
+        self.imu_body_dir = self.config['raw_data_dir'].get() + "/imu_body/"
+        self.odom_dir = self.config['raw_data_dir'].get() + "/odom/"
+        
+        # Define Output Directory
+        self.out_dir = self.config['out_dir'].get()
+        if self.out_dir == '':
+            self.out_dir = self.path + "/data"
             
     def init_dir(self):
         # Input Data Dir
@@ -53,38 +57,26 @@ class AddNoise:
         # Optional Ouput Data Dir
         # Generate the noisy depth directory
         if self.DEPTH_IMG_FLAG:
-            if self.config['output'].get() != None:
-                self.depth_noisy_dir = self.config['output'].get() + "/depth_noisy/"
-            else:
-                self.depth_noisy_dir = self.path + "/depth_noisy/"
+            self.depth_noisy_dir = self.out_dir + "/depth_noisy/"
             print('Depth Noisy Files Directory: ', self.depth_noisy_dir)
             if not os.path.exists(self.depth_noisy_dir):
                 os.makedirs(self.depth_noisy_dir)
                 
         if self.DEPTH_IMG_FLAG:
             # Generate the depth image directory
-            if self.config['output'].get() != None:
-                self.depth_img_dir = self.config['output'].get() + "/depth_image/"
-            else:
-                self.depth_img_dir = self.path + "/depth_image/"
+            self.depth_img_dir = self.out_dir + "/depth_image/"
             print('Depth Images Directory: ', self.depth_img_dir)
             if not os.path.exists(self.depth_img_dir):
                 os.makedirs(self.depth_img_dir)
             
             # Generate the noisy depth image directory
-            if self.config['output'].get() != None:
-                self.depth_noisy_img_dir = self.config['output'].get() + "/depth_noisy_image/"
-            else:
-                self.depth_noisy_img_dir = self.path + "/depth_noisy_image/"
+            self.depth_noisy_img_dir = self.out_dir  + "/depth_noisy_image/"
             print('Depth Noisy Images Directory: ', self.depth_noisy_img_dir)
             if not os.path.exists(self.depth_noisy_img_dir):
                 os.makedirs(self.depth_noisy_img_dir)
         
         if self.BLUR_FLAG:
-            if self.config['output'].get() != None:
-                self.rgb_blurry_dir = self.config['output'].get() + "/rgb_blurry/"
-            else:
-                self.rgb_blurry_dir = self.path + "/rgb_blurry/"
+            self.rgb_blurry_dir = self.out_dir  + "/rgb_blurry/"
             print('RGB Blurry Images Directory: ',  self.rgb_blurry_dir)
             if not os.path.exists(self.rgb_blurry_dir):
                 os.makedirs(self.rgb_blurry_dir)
