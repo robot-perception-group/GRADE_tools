@@ -68,6 +68,10 @@ then
     mv $FILE ${OD}
 elif [[ $TYPE == "tartan" ]];
 then
+    python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \
+                                  --path ${GB} \
+                                  --topic /my_robot_0/camera/pose \
+                                  --od ${OD}
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type tartan --path $FILE --od $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt ${OD}/estimated_pose_tartan.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
     mv $FILE ${OD}

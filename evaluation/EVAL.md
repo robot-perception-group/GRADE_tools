@@ -60,6 +60,10 @@ Some of them were made to avoid crashes of the selected methods, especially when
 ### RUN ON YOUR OWN DATA
 Instructions are specified in each singular tutorial.
 
+If you need to change the evaluation, the `evaluate.sh` is where you want to look. We extract the ground truth trajectory from the bags in most cases (except for RTABMap which log that automatically from the TF tree).
+
+You can easily skip that by running your evaluation by hand using pre-fixed files.
+
 ### ADD ADDITIONAL METHODS
 Please feel free to evaluate on different methods and, by following the same scheme, write a tutorial and a pull-request. We will happily include them here.
 The evaluation script is modular based on the `-t` flag that selects the method.
