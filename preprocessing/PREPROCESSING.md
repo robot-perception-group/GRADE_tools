@@ -56,7 +56,7 @@ The `process_data.sh` will take care of:
   ```
 
 - In **File Processing** procedure, noise will be added to **full size data** including rgb, depth and imu data
-- **File Processing** procedure will take **depthLinear/rgb/camera** data from `Viewport` folder and **raw imu/odom** data from extracted data as inputs. The output folder structure is as follows:
+- **File Processing** procedure will take **depthLinear/rgb/camera** data from `Viewport` folder [you can change this in `preprocessing/src/file_process/add_noise.py`] and **raw imu/odom** data from extracted data as inputs. The output folder structure is as follows:
 
   ```
   Viewport0/
