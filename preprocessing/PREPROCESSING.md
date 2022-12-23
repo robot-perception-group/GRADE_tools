@@ -23,6 +23,9 @@ The `process_data.sh` will take care of:
 - reindexing the bag (if there is a `.bag.active`)
 - start the correct processing script (located in `src/[file,bag]_process/play_[file,bags].py`)
 
+
+###**NOTE:** WE DO NOT ADD NOISE TO THE ODOM. However, it would be trivial to do so given the current setup. Adding white noise to the twist vector is in general considered sufficient, with an integration step to get the pose/orientation.
+
 ---
 
 ## Procedure Overview

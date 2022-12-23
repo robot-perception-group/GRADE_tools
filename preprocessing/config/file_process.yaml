@@ -1,7 +1,7 @@
 seed: 5
 raw_data_dir: '/home/eliab/exp/reindex_bags/data'
 out_dir: ''  # specify output dir. Leave empty to use the viewport dir
-replicate: False # wether to copy the used data from the original folder to the non-noisy folder
+replicate: True # wether to copy the used data from the original folder to the non-noisy folder
 imu: {
   # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
     "enable": True, # if add noise

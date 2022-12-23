@@ -51,6 +51,7 @@ class AddNoise:
         for d in self.config["imu"]["folder_list"].get():
             self.imu_dirs.append(os.path.join(self.config['raw_data_dir'].get(),d))
             if self.replicate:
+                print("=========Replicating imu data===========")
                 dst = os.path.join(self.out_dir, "data", d)
                 if not os.path.exists(dst):
                     os.makedirs(dst)
@@ -67,11 +68,14 @@ class AddNoise:
         self.pose_dir  = os.path.join(self.path,"camera/")
 
         if self.replicate:
+            print("=========Replicating rgb data===========")
             dst = os.path.join(self.out_dir, "data", "rgb")
             if not os.path.exists(dst):
                 os.makedirs(dst)
             for f in os.listdir(self.rgb_dir):
                 shutil.copy(os.path.join(self.rgb_dir,f), dst)
+
+            print("=========Replicating depth data===========")
             dst = os.path.join(self.out_dir, "data", "depth")
             if not os.path.exists(dst):
                 os.makedirs(dst)
@@ -276,6 +280,7 @@ class AddNoise:
                 odom_lin_vels.append(data.item()["lin_vel"])
 
         if self.replicate:
+            print("=========Replicating odom data===========")
             dst = os.path.join(self.out_dir, "data", os.path.basename(self.odom_dir))
             if not os.path.exists(dst):
                 os.makedirs(dst)
