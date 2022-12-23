@@ -11,6 +11,7 @@ def extract_data(config):
     cv_bridge = CvBridge()
     
     '''Define Required Topic Name'''
+    # IMU index will correlated to the Image Index
     imu_reference_topic = config["imu_reference_topic"].get()
 
     dirs = []
@@ -26,6 +27,7 @@ def extract_data(config):
     '''Define Directories'''
     bag_dir = config['path'].get()
 
+    # define output directory
     out_dir = config['out_dir'].get()
     if out_dir=="":
         out_dir = bag_dir
@@ -40,12 +42,14 @@ def extract_data(config):
         if s:
             save_rgb_topics.append(k)
             dirs.append(os.path.join(out_dir,f'data/{v}'))
+            print('Topic [%s] will be saved in: [%s]' %(k, os.path.join(out_dir,f'data/{v}')))
     for k,v,s in depth_map_tmp:
         depth_map[k] = v
         depth_topics.append(k)
         if s:
             save_depth_topics.append(k)
             dirs.append(os.path.join(out_dir,f'data/{v}'))
+            print('Topic [%s] will be saved in: [%s]' %(k, os.path.join(out_dir,f'data/{v}')))
 
     imu_map = {}
     imu_map_tmp = config['save_files']['imu_topics'].get()
@@ -57,12 +61,14 @@ def extract_data(config):
         if s:
             save_imu_topics.append(k)
             dirs.append(os.path.join(out_dir,f'data/{v}'))
+            print('Topic [%s] will be saved in: [%s]' %(k, os.path.join(out_dir,f'data/{v}')))
     for k,v,s in odom_map_tmp:
         odom_map[k] = v
         odom_topics.append(k)
         if s:
             save_odom_topics.append(k)
             dirs.append(os.path.join(out_dir,f'data/{v}'))
+            print('Topic [%s] will be saved in: [%s]' %(k, os.path.join(out_dir,f'data/{v}')))
 
     # Check the existence of rosbags
     if not os.path.exists(bag_dir):
@@ -76,8 +82,6 @@ def extract_data(config):
     bags.sort()
 
     '''Define Params'''
-    # List of RGB view Timestamp
-
     # initalize parameters
     rgb_counter = [1] * len(save_rgb_topics)
     depth_counter = [1] * len(save_depth_topics)
@@ -103,19 +107,25 @@ def extract_data(config):
             #  Save images from rosbag
             if topic in save_rgb_topics:
                 img = cv_bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
+                
+                # Save RGB Images
                 d = os.path.join(out_dir,"data",rgb_map[topic])
                 index = rgb_counter[save_rgb_topics.index(topic)]
-                fn = os.path.join(d,str(index).zfill(6) + '.png') # KITTI name format
+                fn = os.path.join(d,str(index) + '.png') # KITTI name format
                 Image.fromarray(img).save(fn)
+                
                 rgb_counter[save_rgb_topics.index(topic)] += 1
             elif topic in save_depth_topics:
                 depth = cv_bridge.imgmsg_to_cv2(msg, 'passthrough')
                 depth = depth * DEPTH_FACTOR
                 depth = depth.astype('uint16')
+                
+                # Save Depth Images
                 index = depth_counter[save_depth_topics.index(topic)]
                 d = os.path.join(out_dir,"data",depth_map[topic])
-                fn = os.path.join(d,str(index).zfill(6) + '.png')
+                fn = os.path.join(d,str(index) + '.png')
                 Image.fromarray(depth).save(fn)
+                
                 depth_counter[save_depth_topics.index(topic)] += 1
         bag.close()
         
@@ -139,7 +149,7 @@ def extract_data(config):
                 imu_t = t.to_sec()
 
                 for i in range(0, len(imu_ref_t)):
-                    if imu_t <= imu_ref_t[i]:
+                    if imu_t <= imu_ref_t[i] + 10**(-5):
                         new_idx = "img_"+str(i+1)
                         break
 
@@ -163,8 +173,9 @@ def extract_data(config):
                 imu["lin_acc"] = [msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z]
 
                 # Save Message
-                d = os.path.join(out_dir,"data",imu_map[topic])
+                d = os.path.join(out_dir,"data",imu_map[topic]) # directory
                 np.save(os.path.join(d, fn), imu)
+                
             elif topic in save_odom_topics:
                 odom_t = t.to_sec()
 
@@ -180,6 +191,6 @@ def extract_data(config):
                 odom["ang_vel"] = [msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z]
 
                 # Save Message
-                d = os.path.join(out_dir,"data", odom_map[topic])
+                d = os.path.join(out_dir,"data", odom_map[topic]) # directory
                 np.save(os.path.join(d,fn), odom)
         bag.close()

@@ -1,6 +1,6 @@
 #!/bin/bash
 usage() {
-     echo "Usage: ${0} [-t|--type] [-f|--file] [-b|--bag] [-s|--st] [-e|--et]" 1>&2
+     echo "Usage: ${0} [-t|--type] [-p|--path]]" 1>&2
      exit 1
 }
 

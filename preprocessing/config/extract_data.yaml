@@ -2,27 +2,28 @@ out_dir: "" # specify output dir. Leave empty to use the rosbag dir
 save_images:
   {
     "depth_factor": 1000.0,
-    "rgb_topics": # rgb topics that need to be output as files
+    "rgb_topics": # rgb topics that need to be output [topic_name, output_folder_name, FLAG]
       [
-        ["/my_robot_0/camera_link/0/rgb/image_raw","rgb", False],
-        ["/my_robot_0/camera_link/1/rgb/image_raw","rgb_1", False],
+        ["/my_robot_0/camera_link/0/rgb/image_raw","rgb", True],
+        ["/my_robot_0/camera_link/1/rgb/image_raw","rgb_1", True],
       ],
-    "depth_topics": # depth topics that need to be output as files
+    "depth_topics": # depth topics that need to be output [topic_name, output_folder_name, FLAG]
       [
-        ["/my_robot_0/camera_link/0/depth/image_raw","depth", False],
-        ["/my_robot_0/camera_link/1/depth/image_raw","depth_1", False],
+        ["/my_robot_0/camera_link/0/depth/image_raw","depth", True],
+        ["/my_robot_0/camera_link/1/depth/image_raw","depth_1", True],
       ],
   }
 save_files:
   {
-    "odom_topics": # file topics that need to be output as files
+    "odom_topics": # file topics that need to be output [topic_name, output_folder_name, FLAG]
       [
         ["/my_robot_0/odom","odom", True],
       ],
-    "imu_topics":
+    "imu_topics": # [topic_name, output_folder_name, FLAG]
         [
             ["/my_robot_0/imu_camera","imu_camera", True],
             ["/my_robot_0/imu_body","imu_body", True],
         ],
   }
+# IMU index will be saved correspondingly with the Image Id
 imu_reference_topic: "/my_robot_0/camera_link/0/rgb/image_raw"
