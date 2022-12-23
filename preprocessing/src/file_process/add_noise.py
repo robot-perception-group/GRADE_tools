@@ -39,50 +39,55 @@ class AddNoise:
         self.DEPTH_NOISE_FALG = self.config["camera"]["enable"].get()
         self.BLUR_FLAG = self.config["blur"]["enable"].get()
         self.IMU_NOISE_FLAG = self.config["imu"]["enable"].get()
-        self.replicate = self.config["replicate"].get()
+        self.REPLICATE_FLAG = self.config["replicate"].get()
         
         if self.DEPTH_IMG_FLAG:
             self.MIN_DEPTH = self.config['camera']['config']['minimum_depth'].get()
             self.MAX_DEPTH = self.config['camera']['config']['maximum_depth'].get()
             self.DEPTH_FACTOR = self.config['camera']['config']['depth_factor'].get()
-        
-        # Initialize Data Directory
+            
+            
+    def init_dir(self):
+        # Initialize Data Directory from RAW DATA DIRECOTRY in DATA EXTRACTION
         self.imu_dirs = []
-        for d in self.config["imu"]["folder_list"].get():
+        for d in self.config["imu"]["folder"].get():
             self.imu_dirs.append(os.path.join(self.config['raw_data_dir'].get(),d))
-            if self.replicate:
-                print("=========Replicating imu data===========")
+            # Copy IMU data
+            if self.REPLICATE_FLAG:
+                print("----------  Replicating IMU Data  ----------")
                 dst = os.path.join(self.out_dir, "data", d)
                 if not os.path.exists(dst):
                     os.makedirs(dst)
                 for f in os.listdir(self.imu_dirs[-1]):
                     shutil.copy(os.path.join(self.imu_dirs[-1],f), dst)
-        self.imu_dir_for_blurry = os.path.join(self.config['raw_data_dir'].get(),self.config["camera"]["imu_dir_for_blurry"].get())
 
-        self.odom_dir = os.path.join(self.config['raw_data_dir'].get(),self.config["camera"]["odom_dir_for_blurry"].get())
+        # Define the imu directory used for image blur
+        self.imu_dir_for_blurry = os.path.join(self.config['raw_data_dir'].get(),self.config["blur"]["imu_dir_for_blurry"].get())
+        
+        # Define the odom directory
+        self.odom_dir = os.path.join(self.config['raw_data_dir'].get(),self.config["blur"]["odom_dir_for_blurry"].get())
 
-    def init_dir(self):
-        # Input Data Dir
+        # Input Data Dir in VIEWPORT FOLDER
         self.depth_dir = os.path.join(self.path,"depthLinear/")
         self.rgb_dir   = os.path.join(self.path,"rgb/")
         self.pose_dir  = os.path.join(self.path,"camera/")
 
-        if self.replicate:
-            print("=========Replicating rgb data===========")
+        if self.REPLICATE_FLAG:
+            print("----------  Replicating RGB Data  ----------")
             dst = os.path.join(self.out_dir, "data", "rgb")
             if not os.path.exists(dst):
                 os.makedirs(dst)
             for f in os.listdir(self.rgb_dir):
                 shutil.copy(os.path.join(self.rgb_dir,f), dst)
 
-            print("=========Replicating depth data===========")
+            print("----------  Replicating Depth Data  ----------")
             dst = os.path.join(self.out_dir, "data", "depth")
             if not os.path.exists(dst):
                 os.makedirs(dst)
             for f in os.listdir(self.depth_dir):
                 shutil.copy(os.path.join(self.depth_dir,f), dst)
 
-        # Optional Ouput Data Dir
+        # Optional Output Data Dir
         if self.DEPTH_NOISE_FALG:
             # Generate the noisy depth directory
             self.depth_noisy_dir = os.path.join(self.out_dir, "data_noisy","depth")
@@ -120,7 +125,7 @@ class AddNoise:
                 self.add_depth_noise()
             
             if self.DEPTH_IMG_FLAG:
-                print(" ===============  Generating non-noisy Depth Images  ===============\n")
+                print("\n ===============  Generating non-noisy Depth Images  ===============")
                 # Sorted the depth images in order
                 depth_files = os.listdir(self.depth_dir)
                 depth_files.sort(key=lambda x:int(x[:-4]))
@@ -150,7 +155,7 @@ class AddNoise:
 
 
     def add_depth_noise(self):
-        print(" ===============  Adding noise to Depth File ===============") 
+        print("\n ===============  Adding noise to Depth File ===============") 
         topic_type = "camera"
         camera_config = self.config[topic_type]["config"].get()
         noise_type = self.config[topic_type]["noise_model"].get()
@@ -176,7 +181,7 @@ class AddNoise:
                 self.save_image(fn, depth)
 
     def add_imu_noise(self, imu_dir):   
-        print("\n==========  Adding noise to IMU  ==========\n")
+        print("\n ==========  Adding noise to IMU  ==========")
         
         imu_noisy_dir = os.path.join(self.out_dir, "data_noisy", os.path.basename(imu_dir))
         print('IMU Camera Noisy Directory: ', imu_noisy_dir)
@@ -213,7 +218,7 @@ class AddNoise:
             np.save(os.path.join(imu_noisy_dir, imu_file), imu_noisy)
 
     def add_blur(self):
-        print("\n===============  Generating Blurry RGB Images  ===============")
+        print("\n ===============  Generating Blurry RGB Images  ===============")
         
         # load all required data
         _, rgb_ts, imu_ts, imus, odom_ts, odom_lin_vels, poses = self.load_data()
@@ -279,8 +284,8 @@ class AddNoise:
                 odom_ts.append(data.item()["time"])
                 odom_lin_vels.append(data.item()["lin_vel"])
 
-        if self.replicate:
-            print("=========Replicating odom data===========")
+        if self.REPLICATE_FLAG:
+            print("----------  Replicating Odom Data  ----------")
             dst = os.path.join(self.out_dir, "data", os.path.basename(self.odom_dir))
             if not os.path.exists(dst):
                 os.makedirs(dst)
@@ -301,5 +306,3 @@ class AddNoise:
                 
         
         return rgb_list, rgb_ts, imu_ts, imus, odom_ts, odom_lin_vels, poses
-
-# todo check numbering inconsistencies, check naming inconsistencies

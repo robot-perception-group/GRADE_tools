@@ -1,9 +1,9 @@
 seed: 5
-raw_data_dir: '/home/cxu/new_data/exp2/reindex_bags/data'
-out_dir: ''  # specify output dir. Leave empty to use the viewport dir
-replicate: True # wether to copy the used data from the original folder to the non-noisy folder
+raw_data_dir: "/home/cxu/new_data/exp2/reindex_bags/data"
+out_dir: "" # specify output dir. Leave empty to use the viewport dir
+replicate: True # whether to copy the used data from the original folder to the non-noisy folder
 imu: {
-  # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
+    # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
     "enable": True, # if add noise
     "noise_model": "gaussian", # or groundtruth
     "config":
@@ -18,7 +18,11 @@ imu: {
         "gyro_turn_bias": 0.0087,
         "accel_turn_bias": 0.1960,
       },
-    "folder_list": ["imu_camera", "imu_body"]
+    "folder": # Define the data to be processed in "raw_data_dir"
+    [
+      "imu_camera",
+      "imu_body"
+    ],
   }
 camera: {
     "enable": True,
@@ -35,12 +39,12 @@ camera: {
         "camera_params": [1920, 1080, 977.7309, 898.4482, 960, 540],
         "hfov": 88.95,
       },
-    "imu_dir_for_blurry": "imu_camera",
-    "odom_dir_for_blurry": "odom",
   }
 blur:
   {
     "enable": True,
+    "imu_dir_for_blurry": "imu_camera", # raw_data_dir + this_imu_dir
+    "odom_dir_for_blurry": "odom", # raw_data_dir + this_odom_dir
     "config":
       {
         "num_imu_sample": 10,
