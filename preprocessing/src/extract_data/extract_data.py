@@ -79,8 +79,8 @@ def extract_data(config):
     # List of RGB view Timestamp
 
     # initalize parameters
-    rgb_counter = [0] * len(save_rgb_topics)
-    depth_counter = [0] * len(save_depth_topics)
+    rgb_counter = [1] * len(save_rgb_topics)
+    depth_counter = [1] * len(save_depth_topics)
 
     DEPTH_FACTOR = config['save_images']['depth_factor'].get()
 
@@ -121,8 +121,8 @@ def extract_data(config):
         
     print("\n ==========  Stage 2: Save the IMU / Odom for RGB Images  ==========")
     
-    imu_img_idx = [0] * len(save_imu_topics)
-    odom_counter = [0] * len(save_odom_topics)
+    imu_img_idx = [1] * len(save_imu_topics)
+    odom_counter = [1] * len(save_odom_topics)
     imu_counter = [1] * len(save_imu_topics)
 
     for bag in bags:

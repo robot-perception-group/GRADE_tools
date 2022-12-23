@@ -4,13 +4,13 @@ save_images:
     "depth_factor": 1000.0,
     "rgb_topics": # rgb topics that need to be output as files
       [
-        ["/my_robot_0/camera_link/0/rgb/image_raw","rgb", True],
-        ["/my_robot_0/camera_link/1/rgb/image_raw","rgb_1", True],
+        ["/my_robot_0/camera_link/0/rgb/image_raw","rgb", False],
+        ["/my_robot_0/camera_link/1/rgb/image_raw","rgb_1", False],
       ],
     "depth_topics": # depth topics that need to be output as files
       [
-        ["/my_robot_0/camera_link/0/depth/image_raw","depth", True],
-        ["/my_robot_0/camera_link/1/depth/image_raw","depth_1", True],
+        ["/my_robot_0/camera_link/0/depth/image_raw","depth", False],
+        ["/my_robot_0/camera_link/1/depth/image_raw","depth_1", False],
       ],
   }
 save_files:
