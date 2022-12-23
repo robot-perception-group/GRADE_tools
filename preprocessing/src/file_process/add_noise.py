@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 
 from model import sensor_model, blur_model
+import shutil
 
 class linear_acceleration:
     def __init__(self, x ,y, z):
@@ -26,12 +27,19 @@ class AddNoise:
             self.seed = config["seed"].get()
         else:
             self.seed = None
-            
+
+
+        # Define Output Directory
+        self.out_dir = self.config['out_dir'].get()
+        if self.out_dir == '':
+            self.out_dir = self.path
+
         # Flag
-        self.DEPTH_IMG_FLAG = self.config["camera"]["output_img"].get() # if output the full-size images
+        self.DEPTH_IMG_FLAG = self.config["camera"]["output_depth_img"].get() # if output the full-size images
         self.DEPTH_NOISE_FALG = self.config["camera"]["enable"].get()
         self.BLUR_FLAG = self.config["blur"]["enable"].get()
         self.IMU_NOISE_FLAG = self.config["imu"]["enable"].get()
+        self.replicate = self.config["replicate"].get()
         
         if self.DEPTH_IMG_FLAG:
             self.MIN_DEPTH = self.config['camera']['config']['minimum_depth'].get()
@@ -39,44 +47,61 @@ class AddNoise:
             self.DEPTH_FACTOR = self.config['camera']['config']['depth_factor'].get()
         
         # Initialize Data Directory
-        self.imu_camera_dir = os.path.join(self.config['raw_data_dir'].get(),"imu_camera/")
-        self.imu_body_dir = os.path.join(self.config['raw_data_dir'].get(),"imu_body/")
-        self.odom_dir = os.path.join(self.config['raw_data_dir'].get(),"odom/")
-        
-        # Define Output Directory
-        self.out_dir = self.config['out_dir'].get()
-        if self.out_dir == '':
-            self.out_dir = os.path.join(self.path,"data")
-            
+        self.imu_dirs = []
+        for d in self.config["imu"]["folder_list"].get():
+            self.imu_dirs.append(os.path.join(self.config['raw_data_dir'].get(),d))
+            if self.replicate:
+                dst = os.path.join(self.out_dir, "data", d)
+                if not os.path.exists(dst):
+                    os.makedirs(dst)
+                for f in os.listdir(self.imu_dirs[-1]):
+                    shutil.copy(os.path.join(self.imu_dirs[-1],f), dst)
+        self.imu_dir_for_blurry = os.path.join(self.config['raw_data_dir'].get(),self.config["camera"]["imu_dir_for_blurry"].get())
+
+        self.odom_dir = os.path.join(self.config['raw_data_dir'].get(),self.config["camera"]["odom_dir_for_blurry"].get())
+
     def init_dir(self):
         # Input Data Dir
         self.depth_dir = os.path.join(self.path,"depthLinear/")
         self.rgb_dir   = os.path.join(self.path,"rgb/")
         self.pose_dir  = os.path.join(self.path,"camera/")
-        
+
+        if self.replicate:
+            dst = os.path.join(self.out_dir, "data", "rgb")
+            if not os.path.exists(dst):
+                os.makedirs(dst)
+            for f in os.listdir(self.rgb_dir):
+                shutil.copy(os.path.join(self.rgb_dir,f), dst)
+            dst = os.path.join(self.out_dir, "data", "depth")
+            if not os.path.exists(dst):
+                os.makedirs(dst)
+            for f in os.listdir(self.depth_dir):
+                shutil.copy(os.path.join(self.depth_dir,f), dst)
+
         # Optional Ouput Data Dir
-        # Generate the noisy depth directory
-        if self.DEPTH_IMG_FLAG:
-            self.depth_noisy_dir = os.path.join(self.out_dir, "depth_noisy/")
+        if self.DEPTH_NOISE_FALG:
+            # Generate the noisy depth directory
+            self.depth_noisy_dir = os.path.join(self.out_dir, "data_noisy","depth")
             print('Depth Noisy Files Directory: ', self.depth_noisy_dir)
             if not os.path.exists(self.depth_noisy_dir):
                 os.makedirs(self.depth_noisy_dir)
                 
         if self.DEPTH_IMG_FLAG:
             # Generate the depth image directory
-            self.depth_img_dir = os.path.join(self.out_dir, "depth_image/")
+            self.depth_img_dir = os.path.join(self.out_dir, "data", "depth")
             print('Depth Images Directory: ', self.depth_img_dir)
             if not os.path.exists(self.depth_img_dir):
                 os.makedirs(self.depth_img_dir)
             
             # Generate the noisy depth image directory
-            self.depth_noisy_img_dir = os.path.join(self.out_dir, "depth_noisy_image/")
-            print('Depth Noisy Images Directory: ', self.depth_noisy_img_dir)
-            if not os.path.exists(self.depth_noisy_img_dir):
-                os.makedirs(self.depth_noisy_img_dir)
+            if self.DEPTH_NOISE_FALG:
+                self.depth_noisy_img_dir = os.path.join(self.out_dir, "data_noisy", "depth")
+                print('Depth Noisy Images Directory: ', self.depth_noisy_img_dir)
+                if not os.path.exists(self.depth_noisy_img_dir):
+                    os.makedirs(self.depth_noisy_img_dir)
         
         if self.BLUR_FLAG:
-            self.rgb_blurry_dir = os.path.join(self.out_dir, "rgb_noisy/")
+            self.rgb_blurry_dir = os.path.join(self.out_dir, "data_noisy", "rgb")
             print('RGB Blurry Images Directory: ',  self.rgb_blurry_dir)
             if not os.path.exists(self.rgb_blurry_dir):
                 os.makedirs(self.rgb_blurry_dir)
@@ -91,26 +116,24 @@ class AddNoise:
                 self.add_depth_noise()
             
             if self.DEPTH_IMG_FLAG:
-                print("===============  Generating Depth Images  ===============\n")
+                print(" ===============  Generating non-noisy Depth Images  ===============\n")
                 # Sorted the depth images in order
                 depth_files = os.listdir(self.depth_dir)
                 depth_files.sort(key=lambda x:int(x[:-4]))
-        
                 for file in depth_files:
-                    print("------ Processing %s ------" %file)
-                    depth = np.load(self.depth_dir + file, allow_pickle=True)
+                    print("------ Processing %s ------" %file,end='\r')
+                    depth = np.load(os.path.join(self.depth_dir,file), allow_pickle=True)
                     
-                    fn = self.depth_img_dir + str(int(file[:-4])-1).zfill(6) + '.png'
+                    fn = os.path.join(self.depth_img_dir, str(int(file[:-4])-1).zfill(6) + '.png')
                     self.save_image(fn, depth)
-                    
             if self.BLUR_FLAG:
                 self.add_blur()
         else:
             raise ValueError('Folder does not exist')
         
         if self.IMU_NOISE_FLAG:
-            self.add_imu_noise(self.imu_camera_dir)
-            self.add_imu_noise(self.imu_body_dir)
+            for d in self.imu_dirs:
+                self.add_imu_noise(d)
 
         
     def save_image(self, file_name, depth):       
@@ -133,34 +156,27 @@ class AddNoise:
         # Sorted the depth images in order
         depth_files = os.listdir(self.depth_dir)
         depth_files.sort(key=lambda x:int(x[:-4]))
-        
         for file in depth_files:
-            print("------ Processing %s ------" %file)
-            depth = np.load(self.depth_dir + file, allow_pickle=True)
+            print("------ Processing %s ------" %file,end='\r')
+            depth = np.load(os.path.join(self.depth_dir, file), allow_pickle=True)
             
             data = sensor_model.Image(depth)
             _, _, _, depth = noise_model.callback(data)
             # todo finish up kinect case with correct image
 
             # output npy files
-            np.save(self.depth_noisy_dir + file, depth)
+            np.save(os.path.join(self.depth_noisy_dir,file), depth)
             
             if self.DEPTH_IMG_FLAG:
-                fn = self.depth_noisy_img_dir + str(int(file[:-4])-1).zfill(6) + '.png'
+                fn = os.path.join(self.depth_noisy_img_dir,str(int(file[:-4])-1).zfill(6) + '.png')
                 self.save_image(fn, depth)
-                
 
     def add_imu_noise(self, imu_dir):   
         print("\n==========  Adding noise to IMU  ==========\n")
         
-        # Create depth noisy folder
-        if 'camera' in imu_dir:
-            imu_noisy_dir = os.path.join(self.out_dir, "imu_camera_noisy/")
-            print('IMU Camera Noisy Directory: ', imu_noisy_dir)
-        elif 'body' in imu_dir:
-            imu_noisy_dir = os.path.join(self.out_dir, "imu_body_noisy/")
-            print('IMU Body Noisy Directory: ', imu_noisy_dir)
-            
+        imu_noisy_dir = os.path.join(self.out_dir, "data_noisy", os.path.basename(imu_dir))
+        print('IMU Camera Noisy Directory: ', imu_noisy_dir)
+
         if not os.path.exists(imu_noisy_dir):
             os.makedirs(imu_noisy_dir)
             
@@ -172,8 +188,8 @@ class AddNoise:
                                                                     self.config[topic_type]["config"].get(), self.seed)
         for imu_file in imu_files:
             # Load IMU Data
-            print("------ Processing %s ------" %imu_file)
-            with open(imu_dir + imu_file,'rb') as f:
+            print("------ Processing %s ------" %imu_file,end='\r')
+            with open(os.path.join(imu_dir, imu_file),'rb') as f:
                 imu = np.load(f, allow_pickle=True)
                 
             # Define the angular velocity class and linear acceleration class same as the msg type
@@ -190,7 +206,7 @@ class AddNoise:
             imu_noisy["ang_vel"] = [ang_vel_data.x, ang_vel_data.y, ang_vel_data.z]
             imu_noisy["lin_acc"] = [accel_data.x, accel_data.y, accel_data.z]
             
-            np.save(imu_noisy_dir + imu_file, imu_noisy)
+            np.save(os.path.join(imu_noisy_dir, imu_file), imu_noisy)
 
     def add_blur(self):
         print("\n===============  Generating Blurry RGB Images  ===============")
@@ -204,20 +220,18 @@ class AddNoise:
         blur.generate_IMU(imus, imu_ts, rgb_ts)
         # generate the blurry image
         for i in range(len(rgb_ts)):
-            print("------ Processing %s ------" %(str(i+1)+".png"))
+            print("------ Processing %s ------" %(str(i+1)+".png"),end='\r')
             v_init = blur_model.velocity_transform(rgb_ts[i], odom_ts, odom_lin_vels, pose_ts, poses)
             
             img = cv2.imread(self.rgb_dir + str(i+1) + ".png")
             Hs = blur.blur_homography(i, v_init)
 
             blur_img = blur.create_blur_image(img, Hs)
-            
-            cv2.imwrite(self.rgb_blurry_dir + str(i+1) + ".png", blur_img)
-            
-            
+            cv2.imwrite(os.path.join(self.rgb_blurry_dir,str(i+1)+".png"), blur_img)
+
     def load_data(self):
         '''Load Data for Blurry Images'''
-        imu_files = os.listdir(self.imu_camera_dir)
+        imu_files = os.listdir(self.imu_dir_for_blurry)
         imu_files.sort(key=lambda x:(int(x.split('-')[0][4:]),int(x.split('-')[1][4:-4])))
         
         # Define RGB Image list, IMU Timestamps, IMU Data
@@ -228,7 +242,7 @@ class AddNoise:
             if imu_file.split('-')[0] not in rgb_list:
                 rgb_list.append(imu_file.split('-')[0])
                 
-            with open(self.imu_camera_dir + imu_file,'rb') as f:
+            with open(os.path.join(self.imu_dir_for_blurry,imu_file),'rb') as f:
                 data = np.load(f, allow_pickle=True)
                 ang_vel = data.item()["ang_vel"]
                 lin_acc = data.item()["lin_acc"]
@@ -243,7 +257,7 @@ class AddNoise:
                     imu_file_ = imu_file # loop to find the last imu data for this rgb image
             
             # Load the timestamp of the final imu data
-            with open(self.imu_camera_dir + imu_file_,'rb') as f:
+            with open(os.path.join(self.imu_dir_for_blurry, imu_file_),'rb') as f:
                 data = np.load(f, allow_pickle=True)
                 imu_t = data.item()["time"]
                 rgb_ts.append(imu_t)
@@ -256,18 +270,25 @@ class AddNoise:
         odom_files = os.listdir(self.odom_dir)
         odom_files.sort(key=lambda x:int(x[:-4]))
         for odom_file in odom_files:
-            with open(self.odom_dir + odom_file, 'rb') as f:
+            with open(os.path.join(self.odom_dir, odom_file), 'rb') as f:
                 data = np.load(f, allow_pickle=True)
                 odom_ts.append(data.item()["time"])
                 odom_lin_vels.append(data.item()["lin_vel"])
-        
+
+        if self.replicate:
+            dst = os.path.join(self.out_dir, "data", os.path.basename(self.odom_dir))
+            if not os.path.exists(dst):
+                os.makedirs(dst)
+            for f in os.listdir(self.odom_dir):
+                shutil.copy(os.path.join(self.odom_dir,f), dst)
+
         '''Load Pose Data'''
         pose_files = os.listdir(self.pose_dir)
         pose_files.sort(key=lambda x:int(x[:-4]))
         
         poses = []
         for pose_file in pose_files:
-            with open(self.pose_dir + pose_file,'rb') as f:
+            with open(os.path.join(self.pose_dir, pose_file),'rb') as f:
                 data = np.load(f, allow_pickle=True)
                 pose_camera = data.item()["pose"]
                 pose_camera = pose_camera.T
@@ -275,3 +296,5 @@ class AddNoise:
                 
         
         return rgb_list, rgb_ts, imu_ts, imus, odom_ts, odom_lin_vels, poses
+
+# todo check numbering inconsistencies, check naming inconsistencies

@@ -1,6 +1,7 @@
 seed: 5
-raw_data_dir: '/home/cxu/new_data/exp1/data' # specify the path to raw IMU-body/IMU-camera/odom from DATA EXTRACTION
-out_dir: ''  # specify output dir. Leave empty to use the rosbag dir
+raw_data_dir: '/home/eliab/exp/reindex_bags/data'
+out_dir: ''  # specify output dir. Leave empty to use the viewport dir
+replicate: False # wether to copy the used data from the original folder to the non-noisy folder
 imu: {
   # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
     "enable": True, # if add noise
@@ -17,10 +18,11 @@ imu: {
         "gyro_turn_bias": 0.0087,
         "accel_turn_bias": 0.1960,
       },
+    "folder_list": ["imu_camera", "imu_body"]
   }
 camera: {
     "enable": True,
-    "output_img": True, # transfer the npy file to png image
+    "output_depth_img": True, # transfer the depth npy file to png image
     "noise_model": "realsense", # kinect (not complete -- need to mask the rgb), gaussian, groundtruth
     "config":
       {
@@ -33,6 +35,8 @@ camera: {
         "camera_params": [1920, 1080, 977.7309, 898.4482, 960, 540],
         "hfov": 88.95,
       },
+    "imu_dir_for_blurry": "imu_camera",
+    "odom_dir_for_blurry": "odom",
   }
 blur:
   {
