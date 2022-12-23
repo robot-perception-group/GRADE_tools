@@ -128,7 +128,7 @@ class AddNoise:
                     print("------ Processing %s ------" %file,end='\r')
                     depth = np.load(os.path.join(self.depth_dir,file), allow_pickle=True)
                     
-                    fn = os.path.join(self.depth_img_dir, str(int(file[:-4])-1).zfill(6) + '.png')
+                    fn = os.path.join(self.depth_img_dir, str(int(file[:-4])) + '.png')
                     self.save_image(fn, depth)
             if self.BLUR_FLAG:
                 self.add_blur()
@@ -172,7 +172,7 @@ class AddNoise:
             np.save(os.path.join(self.depth_noisy_dir,file), depth)
             
             if self.DEPTH_IMG_FLAG:
-                fn = os.path.join(self.depth_noisy_img_dir,str(int(file[:-4])-1).zfill(6) + '.png')
+                fn = os.path.join(self.depth_noisy_img_dir,str(int(file[:-4])) + '.png')
                 self.save_image(fn, depth)
 
     def add_imu_noise(self, imu_dir):   

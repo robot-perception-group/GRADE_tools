@@ -1,5 +1,5 @@
 seed: 5
-raw_data_dir: '/home/eliab/exp/reindex_bags/data'
+raw_data_dir: '/home/cxu/new_data/exp2/reindex_bags/data'
 out_dir: ''  # specify output dir. Leave empty to use the viewport dir
 replicate: True # wether to copy the used data from the original folder to the non-noisy folder
 imu: {
