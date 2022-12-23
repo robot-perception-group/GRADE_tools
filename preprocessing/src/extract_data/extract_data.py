@@ -11,51 +11,64 @@ def extract_data(config):
     cv_bridge = CvBridge()
     
     '''Define Required Topic Name'''
-    topics = config['topics'].get()
-    
-    SAVE_IMAGE = False
-    SAVE_FILE = False
-    if config['save_images']['enable'].get():
-        SAVE_IMAGE = True 
-        save_image_topics = config['save_images']['topics'].get()
-        
-    if config['save_files']['enable'].get():
-        SAVE_FILE = True 
-        save_file_topics = config['save_files']['topics'].get()
-    
+    imu_reference_topic = config["imu_reference_topic"].get()
+
+    dirs = []
+    rgb_topics = []
+    imu_topics = []
+    depth_topics = []
+    odom_topics = []
+    save_rgb_topics = []
+    save_imu_topics = []
+    save_depth_topics = []
+    save_odom_topics = []
+
     '''Define Directories'''
-    #'reindex' for outputting original data, 'noisy' for outputting noisy data
     bag_dir = config['path'].get()
-    if 'noisy' in bag_dir:
-        dir_suffix = '_noisy/'
-    else:
-        dir_suffix = '/'
 
     out_dir = config['out_dir'].get()
     if out_dir=="":
         out_dir = bag_dir
 
-    if SAVE_FILE:
-        imu_camera_dir = os.path.join(out_dir,'data/imu_camera' + dir_suffix)
-        imu_body_dir = os.path.join(out_dir,'data/imu_body' + dir_suffix)
-        odom_dir = os.path.join(out_dir,'data/odom/') # Odom data does not have noisy version
-        
-    if SAVE_IMAGE:
-        rgb_1_dir = os.path.join(out_dir,'data/rgb' + dir_suffix) # output rgb image
-        depth_1_dir = os.path.join(out_dir,'data/depth' + dir_suffix) # output depth image
-        rgb_2_dir = os.path.join(out_dir,'data/rgb_occluded' + dir_suffix) # output rgb image
-        depth_2_dir = os.path.join(out_dir,'data/depth_occluded' + dir_suffix) # output depth image
-    
+    rgb_map = {}
+    rgb_map_tmp = config['save_images']['rgb_topics'].get()
+    depth_map = {}
+    depth_map_tmp = config['save_images']['depth_topics'].get()
+    for k,v,s in rgb_map_tmp:
+        rgb_map[k] = v
+        rgb_topics.append(k)
+        if s:
+            save_rgb_topics.append(k)
+            dirs.append(os.path.join(out_dir,f'data/{v}'))
+    for k,v,s in depth_map_tmp:
+        depth_map[k] = v
+        depth_topics.append(k)
+        if s:
+            save_depth_topics.append(k)
+            dirs.append(os.path.join(out_dir,f'data/{v}'))
+
+    imu_map = {}
+    imu_map_tmp = config['save_files']['imu_topics'].get()
+    odom_map = {}
+    odom_map_tmp = config['save_files']['odom_topics'].get()
+    for k,v,s in imu_map_tmp:
+        imu_map[k] = v
+        imu_topics.append(k)
+        if s:
+            save_imu_topics.append(k)
+            dirs.append(os.path.join(out_dir,f'data/{v}'))
+    for k,v,s in odom_map_tmp:
+        odom_map[k] = v
+        odom_topics.append(k)
+        if s:
+            save_odom_topics.append(k)
+            dirs.append(os.path.join(out_dir,f'data/{v}'))
+
     # Check the existence of rosbags
     if not os.path.exists(bag_dir):
         raise ValueError('Please refer to a correct rosbag folder')
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    
-    # Create the output directories
-    dirs = [imu_camera_dir, imu_body_dir, odom_dir, rgb_1_dir, rgb_2_dir, depth_1_dir, depth_2_dir]
     for d in dirs:
-        if (d != None) and (not os.path.exists(d)):
+        if not os.path.exists(d):
             os.makedirs(d)
 
     # Define processed rosbag
@@ -64,167 +77,109 @@ def extract_data(config):
 
     '''Define Params'''
     # List of RGB view Timestamp
-    rgb1_ts = []
-    rgb2_ts = []
-    
+
     # initalize parameters
-    index_rgb_1 = 0
-    index_rgb_2 = 0
-    index_dep_1 = 0
-    index_dep_2 = 0
-    
+    rgb_counter = [0] * len(save_rgb_topics)
+    depth_counter = [0] * len(save_depth_topics)
+
     DEPTH_FACTOR = config['save_images']['depth_factor'].get()
-    
+
+    imu_ref_t = []
     
     print("\n ==========  STAGE 1: Load all RGB Timestamps / Save Images  ==========")
     for bag in bags:
-        if ".bag" not in bag:
-            continue
-        
-        if ".active" in bag or ".orig" in bag:
+        if not bag.endswith(".bag"):
             continue
         
         print("Playing bag", bag)
         
         bag_path = os.path.join(bag_dir, bag)
         bag = rosbag.Bag(bag_path)
-
-        for topic, msg, t in bag.read_messages(topics = topics.values()):
+        for topic, msg, t in bag.read_messages(topics = rgb_topics + depth_topics + [imu_reference_topic]):
             # Load rgb image timestamps
-            if topic == topics['rgb_topic_1']:
-                rgb1_t = t.to_sec()
-                rgb1_ts.append(rgb1_t)  
+            if topic == imu_reference_topic:
+                imu_ref_t.append(t.to_sec())
 
-            elif topic == topics['rgb_topic_2']:
-                rgb2_t = t.to_sec()
-                rgb2_ts.append(rgb2_t)
-            
             #  Save images from rosbag
-            if SAVE_IMAGE and topic in save_image_topics:
-                if topic == topics['rgb_topic_1']:
-                    img = cv_bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
-                    fn = rgb_1_dir + str(index_rgb_1).zfill(6) + '.png' # KITTI name format
-                    Image.fromarray(img).save(fn)
-                    index_rgb_1 += 1
-                    
-                elif topic == topics['rgb_topic_2']:
-                    img = cv_bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
-                    fn = rgb_2_dir + str(index_rgb_2).zfill(6) + '.png'
-                    Image.fromarray(img).save(fn)
-                    index_rgb_2 += 1
-                    
-                elif topic == topics['depth_topic_1']:
-                    depth = cv_bridge.imgmsg_to_cv2(msg, 'passthrough')
-                    depth = depth * DEPTH_FACTOR
-                    depth = depth.astype('uint16')
-                    fn = depth_1_dir + str(index_dep_1).zfill(6) + '.png'
-                    Image.fromarray(depth).save(fn)
-                    index_dep_1 += 1
-                    
-                elif topic == topics['depth_topic_2']:
-                    depth = cv_bridge.imgmsg_to_cv2(msg, 'passthrough')
-                    depth = depth * DEPTH_FACTOR
-                    depth = depth.astype('uint16')
-                    fn = depth_2_dir + str(index_dep_2).zfill(6) + '.png'
-                    Image.fromarray(depth).save(fn)
-                    index_dep_2 += 1
+            if topic in save_rgb_topics:
+                img = cv_bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
+                d = os.path.join(out_dir,"data",rgb_map[topic])
+                index = rgb_counter[save_rgb_topics.index(topic)]
+                fn = os.path.join(d,str(index).zfill(6) + '.png') # KITTI name format
+                Image.fromarray(img).save(fn)
+                rgb_counter[save_rgb_topics.index(topic)] += 1
+            elif topic in save_depth_topics:
+                depth = cv_bridge.imgmsg_to_cv2(msg, 'passthrough')
+                depth = depth * DEPTH_FACTOR
+                depth = depth.astype('uint16')
+                index = depth_counter[save_depth_topics.index(topic)]
+                d = os.path.join(out_dir,"data",depth_map[topic])
+                fn = os.path.join(d,str(index).zfill(6) + '.png')
+                Image.fromarray(depth).save(fn)
+                depth_counter[save_depth_topics.index(topic)] += 1
         bag.close()
         
     print("\n ==========  Stage 2: Save the IMU / Odom for RGB Images  ==========")
     
-    camera_index = None
-    body_index = None
-    odom_index = 1
-    
+    imu_img_idx = [0] * len(save_imu_topics)
+    odom_counter = [0] * len(save_odom_topics)
+    imu_counter = [1] * len(save_imu_topics)
+
     for bag in bags:
-        if ".bag" not in bag:
+        if not bag.endswith(".bag"):
             continue
-        if ".active" in bag or ".orig" in bag:
-            continue
-        
+
         print("Playing bag", bag)
         
         bag_path = os.path.join(bag_dir, bag)
         bag = rosbag.Bag(bag_path)
+        new_idx = -1
+        for topic, msg, t in bag.read_messages(topics = save_imu_topics + [imu_reference_topic] + save_odom_topics):
+            if topic in save_imu_topics:
+                imu_t = t.to_sec()
 
-        for topic, msg, t in bag.read_messages(topics = save_file_topics):            
-            if SAVE_FILE:
-                if topic == topics['imu_camera_topic']:
-                    imu_t = t.to_sec()
-                    
-                    for i in range(len(rgb1_ts)):
-                        rgb_t = rgb1_ts[i]
-                        if imu_t <= rgb_t:
-                            camera_index_new = "img_"+str(i+1)
-                            break
-                    
-                    # Update the img index
-                    if camera_index != camera_index_new:
-                        camera_index = camera_index_new
-                        j = 1
-                    else:
-                        j += 1
-                    
-                    # Update the imu index
-                    imu_index = "imu_"+str(j)
-                    
-                    # Define File Name    
-                    fn= camera_index + "-" + imu_index + ".npy"
-                    
-                    # Load Data
-                    imu = {}
-                    imu["time"] = imu_t
-                    imu["ang_vel"] = [msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z]
-                    imu["lin_acc"] = [msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z]
-                    
-                    # Save Message
-                    np.save(imu_camera_dir + fn, imu)
-                
-                elif topic == topics['imu_body_topic']:
-                    imu_t = t.to_sec()
-                    
-                    for i in range(len(rgb1_ts)):
-                        rgb_t = rgb1_ts[i]
-                        if imu_t <= rgb_t:
-                            body_index_new = "img_"+str(i+1)
-                            break
-                    
-                    # Update the img index
-                    if body_index != body_index_new:
-                        body_index = body_index_new
-                        k = 1
-                    else:
-                        k += 1
-                    
-                    # Update the imu index
-                    imu_index = "imu_"+str(k)
-                    
-                    # Define File Name    
-                    fn = body_index + "-" + imu_index + ".npy"
-                    
-                    # Load Data
-                    imu = {}
-                    imu["time"] = imu_t
-                    imu["ang_vel"] = [msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z]
-                    imu["lin_acc"] = [msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z]
-                    
-                    # Save Message
-                    np.save(imu_body_dir + fn, imu)
-                    
-                elif topic == topics['odom_topic']:
-                    odom_t = t.to_sec()
-                    
-                    # Define File Name    
-                    fn = str(odom_index) + ".npy"
-                    
-                    odom = {}
-                    odom["time"] = odom_t
-                    odom["position"] = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
-                    odom["orientation"] = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
-                    odom["lin_vel"] = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z]
-                    odom["ang_vel"] = [msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z]
-                    
-                    # Save Message
-                    np.save(odom_dir + fn, odom)
-                    odom_index += 1
+                for i in range(0, len(imu_ref_t)):
+                    if imu_t <= imu_ref_t[i]:
+                        new_idx = "img_"+str(i+1)
+                        break
+
+                # Update the img index
+                if imu_img_idx[save_imu_topics.index(topic)] != new_idx:
+                    imu_img_idx[save_imu_topics.index(topic)] = new_idx
+                    imu_counter[save_imu_topics.index(topic)] = 1
+                else:
+                    imu_counter[save_imu_topics.index(topic)] += 1
+
+                # Update the imu index
+                imu_index = "imu_"+str(imu_counter[save_imu_topics.index(topic)])
+
+                # Define File Name
+                fn= new_idx + "-" + imu_index + ".npy"
+
+                # Load Data
+                imu = {}
+                imu["time"] = imu_t
+                imu["ang_vel"] = [msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z]
+                imu["lin_acc"] = [msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z]
+
+                # Save Message
+                d = os.path.join(out_dir,"data",imu_map[topic])
+                np.save(os.path.join(d, fn), imu)
+            elif topic in save_odom_topics:
+                odom_t = t.to_sec()
+
+                # Define File Name
+                fn = str(odom_counter[save_odom_topics.index(topic)]) + ".npy"
+                odom_counter[save_odom_topics.index(topic)] += 1
+
+                odom = {}
+                odom["time"] = odom_t
+                odom["position"] = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
+                odom["orientation"] = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
+                odom["lin_vel"] = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z]
+                odom["ang_vel"] = [msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z]
+
+                # Save Message
+                d = os.path.join(out_dir,"data", odom_map[topic])
+                np.save(os.path.join(d,fn), odom)
         bag.close()

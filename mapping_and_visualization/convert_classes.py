@@ -89,15 +89,16 @@ if allow_40_plus:
 
 import os
 main_path = '' # This will process all the subfolders recursively
+viewport_name = ""
 dirs = os.listdir(main_path)
 wrong_rgb = {}
 wrong_depth = {}
 for d in dirs:
     print(f"processing {d}")
     mapping = pkl.load(open('mapping.pkl','rb'))
-    rgb_path = os.path.join(main_path, d, 'Viewport0_occluded', 'rgb')
-    depth_path = os.path.join(main_path, d, 'Viewport0_occluded', 'depthLinear')
-    instance_path = os.path.join(main_path, d, 'Viewport0_occluded', 'instance')
+    rgb_path = os.path.join(main_path, d, viewport_name, 'rgb')
+    depth_path = os.path.join(main_path, d, viewport_name, 'depthLinear')
+    instance_path = os.path.join(main_path, d, viewport_name, 'instance')
     wrong_rgb[d] = []
     wrong_depth[d] = []
     for i in range(1,1800):
