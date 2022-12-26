@@ -5,8 +5,6 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
-from quaternion import quaternion
-
 class MsgSequence:
     def __init__(self, config):
         self.config = config
@@ -15,19 +13,19 @@ class MsgSequence:
         self.last_seq = {}  # Record the final sequence number
         self.init_ts = {}  # Record the first timestamp
         self.init_seq = {}  # Record the first sequence number
-        self.prev_ts = {}  # Record the previrous timestamp
+        self.prev_ts = {}  # Record the previous timestamp
         self.msg_intervals = {}
-        
-        self.imu_bodys = []
-        self.odoms = []
 
-        self.bag_dir = self.config['bag_folder'].get()
+        self.bag_dir = self.config['path'].get()
         self.bags = os.listdir(self.bag_dir)
         self.bags = [bag for bag in self.bags if (
             '.bag' in bag) and '.orig' not in bag]
         self.bags.sort()
 
-        self.topics = self.config['topics'].get()
+        self.topics = []
+        for topic_type in self.config['topics'].keys():
+            for topic_name in self.config['topics'][topic_type].keys():
+                self.topics.append(topic_name)
         
     def play_bags(self):
         for bag in self.bags:
@@ -40,8 +38,7 @@ class MsgSequence:
 
             # Obtain the Useful Stamp Information
             for topic, msg, _ in bag.read_messages(topics=self.topics):
-                print(topic, _.to_sec())
-                
+                                
                 if topic == '/starting_experiment':
                     continue
 
@@ -49,20 +46,6 @@ class MsgSequence:
                     # Filter the tf transforms that we don't need
                     if len(msg.transforms) == 0 or len(msg.transforms) == 1:
                         continue
-                    # elif 'reference' in msg.transforms[0].child_frame_id:
-                    #     # Define the initial sequence number and timestamp for tf messages
-                    #     if 'tf_reference' not in self.init_ts.keys():
-                    #         self.init_ts['tf_reference'] = msg.transforms[0].header.stamp.to_sec()
-                    #         self.init_seq['tf_reference'] = msg.transforms[0].header.seq
-                    #         self.prev_ts['tf_reference'] = 0.0
-                    #         self.msg_intervals['tf_reference'] = []
-                    #     # Iterate to obtain the final sequence number and timestamp for tf message
-                    #     self.last_ts['tf_reference'] = msg.transforms[0].header.stamp.to_sec()
-                    #     self.last_seq['tf_reference'] = msg.transforms[0].header.seq
-                    #     # Record the interval with the previours data
-                    #     self.msg_intervals['tf_reference'].append(
-                    #         msg.transforms[0].header.stamp.to_sec() - self.prev_ts['tf_reference'])
-                    #     self.prev_ts['tf_reference'] = msg.transforms[0].header.stamp.to_sec()
                     else:
                         # Define the initial sequence number and timestamp for tf messages
                         if topic not in self.init_ts.keys():
@@ -72,11 +55,12 @@ class MsgSequence:
                             self.prev_ts[topic] = [0.0]
                             self.msg_intervals[topic] = []
                         # Iterate to obtain the final sequence number and timestamp for tf message
-                        self.last_ts[topic] = msg.transforms[0].header.stamp.to_sec()
+                        curr_ts = msg.transforms[0].header.stamp.to_sec()
+                        self.last_ts[topic] = curr_ts
                         self.last_seq[topic] = msg.transforms[0].header.seq
                         self.msg_intervals[topic].append(
-                            msg.transforms[0].header.stamp.to_sec() - self.prev_ts[topic][-1])
-                        self.prev_ts[topic].append(msg.transforms[0].header.stamp.to_sec())
+                            curr_ts - self.prev_ts[topic][-1])
+                        self.prev_ts[topic].append(curr_ts)
                 else:
                     # Define the initial sequence number and timestamp for required messages
                     if topic not in self.init_ts.keys():
@@ -85,19 +69,13 @@ class MsgSequence:
                         self.prev_ts[topic] = [0.0]
                         self.msg_intervals[topic] = []
                     # Iterate to obtain the final sequence number and timestamp for tf message
-                    self.last_ts[topic] = msg.header.stamp.to_sec()
+                    curr_ts = msg.header.stamp.to_sec()
+                    self.last_ts[topic] = curr_ts
                     self.last_seq[topic] = msg.header.seq
                     self.msg_intervals[topic].append(
-                        msg.header.stamp.to_sec() - self.prev_ts[topic][-1])
-                    self.prev_ts[topic].append(msg.header.stamp.to_sec())
-                    
-                    if 'odom' in topic:
-                        self.odoms.append(msg)
-                        
-                    if 'imu_body' in topic:
-                        self.imu_bodys.append(msg)
-                        
-        self.ang_vel_verify()
+                        curr_ts- self.prev_ts[topic][-1])
+                    self.prev_ts[topic].append(curr_ts)
+            bag.close()
 
         # Visualize the statistic result
         for key in self.last_seq.keys():
@@ -110,47 +88,21 @@ class MsgSequence:
             
             intervals = self.msg_intervals[key]
             plt.scatter(range(len(intervals)), intervals, s=1, label=key)
-        plt.legend()
-        plt.show()
-
-    def ang_vel_verify(self):
-        for i in range(1, len(self.prev_ts["/my_robot_0/imu_body"])):
-            for j in range(1, len(self.prev_ts["/my_robot_0/odom"])):
-                # find the similar timestamp
-                if self.prev_ts["/my_robot_0/imu_body"][i] == self.prev_ts["/my_robot_0/odom"][j]:
-                    # Obtain the rotation matrix from odom data
-                    orientation = self.odoms[j-1].pose.pose.orientation
-                    q = quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
-                    rot = q.from_quaternion_to_rotation_matrix()
-                    
-                    # Obtain local angular velocity from imu data
-                    ang_vel = self.imu_bodys[i-1].angular_velocity
-                    omega = np.array([ang_vel.x, ang_vel.y, ang_vel.z])
-                    
-                    # Calculate the angular veloicy w.r.t the world frame
-                    omega_world = np.matmul(rot, omega)
-                    
-                    omega_error = np.abs(np.array(
-                        [omega_world[0] - self.odoms[j-1].twist.twist.angular.x,
-                         omega_world[1] - self.odoms[j-1].twist.twist.angular.y,
-                         omega_world[2] - self.odoms[j-1].twist.twist.angular.z])) > 10**(-6)
-                    
-                    if omega_error.any():
-                        print("Angular Velocity of IMU Data [x: %.5f, y: %.5f, z: %.5f]" 
-                              %(omega_world[0], omega_world[1], omega_world[2]) )
-                        print("Angular Velocity of ODOM Data:\n", self.odoms[j-1].twist.twist.angular, "\n")
+            plt.title('Timestamp Interval for [%s]' %key)
+            plt.legend()
+            plt.show()
         
 
 if __name__ == '__main__':
     # Define parser arguments
     parser = argparse.ArgumentParser(description="Isaac bag player")
-    parser.add_argument("--bag_folder", type=str)
-    parser.add_argument("--config_file", type=str)
+    parser.add_argument("--path", type=str, help='reindex bags folders')
+    parser.add_argument("--config", type=str, default='preprocessing/config/bag_process.yaml', help='path to bag_process.yaml')
     args, _ = parser.parse_known_args()
 
     # load configuration file
     config = confuse.Configuration("IsaacBag", __name__)
-    config.set_file(args.config_file)
+    config.set_file(args.config)
     config.set_args(args)
 
     sequences = MsgSequence(config)

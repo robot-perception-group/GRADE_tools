@@ -28,7 +28,7 @@ ___
   [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/imu_visualize.py)
   For this script you need to specify `[data,imu,imu_noisy]_dir` in lines 6:8 of the python code.
   
-- Timestamp verification script that will output plots and stats to check whether the original bags have sorted stamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/timestamp_verification.py)
+- Timestamp verification script that will output plots and stats to check whether the original bags have sorted timestamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/timestamp_verification.py).
   
 ___
 ## Citation
