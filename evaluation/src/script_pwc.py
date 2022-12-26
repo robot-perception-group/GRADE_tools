@@ -26,11 +26,6 @@ def writeFlowFile(filename,uv):
 		f.write(H.tobytes())
 		f.write(uv.tobytes())
 
-
-im1_fn = 'data/frame_0010.png';
-im2_fn = 'data/frame_0011.png';
-flow_fn = './tmp/frame_0010.flo';
-
 import os
 mainpath = sys.argv[1]
 outpath = sys.argv[2]
@@ -39,8 +34,9 @@ if not os.path.exists(outpath):
 
 files = os.listdir(mainpath)
 files.sort(key=lambda x:int(x[:-4]))
+files.insert(0, files[0])
+pwc_model_fn = './pwc_net.pth.tar'
 for idx in range(0,len(files)-1):
-	pwc_model_fn = './pwc_net.pth.tar'
 	im1_fn = os.path.join(mainpath, files[idx])
 	im2_fn = os.path.join(mainpath, files[idx+1])
 	im_all = [imread(img) for img in [im1_fn, im2_fn]]
@@ -82,5 +78,5 @@ for idx in range(0,len(files)-1):
 	u_ *= W/ float(W_)
 	v_ *= H/ float(H_)
 	flo = np.dstack((u_,v_))
-	flow_fn = os.path.join(outpath, files[idx][:-3]+"flo")
+	flow_fn = os.path.join(outpath, files[idx+1][:-3]+"flo")
 	writeFlowFile(flow_fn, flo)
