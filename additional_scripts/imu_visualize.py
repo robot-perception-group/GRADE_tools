@@ -19,24 +19,28 @@ if __name__ == '__main__':
         
         imus = np.zeros((len(imu_files),6))
         for imu_file in imu_files:
-            with open(imu_dir + imu_file,'rb') as f:
+            with open(os.path.join(imu_dir, imu_file),'rb') as f:
                 imu = np.load(f, allow_pickle=True)
-            with open(imu_noisy_dir + imu_file,'rb') as f:
+                
+            with open(os.path.join(imu_noisy_dir, imu_file),'rb') as f:
                 imu_noisy = np.load(f, allow_pickle=True)
             
+            # Load Raw IMU data
             imus[index, 0] = imu.item()["ang_vel"][0]
             imus[index, 1] = imu.item()["ang_vel"][1]
             imus[index, 2] = imu.item()["ang_vel"][2]
-            imus[index, 3] = imu.item()["acc_lin"][0]
-            imus[index, 4] = imu.item()["acc_lin"][1]
-            imus[index, 5] = imu.item()["acc_lin"][2]
+            imus[index, 3] = imu.item()["lin_acc"][0]
+            imus[index, 4] = imu.item()["lin_acc"][1]
+            imus[index, 5] = imu.item()["lin_acc"][2]
             
+            # Load noisy IMU difference
             noise_error[index, 0] = imu_noisy.item()["ang_vel"][0] - imu.item()["ang_vel"][0]
             noise_error[index, 1] = imu_noisy.item()["ang_vel"][1] - imu.item()["ang_vel"][1]
             noise_error[index, 2] = imu_noisy.item()["ang_vel"][2] - imu.item()["ang_vel"][2]
-            noise_error[index, 3] = imu_noisy.item()["acc_lin"][0] - imu.item()["acc_lin"][0]
-            noise_error[index, 4] = imu_noisy.item()["acc_lin"][1] - imu.item()["acc_lin"][1]
-            noise_error[index, 5] = imu_noisy.item()["acc_lin"][2] - imu.item()["acc_lin"][2]
+            noise_error[index, 3] = imu_noisy.item()["lin_acc"][0] - imu.item()["lin_acc"][0]
+            noise_error[index, 4] = imu_noisy.item()["lin_acc"][1] - imu.item()["lin_acc"][1]
+            noise_error[index, 5] = imu_noisy.item()["lin_acc"][2] - imu.item()["lin_acc"][2]
+            
             ts[index] = imu_noisy.item()["time"]
             
             index += 1
@@ -46,12 +50,12 @@ if __name__ == '__main__':
         noise_data["noise_error"] = noise_error
         noise_data["ts"] = ts
         
-        np.save(data_dir + "error.npy", noise_data)
-        np.save(data_dir + "imu.npy", imus)
+        np.save(os.path.join(data_dir, "error.npy"), noise_data)
+        np.save(os.path.join(data_dir, "imu.npy"), imus)
     else:
-        noise_data = np.load(data_dir + "error.npy", allow_pickle=True)
+        noise_data = np.load(os.path.join(data_dir, "error.npy"), allow_pickle=True)
         noise_error = noise_data.item()["noise_error"]
-        imus = np.load(data_dir +"imu.npy")
+        imus = np.load(os.path.join(data_dir, "imu.npy"), allow_pickle=True)
         ts = noise_data.item()["ts"]
     
     '''Polyfit the Data'''
