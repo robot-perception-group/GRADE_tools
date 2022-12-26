@@ -117,9 +117,7 @@ As a suggestion, you should use a virtualenv. Instructions will not include that
 
 ### 3. Run
 - Prepare the data:
-  Either extract the RGB-D from the rosbags or from the `npy` files. To do that, refer to [this]() step.
-  TODO add link + structure data
-  
+  Either extract the RGB-D from the rosbags or from the `npy` files. To do that, refer to [this](https://github.com/robot-perception-group/GRADE-eval/blob/main/preprocessing/PREPROCESSING.md#2-data-extraction) step.
   
 - Execute the following command. Change `PATH_TO_DATA_FOLDER` to the sequence folder. `PATH_TO_MASKS` and `PATH_TO_OUTPUT` are optional parameters.
 

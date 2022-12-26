@@ -6,8 +6,6 @@ This repository contains all the files necessary to process the data generated b
 
 Find more information about the GRADE by looking at the [paper]()
 
-# CX-TODO add links below
-
 ## (Pre)Processing - Add Noise, Reorder ...
 The first step you need to do is the pre-processing of the experiment data.
 You can find all the necessary information [here](preprocessing/PREPROCESSING.md).
@@ -23,14 +21,14 @@ Therefore, we made a script (which is appliable to bboxes, instance, semantic in
 ___
 ## Identify bad frames
 Possible occlusions, subjects that are too nearby the camera, camera that look only toward outside the environment and many others.
-If you want to check these things, there is a snippet that might help you out [here]()
+If you want to check these things, there is a snippet that might help you out [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/mapping_and_visualization/convert_classes.py#L60)
 ___
 ## Additional scripts
 - IMU visualization to check eventual spikes and smoothness of the IMU data, as well as the added noise 
-  # *CX TODO check* [here]()
+  [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/imu_visualize.py)
   For this script you need to specify `[data,imu,imu_noisy]_dir` in lines 6:8 of the python code.
   
-- Timestamp verification script that will output plots and stats to check whether the original bags have sorted stamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here]()
+- Timestamp verification script that will output plots and stats to check whether the original bags have sorted stamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/timestamp_verification.py)
   
 ___
 ## Citation

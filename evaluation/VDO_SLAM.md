@@ -67,6 +67,7 @@ Before installation, please apply the following modification:
   > Where ti are the coefficients of 3D object location **t** in camera coordinates, and r1 is the Rotation around Y-axis in camera coordinates. B1-4 is 2D bounding box of object in the image, used for visualization.
 
 - Flow data can be generated using [PWC-NET](https://github.com/NVlabs/PWC-Net) with Python 2.7 & PyTorch 0.2 & CUDA 8.0.
+  A simple script to process all the data inside a folder and output the flow can be found [here](https://github.com/robot-perception-group/GRADE-eval/tree/main/evaluation/src/script_pwc.py)
 - Semantic data is generated using [MASK-RCNN](https://github.com/matterport/Mask_RCNN) with Python 3.6 & tensorflow 1.15.0 & keras 2.2.4 & CUDA 10.2 & cupy-cuda102
 
 

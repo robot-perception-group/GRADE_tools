@@ -52,10 +52,7 @@ Some of them were made to avoid crashes of the selected methods, especially when
 - [Dynamic-VINS](https://github.com/robot-perception-group/Dynamic-VINS) from [RGB-D Inertial Odometry for a Resource-Restricted Robot in Dynamic Environments](https://ieeexplore.ieee.org/document/9830851/)
 - [VDO SLAM](https://github.com/robot-perception-group/VDO_SLAM) from [VDO-SLAM: A Visual Dynamic Object-aware SLAM System](https://arxiv.org/abs/2005.11052)
 - [TartanVO](https://github.com/robot-perception-group/tartanvo) from [TartanVO: A Generalizable Learning-based VO](https://arxiv.org/pdf/2011.00359.pdf)
-- [DynaSLAM]() from [DynaSLAM: Tracking, Mapping, and Inpainting in Dynamic Scenes](https://ieeexplore.ieee.org/document/8421015)
-
-
-# CX-TODO ADD LINKS + publication/arxiv
+- [DynaSLAM](https://github.com/BertaBescos/DynaSLAM) from [DynaSLAM: Tracking, Mapping, and Inpainting in Dynamic Scenes](https://ieeexplore.ieee.org/document/8421015)
 
 ### RUN ON YOUR OWN DATA
 Instructions are specified in each singular tutorial.

@@ -66,7 +66,7 @@ make
   /dataset/depth/ # folder containing all depth images
   /dataset/rgbd_assoc.txt
   ```
-  You can extract the rgb and depth by running [](TODO COMPLETE)
+  You can extract the rgb and depth by running [this](https://github.com/robot-perception-group/GRADE-eval/blob/main/preprocessing/PREPROCESSING.md#2-data-extraction)
 
 
 - The expected format of the images:

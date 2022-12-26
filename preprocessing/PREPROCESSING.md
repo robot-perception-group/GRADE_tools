@@ -5,7 +5,7 @@ This document will help you processing the data recorded during the experiments 
 There are many options.
 
 The first choice you need to make is if you want to process the **rosbags** or the **full size data** (the saved `npy` files).
-In the first case go to [ROSBAG Processing](), in the latter go to [File Processing]().
+In the first case go to [ROSBAG Processing](https://github.com/robot-perception-group/GRADE-eval/blob/main/preprocessing/PREPROCESSING.md#1-rosbag-processing), in the latter go to [File Processing](https://github.com/robot-perception-group/GRADE-eval/blob/main/preprocessing/PREPROCESSING.md#3-file-processing).
 
 In practice, given an input folder, the script can:
 
