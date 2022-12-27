@@ -286,14 +286,16 @@ def output_vdo_gt(args):
     outdir = args.od
 
     # for VDO SLAM
-    f1 = open(os.path.join(outdir,"gt_pose_vdo.txt", "w"))
-    f3 = open(os.path.join(outdir, "times.txt", "w"))
+    f1 = open(os.path.join(outdir,"pose_gt.txt"), "w")
+    f3 = open(os.path.join(outdir, "times.txt"), "w")
 
 
     ts_list = []
 
     '''Generating Timestamps List'''
     for bag in bags:
+        if not bag.endswith(".bag"):
+            continue
         bag_path = os.path.join(bag_dir, bag)
         bag = rosbag.Bag(bag_path)
 
@@ -305,6 +307,8 @@ def output_vdo_gt(args):
     '''Generating Camera gt-pose'''
     frame_index = 0
     for bag in bags:
+        if not bag.endswith(".bag"):
+            continue
         print("Playing bag", bag)
 
         bag_path = os.path.join(bag_dir, bag)
@@ -345,8 +349,8 @@ def output_vdo(args):
     :output estimated_pose_vdo.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
     # for VDO SLAM
-    outdir = args.outdir
-    f1 = open(os.path.join(outdir,"estimated_pose_vdo.txt", "w"))
+    outdir = args.od
+    f1 = open(os.path.join(outdir,"estimated_pose_vdo.txt"), "w")
 
     # # Obtain the initial transformation from map to world
     # with open("pose_gt_mat.txt") as f:
