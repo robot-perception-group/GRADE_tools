@@ -2,6 +2,7 @@ import numpy as np
 import pickle as pkl
 import cv2
 import random
+import colorsys
 from PIL import Image, ImageDraw
 
 def random_colours(N, enable_random=True, num_channels=3):
@@ -54,7 +55,10 @@ def colorize_bboxes(bboxes_2d_data, bboxes_2d_rgb, num_channels=3):
                 int(255 * bbox_color[3]),
             )
         rgb_img_draw.rectangle([(bbox_2d[6], bbox_2d[7]), (bbox_2d[8], bbox_2d[9])], outline=outline, width=2)
-    bboxes_2d_rgb = np.array(rgb_img)
+        bboxes_2d_rgb = np.array(rgb_img)
+        cv2.imshow('img',bboxes_2d_rgb)
+        cv2.waitKey(0)
+        print(bbox_2d)
     return bboxes_2d_rgb
 
 def detect_occlusion(rgb, depth, seg, depth_thr):
@@ -81,24 +85,93 @@ def convert_instances(instances, mapping):
         import ipdb; ipdb.set_trace()
     return instances
 
+def convert_size(rgb, bbox_2d_data, input_img_size):
+    """ Resize RGB image and corresponding coordinates of bbox rectangle.
+
+        Args:
+            rgb (numpy.ndarray): RGB data from the sensor to embed bounding box.
+            bboxes_2d_data (numpy.ndarray): 2D bounding box data from the sensor.
+            input_img_size(tuple): Desired output image size
+    """
+    rgb_resized = cv2.resize(rgb, dsize=input_img_size)
+
+    img_width = rgb.shape[1]
+    img_height = rgb.shape[0]
+    
+    for bbox in bbox_2d_data:
+        bbox[6] = bbox[6] / img_width  * input_img_size[0]
+        bbox[7] = bbox[7] / img_height * input_img_size[1]
+        bbox[8] = bbox[8] / img_width  * input_img_size[0]
+        bbox[9] = bbox[9] / img_height * input_img_size[1]
+    
+    return rgb_resized, bbox_2d_data
+
+
+def bbox_filter(bbox_2d_data, filtered_class_label, mapping):
+    """ Filter Target Classes from bbox_2d_data and transform the semantic ID of bbox_2d_data
+
+    Args:
+        bboxes_2d_data (numpy.ndarray): 2D bounding box data from the sensor.
+        filtered_class_label (list): class labels need to be ignored
+        mapping: standard class label and corresponding class ID 
+    """
+    filtered_bbox_data = []
+    
+    for bbox in bbox_2d_data:
+        # transform semantic ID to the mapping ID based on the semantic label
+        semanticLabel = bbox[2]
+        semanticId = mapping[semanticLabel.lower()]
+        # Update the semantic ID
+        bbox[5] = semanticId
+        
+        # Filter out class labels
+        if semanticLabel in filtered_class_label or 'Armature' in bbox[1]:
+            continue
+        
+        # Filter based on the area
+        rectangle_area = abs(bbox[8] - bbox[6]) * abs(bbox[9] - bbox[7]) 
+        if rectangle_area < 400:
+            continue
+        
+        filtered_bbox_data.append(bbox)
+        
+    filtered_bbox_data = np.array(filtered_bbox_data)
+    
+    return filtered_bbox_data
+    
+
+
+input_img_size = (960, 720)
+filtered_class_label = ['wallinner', 'baseboard']
+
 allow_40_plus = False
 additional = {'robot':41, 'flying-object':42, 'clothes':43}
 #mapping = pkl.load(open('~/Desktop/mapping.pkl','rb'))
 if allow_40_plus:
     mapping = {**mapping,**additional}
 
+
 import os
-main_path = '' # This will process all the subfolders recursively
-viewport_name = ""
+main_path = '/home/cxu/new_data/' # This will process all the subfolders recursively
+viewport_name = "Viewport0_occluded"
+
 dirs = os.listdir(main_path)
+
+# initialize ignored data
 wrong_rgb = {}
 wrong_depth = {}
+
 for d in dirs:
+    if 'exp1' not in d or '.bag' in d:
+        continue
+    
     print(f"processing {d}")
     mapping = pkl.load(open('mapping.pkl','rb'))
     rgb_path = os.path.join(main_path, d, viewport_name, 'rgb')
     depth_path = os.path.join(main_path, d, viewport_name, 'depthLinear')
     instance_path = os.path.join(main_path, d, viewport_name, 'instance')
+    bbox_path = os.path.join(main_path, d, viewport_name, 'bbox_2d_tight')
+    
     wrong_rgb[d] = []
     wrong_depth[d] = []
     for i in range(1,1800):
@@ -107,13 +180,21 @@ for d in dirs:
         depth = np.load(os.path.join(depth_path, f'{i}.npy'))
         instances = np.load(os.path.join(instance_path, f'{i}.npy'), allow_pickle = True)
         instances = convert_instances(instances, mapping)
+        bboxes = np.load(os.path.join(bbox_path, f'{i}.npy'), allow_pickle = True)
+        
+        # Transform the rgb image size and bboxes data
+        rgb_resized, bboxes_resized = convert_size(rgb, bboxes, input_img_size)
+        filtered_bboxes = bbox_filter(bboxes_resized, filtered_class_label, mapping)
+
+        #print(bboxes)
+        bboxes_2d_rgb = colorize_bboxes(filtered_bboxes, rgb_resized)
+        
         a,b,c = detect_occlusion(rgb, depth, instances[0], 0.05)
         if a > 10:
             wrong_rgb[d].append(i)
         if b > 10:
             wrong_depth[d].append(i)
-    import ipdb; ipdb.set_trace()
-
+        break
 
 ## todo for bboxes -- humans use only /my_human_* as box. the rest is big
 ## use colorize with rgb to vis
