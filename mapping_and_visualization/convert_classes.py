@@ -31,6 +31,7 @@ def detect_occlusion(rgb, depth, depth_thr): # TO DO: add seg
     rgb_mask = np.zeros(rgb.shape, dtype=np.uint8)
     depth_mask = np.zeros(rgb.shape, dtype=np.uint8)
     #seg_mask = np.zeros(rgb.shape, dtype=np.uint8)
+    
     rgb_mask[np.where((rgb <= [15,15,15]).all(axis=2))] = [255,255,255]
     depth_mask[depth < depth_thr] = [255,255,255]
     #seg_mask[seg >= 40] = [255,255,255] # assuming 40 are flying objects/humans
@@ -63,7 +64,11 @@ class Instances(object):
                 label = "clothes"
         
             # Transform the label ID to NYU 40
-            self.instance_dict[idx-1]['semanticId'] = self.mapping[label.lower()]
+            try:
+                obj_ID = self.mapping[label.lower()]
+                self.instance_dict[idx-1]['semanticId'] = obj_ID
+            except:
+                print(label, 'can not be mapped...')
         
         
             if label.lower() in self.object_classes:
@@ -185,11 +190,10 @@ class Bboxes(object):
             if obj_class in self.filtered_class_label or 'Armature' in obj_name:
                 continue
             
+            # transform semantic ID to the mapping ID based on the semantic label
             try:
-                # transform semantic ID to the mapping ID based on the semantic label
-                obj_Id = self.mapping[obj_class]
-                # Update the semantic ID
-                bbox[5] = obj_Id
+                obj_ID = self.mapping[obj_class]
+                bbox[5] = obj_ID
             except:
                 print(obj_class, 'can not be mapped...')
         
@@ -257,8 +261,6 @@ class Bboxes(object):
 
 def main(config):
     # Define input variables
-    input_img_size = config['input_image_size'].get()
-    output_img_size = config['output_image_size'].get()
     main_paths = config['main_path'].get()
     output_path = config['output_path'].get()
     viewport = config['viewport_name'].get()
@@ -280,6 +282,10 @@ def main(config):
     filtered_classes = config['filtered_classes'].get()
     object_classes = config['object_classes'].get()
     
+    # Define image size
+    input_img_size = config['input_image_size'].get()
+    output_img_size = config['output_image_size'].get()
+    
     # Load mapping dictionary
     mapping = pkl.load(open(config['mapping_file'].get(),'rb'))
     allow_40_plus = config['allow_40_plus'].get()
@@ -299,6 +305,7 @@ def main(config):
     INSTANCE_FLAG = config['instance'].get()
     BBOX_FLAG = config['bbox'].get()
     
+    # initialize data classes
     if INSTANCE_FLAG:
         instance = Instances(mapping, object_classes, output_img_size, allow_40_plus)
         
@@ -312,11 +319,7 @@ def main(config):
         dirs = os.listdir(path)
         wrong_img_ids[path] = {}
 
-        for d in dirs:
-            # '''TO DO: TESTING'''
-            # if d != 'exp1' or '.bag' in d:
-            #     continue
-            
+        for d in dirs:            
             print(f"processing {path}/{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
@@ -347,8 +350,8 @@ def main(config):
                     continue
                 
                 # resize image to output format size
-                rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0],output_img_size[1]))
-                # rgb_ = rgb_resized.copy()
+                rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
+                rgb_ = rgb_resized.copy()
                 
                 # Load instance
                 if INSTANCE_FLAG:
@@ -361,13 +364,13 @@ def main(config):
                     else:
                         OBJ_FLAG = True # postive sample
                         data_ids['obj_id'] += 1
+                        
+                        # save mask data
+                        instance.generate_mask_data(output_path, data_ids, mask, classes)
                     
-                    # save mask data
-                    instance.generate_mask_data(output_path, data_ids, mask, classes)
-                    
-                    # # visualiza semantic mask
-                    # for j in range(mask.shape[2]):
-                    #     rgb_[np.where((mask[:,:,j] > 0))] = [255,255,255]
+                        # # visualiza semantic mask
+                        for j in range(mask.shape[2]):
+                            rgb_[np.where((mask[:,:,j] > 0))] = [255,255,255]
                         
                 # Load bboxes
                 if BBOX_FLAG:
@@ -377,11 +380,20 @@ def main(config):
                     # bboxes = bbox.convert_bbox(bboxes)
                     filtered_bboxes = bbox.load_bbox(bboxes)
                     
+                    # when only processing bbox data
+                    if not INSTANCE_FLAG:
+                        if filtered_bboxes.shape[0] == 0:
+                            OBJ_FLAG = False # negative sample
+                            data_ids['non_obj_id'] += 1
+                        else:
+                            OBJ_FLAG = True # postive sample
+                            data_ids['obj_id'] += 1
+                            
                     # save bbox data
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, filtered_bboxes)
                     
-                    # # bbox visualization
-                    # rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
+                    # bbox visualization
+                    rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
                 
                 
                 # Save RGB images
@@ -391,13 +403,13 @@ def main(config):
                 else:
                     folder = 'non_object'
                     data_id = data_ids['non_obj_id']
-
                 fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
                 cv2.imwrite(fn, rgb_resized)
                 
-                # # visualize the image result
-                # cv2.imshow('bbox + mask', rgb_)
-                # cv2.waitKey(1)
+                
+                # visualize the image result
+                cv2.imshow('bbox + mask', rgb_)
+                cv2.waitKey(1)
             
             
     np.save(os.path.join(output_path,'ignored_img_ids.npy'), wrong_img_ids)
