@@ -1,8 +1,9 @@
-import numpy as np
-import pickle as pkl
+import os
 import cv2
 import random
 import colorsys
+import numpy as np
+import pickle as pkl
 from PIL import Image, ImageDraw
 
 def random_colours(N, enable_random=True, num_channels=3):
@@ -62,6 +63,7 @@ def colorize_bboxes(bboxes_2d_data, bboxes_2d_rgb, num_channels=3):
     cv2.waitKey(1)
     return bboxes_2d_rgb
 
+
 def detect_occlusion(rgb, depth, depth_thr): # TO DO: add seg
     rgb_mask = np.zeros(rgb.shape, dtype=np.uint8)
     depth_mask = np.zeros(rgb.shape, dtype=np.uint8)
@@ -69,22 +71,75 @@ def detect_occlusion(rgb, depth, depth_thr): # TO DO: add seg
     rgb_mask[np.where((rgb <= [15,15,15]).all(axis=2))] = [255,255,255]
     depth_mask[depth < depth_thr] = [255,255,255]
     #seg_mask[seg >= 40] = [255,255,255] # assuming 40 are flying objects/humans
+    
+    # calculate the percentage of the rgb / depth are occluded
     perc_rgb = (np.count_nonzero(rgb_mask) / (3 * rgb.shape[0] * rgb.shape[1])) * 100
     perc_depth = (np.count_nonzero(depth_mask) / (3 * rgb.shape[0] * rgb.shape[1])) * 100
     #perc_seg = (np.count_nonzero(seg_mask) / (3 * rgb.shape[0] * rgb.shape[1])) * 100
+    
     return perc_rgb, perc_depth
 
+
+
 def convert_instances(instances, mapping):
-    for idx, name, label in zip(instances[1]['uniqueId'],instances[1]['name'],instances[1]['semanticLabel']):
+    detection_ids = {}
+    labels = []
+    
+    for idx, name, label in zip(instances[1]['uniqueId'], instances[1]['name'], instances[1]['semanticLabel']):
         if allow_40_plus and "human" == label and "body" not in name:
             label = "clothes"
-    index, = np.where(instances[1]['uniqueId'] == idx)
-    try:
-        instances[1]['semanticId'][index[0]] = mapping[label.lower()]
-        instances[0][instances[0] == instances[1]['uniqueId'][index[0]]] = mapping[label.lower()]
-    except:
-        import ipdb; ipdb.set_trace()
-    return instances
+        
+        # Transform the label ID to NYU 40
+        instances[1][idx-1]['semanticId'] = mapping[label.lower()]
+        
+        
+        if label.lower() == 'human':
+            human_name = name.split('/')[1]
+            if human_name not in detection_ids:
+                detection_ids[human_name] = []
+                labels.append(label.lower())
+            detection_ids[human_name].append(idx)
+            
+    return instances[1], detection_ids, labels
+
+
+def load_mask(instances, detection_ids, labels, input_img_size):
+    '''
+    Specific Mask Generation for MASK RCNN
+    '''
+    classes = [] # empty detections
+    semantic_mask = np.zeros([input_img_size[1], input_img_size[0],1], dtype=np.uint8)
+    
+    for index, obj_name in zip(range(len(detection_ids)), detection_ids):
+        # merge several components into one object
+        mask = np.zeros(instances[0].shape, dtype=np.uint8)
+        
+        ids = detection_ids[obj_name]
+        for idx in ids:
+            mask[np.where(instances[0]==idx)] = 255
+        
+        # objects exist in this image
+        if mask.any():     
+            # resize the full size image mask
+            mask = cv2.resize(mask, dsize=input_img_size)
+            mask = mask[:,:,None] # add one dim
+            
+            # Filter based on the area
+            obj_height = np.max(np.where(mask > 0)[0]) - np.min(np.where(mask > 0)[0])
+            obj_width  = np.max(np.where(mask > 0)[1]) - np.min(np.where(mask > 0)[1])
+            rectangle_area = obj_width * obj_height
+            if rectangle_area < 2000 or obj_width < 50 or obj_height < 50:
+                continue
+            
+            classes.append(labels[index])
+            
+            if len(classes) == 1:
+                semantic_mask = mask
+            else:
+                semantic_mask = np.concatenate((semantic_mask, mask),axis=2)
+        
+    return semantic_mask, classes
+
 
 def convert_size(rgb, bbox_2d_data, input_img_size):
     """ Resize RGB image and corresponding coordinates of bbox rectangle.
@@ -145,7 +200,7 @@ def bbox_filter(bbox_2d_data, filtered_class_label, mapping):
     
     return filtered_bbox_data
 
-def generate_dataset(output_path, data_id, rgb, bboxes_2d_data):
+def generate_bbox_data(output_path, data_id, rgb, bboxes_2d_data):
     fn = os.path.join(output_path, 'images', f"{data_id}.png")
     cv2.imwrite(fn, rgb)
     
@@ -163,80 +218,111 @@ def generate_dataset(output_path, data_id, rgb, bboxes_2d_data):
             f1.write('%d %.6f %.6f %.6f %.6f\n' %(0, x_center, y_center, width, height))
     f1.close()
 
+def generate_semantic_data(output_path, data_id, rgb, mask, classes):
+    fn = os.path.join(output_path, 'images', f"{data_id}.png")
+    cv2.imwrite(fn, rgb)
+    
+    masks = {}
+    masks['mask'] = mask
+    masks['class'] = classes
+    
+    np.save(os.path.join(output_path, 'masks', f"{data_id}.npy"), masks)
+
+    
 # Define input variables
 input_img_size = (960, 720)
 filtered_class_label = ['wallinner', 'baseboard', 'cabinet', 'wine cabinet']
 
 allow_40_plus = False
 additional = {'robot':41,
-              'flying-object':42,
-              'clothes':43}
-mapping = pkl.load(open('mapping.pkl','rb'))
-print(mapping)
+            'flying-object':42,
+            'clothes':43}
+mapping = pkl.load(open('mapping_and_visualization/mapping.pkl','rb'))
 
 if allow_40_plus:
     mapping = {**mapping,**additional}
 
 
-import os
-main_paths = ['/ps/project/irotate/DE_cam1',
-              '/ps/project/irotate/DE_cam0_horiz',
-              '/ps/project/irotate/DE_cam1_horiz']# This will process all the subfolders recursively
-output_path = '/home/cxu/Datasets/'
+# Define input path and output path
+main_path = '/ps/project/irotate/DE_cam0/' # This will process all the subfolders recursively
+main_path = '/home/cxu/new_data/'
+output_path = '/home/cxu/Datasets/train'
 viewport_name = "Viewport0_occluded"
 
+dirs = os.listdir(main_path)
 
+# initialize ignored data 
+wrong_imgs = {}
 
-# initialize ignored data
-wrong_rgb = {}
-wrong_depth = {}
-
+# initialize index number
 data_id = 1
 
-for main_path in main_paths:
-    break
-    dirs = os.listdir(main_path)
+for d in dirs:
+    if d != 'exp1' or '.bag' in d:
+        continue
     
-    for d in dirs:
+    print(f"processing {d}")
+    rgb_path = os.path.join(main_path, d, viewport_name, 'rgb')
+    depth_path = os.path.join(main_path, d, viewport_name, 'depthLinear')
+    instance_path = os.path.join(main_path, d, viewport_name, 'instance')
+    bbox_path = os.path.join(main_path, d, viewport_name, 'bbox_2d_tight')
+    
+    wrong_imgs[d] = []
+    
+    # initial the instance mapping dictionary
+    instances = np.load(os.path.join(instance_path, f'{1}.npy'), allow_pickle = True)
+    instance_dict, detection_ids, labels = convert_instances(instances, mapping)
+    
+    for i in range(1,1800):
+        #print(f"{i}/1800", end='\r')
+        print(f"{i}/1800")
         
-        print(f"processing {d}")
-        rgb_path = os.path.join(main_path, d, viewport_name, 'rgb')
-        depth_path = os.path.join(main_path, d, viewport_name, 'depthLinear')
-        #instance_path = os.path.join(main_path, d, viewport_name, 'instance')
-        bbox_path = os.path.join(main_path, d, viewport_name, 'bbox_2d_tight')
+        rgb = cv2.imread(os.path.join(rgb_path, f'{i}.png'))
+        depth = np.load(os.path.join(depth_path, f'{i}.npy'))
         
-        wrong_rgb[d] = []
-        wrong_depth[d] = []
+        # Load instance
+        instances = np.load(os.path.join(instance_path, f'{i}.npy'), allow_pickle = True)
         
-        for i in range(1,1800):
-            print(f"{i}/1800", end='\r')
-            rgb = cv2.imread(os.path.join(rgb_path, f'{i}.png'))
-            depth = np.load(os.path.join(depth_path, f'{i}.npy'))
-            #instances = np.load(os.path.join(instance_path, f'{i}.npy'), allow_pickle = True)
-            #instances = convert_instances(instances, mapping)
-            bboxes = np.load(os.path.join(bbox_path, f'{i}.npy'), allow_pickle = True)
-            
-            # Transform the rgb image size and bboxes data
-            rgb_resized, bboxes_resized = convert_size(rgb, bboxes, input_img_size)
-            filtered_bboxes = bbox_filter(bboxes_resized, filtered_class_label, mapping)
+        # generate mask and detected classes
+        mask, classes = load_mask(instances, detection_ids, labels, input_img_size)
+        
+        if len(classes) == 0:
+            continue
+        
+        # Load bboxes
+        bboxes = np.load(os.path.join(bbox_path, f'{i}.npy'), allow_pickle = True)
+        
+        # Transform the rgb image size and bboxes data
+        rgb_resized, bboxes_resized = convert_size(rgb, bboxes, input_img_size)
+        
+        # visualize mask_rgb image 
+        rgb_ = rgb_resized.copy()
+        for j in range(mask.shape[2]):
+            rgb_[np.where((mask[:,:,j] > 0))] = [255,255,255]
+        cv2.imshow('rgb_masked', rgb_)
+        cv2.waitKey(1)
+        
+        # filtered_bboxes = bbox_filter(bboxes_resized, filtered_class_label, mapping)
 
-            # bbox visualization
-            bboxes_2d_rgb = colorize_bboxes(filtered_bboxes, rgb_resized)
+        # # bbox visualization
+        # bboxes_2d_rgb = colorize_bboxes(filtered_bboxes, rgb_resized)
+        
+        # Detect Occlusion
+        rgb_occluded, depth_occluded = detect_occlusion(rgb, depth, 0.3)
+        if rgb_occluded > 10 and depth_occluded > 10:
+            wrong_imgs[d].append(i)
+            print(f"{i}.png will be ignored...")
+            continue
             
-            a, b = detect_occlusion(rgb, depth, 0.3)
-            
-            if a > 10:
-                wrong_rgb[d].append(i)
-            if b > 10:
-                wrong_depth[d].append(i)
-
-            if i in wrong_rgb[d] and i in wrong_depth[d]:
-                print(f"{i}.png will be ignored...")
-                continue
-                
-            if b > 40:
-                print(f"{i}.png will be ignored...")
-                continue
-            
-            generate_dataset(output_path ,data_id, rgb_resized, filtered_bboxes)
-            data_id += 1
+        if depth_occluded > 40:
+            wrong_imgs[d].append(i)
+            print(f"{i}.png will be ignored...")
+            continue
+        
+        #generate_dataset(output_path ,data_id, rgb_resized, filtered_bboxes)
+        generate_semantic_data(output_path, data_id, rgb_resized, mask, classes)
+        
+        data_id += 1
+        
+        
+np.save(os.path.join(output_path,'occluded_data.npy'), wrong_imgs)
