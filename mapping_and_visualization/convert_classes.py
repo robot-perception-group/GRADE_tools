@@ -54,7 +54,7 @@ class Instances(object):
         self.allow_40_plus =  allow_40_plus
         self.mapping = mapping   
         
-    def convert_instance(self, instances):
+    def convert_instance(self, instances, wrong_labels):
         self.instance_dict = instances[1]
         self.object_ids = {}
         self.labels = []
@@ -69,7 +69,7 @@ class Instances(object):
                 self.instance_dict[idx-1]['semanticId'] = obj_ID
             except:
                 print(label, 'can not be mapped...')
-        
+                wrong_labels.append(label)        
         
             if label.lower() in self.object_classes:
                 if label.lower() == 'human':
@@ -90,13 +90,13 @@ class Instances(object):
         classes = [] # empty detections
         semantic_mask = np.zeros([self.imgsz[1], self.imgsz[0], 1], dtype=np.uint8)
         
-        for index, obj_name in zip(range(len(self.object_ids)), self.object_ids):
+        for index, obj_name in enumerate(self.object_ids):
             # merge several components into one object
             mask = np.zeros(instances[0].shape, dtype=np.uint8)
             
             ids = self.object_ids[obj_name]
             for idx in ids:
-                mask[np.where(instances[0]==idx)] = 255
+                mask[instances[0]==idx] = 255
             
             # objects exist in this image
             if mask.any():     
@@ -107,8 +107,8 @@ class Instances(object):
                 # Filter object with very small area
                 obj_height = np.max(np.where(mask > 0)[0]) - np.min(np.where(mask > 0)[0])
                 obj_width  = np.max(np.where(mask > 0)[1]) - np.min(np.where(mask > 0)[1])
-                bbox_area = obj_width * obj_height
-                if bbox_area < 2000 or obj_width < 50 or obj_height < 50:
+                
+                if obj_height/obj_width > 100 or obj_width/obj_height > 100 or obj_width < 3 or obj_height < 3:
                     continue
                 
                 classes.append(self.labels[index])
@@ -164,9 +164,8 @@ class Bboxes(object):
                 # Filter based on the area
                 bbox_width = abs(bbox[8] - bbox[6])
                 bbox_height = abs(bbox[9] - bbox[7])
-                bbox_area = bbox_width * bbox_height
                 
-                if bbox_area < 2000 or bbox_width < 50 or bbox_height < 50:
+                if bbox_height/bbox_width > 100 or bbox_width/bbox_height > 100 or bbox_width < 3 or bbox_height < 3:
                     continue
                 
                 new_bbox_data.append(bbox)
@@ -176,7 +175,7 @@ class Bboxes(object):
         return new_bbox_data
 
 
-    def convert_bbox(self, bbox_2d_data):
+    def convert_bbox(self, bbox_2d_data, wrong_labels):
         """ Transform the semantic label ID of bbox_2d_data
 
         Args:
@@ -196,6 +195,7 @@ class Bboxes(object):
                 bbox[5] = obj_ID
             except:
                 print(obj_class, 'can not be mapped...')
+                wrong_labels.append(obj_class)
         
         return bbox_2d_data
     
@@ -295,6 +295,7 @@ def main(config):
     
     # initialize ignored data list
     wrong_img_ids = {}
+    wrong_labels = [] # list with labels that can not be mapped
     
     # initialize data file id
     data_ids = {}
@@ -331,31 +332,31 @@ def main(config):
             # initial the instance mapping dictionary
             if INSTANCE_FLAG:
                 instances = np.load(os.path.join(instance_path, f'{1}.npy'), allow_pickle = True)
-                instance.convert_instance(instances)
+                instance.convert_instance(instances, wrong_labels)
             
-            for i in range(1,1800):
-                print(f"{i}/1800", end='\r')
+            for i in range(1,900):
+                print(f"{i}/900", end='\r')
                 
-                rgb = cv2.imread(os.path.join(rgb_path, f'{i}.png'))
-                depth = np.load(os.path.join(depth_path, f'{i}.npy'))
+                rgb = cv2.imread(os.path.join(rgb_path, f'{2*i}.png'))
+                depth = np.load(os.path.join(depth_path, f'{2*i}.npy'))
 
                 # Detect Occlusion
                 perc_rgb_occluded, perc_depth_occluded = detect_occlusion(rgb, depth, 0.3)
                 if perc_rgb_occluded > 10 and perc_depth_occluded > 10:
-                    wrong_img_ids[path][d].append(i)
+                    wrong_img_ids[path][d].append(2*i)
                     continue
                     
                 if perc_depth_occluded > 40:
-                    wrong_img_ids[path][d].append(i)
+                    wrong_img_ids[path][d].append(2*i)
                     continue
                 
                 # resize image to output format size
                 rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
-                rgb_ = rgb_resized.copy()
+                # rgb_ = rgb_resized.copy()
                 
                 # Load instance
                 if INSTANCE_FLAG:
-                    instances = np.load(os.path.join(instance_path, f'{i}.npy'), allow_pickle = True)
+                    instances = np.load(os.path.join(instance_path, f'{2*i}.npy'), allow_pickle = True)
                     mask, classes = instance.load_mask(instances)  # generate mask and detected classes
                     
                     if len(classes) == 0:
@@ -368,16 +369,16 @@ def main(config):
                         # save mask data
                         instance.generate_mask_data(output_path, data_ids, mask, classes)
                     
-                        # # visualiza semantic mask
-                        for j in range(mask.shape[2]):
-                            rgb_[np.where((mask[:,:,j] > 0))] = [255,255,255]
+                        # # # visualiza semantic mask
+                        # for j in range(mask.shape[2]):
+                        #     rgb_[np.where((mask[:,:,j] > 0))] = [255,255,255]
                         
                 # Load bboxes
                 if BBOX_FLAG:
-                    bboxes = np.load(os.path.join(bbox_path, f'{i}.npy'), allow_pickle = True)
+                    bboxes = np.load(os.path.join(bbox_path, f'{2*i}.npy'), allow_pickle = True)
             
                     # Transform bboxes label ID to NYU40
-                    # bboxes = bbox.convert_bbox(bboxes)
+                    # bboxes = bbox.convert_bbox(bboxes, wrong_labels)
                     filtered_bboxes = bbox.load_bbox(bboxes)
                     
                     # when only processing bbox data
@@ -392,8 +393,8 @@ def main(config):
                     # save bbox data
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, filtered_bboxes)
                     
-                    # bbox visualization
-                    rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
+                    # # bbox visualization
+                    # rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
                 
                 
                 # Save RGB images
@@ -407,12 +408,13 @@ def main(config):
                 cv2.imwrite(fn, rgb_resized)
                 
                 
-                # visualize the image result
-                cv2.imshow('bbox + mask', rgb_)
-                cv2.waitKey(1)
+                # # visualize the image result
+                # cv2.imshow('bbox + mask', rgb_)
+                # cv2.waitKey(1)
             
             
     np.save(os.path.join(output_path,'ignored_img_ids.npy'), wrong_img_ids)
+    np.save(os.path.join(output_path,'wrong_labels.npy'), wrong_labels)
 
 
 
