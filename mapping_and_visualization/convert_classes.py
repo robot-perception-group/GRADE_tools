@@ -318,7 +318,6 @@ def main(config):
         dirs = os.listdir(path)
 
         for d in dirs:
-                
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
@@ -327,7 +326,7 @@ def main(config):
 
             # Check repository
             sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path]]
-            if np.any(sub_dirs)
+            if np.any(sub_dirs):
                 print(d, ' HAVE INCOMPLETE DATA...')
                 continue
             
