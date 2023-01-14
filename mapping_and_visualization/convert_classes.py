@@ -1,6 +1,7 @@
 import os
 import cv2
 import random
+import shutil
 import confuse
 import colorsys
 import argparse
@@ -272,9 +273,11 @@ def main(config):
                     os.path.join(output_path, 'object','masks'),
                     os.path.join(output_path, 'object','images'),
                     os.path.join(output_path, 'object','labels'),
+                    os.path.join(output_path, 'object','images_blur'),
                     os.path.join(output_path, 'non_object'),
                     os.path.join(output_path, 'non_object','images'),
-                    os.path.join(output_path, 'non_object','labels')]
+                    os.path.join(output_path, 'non_object','labels'),
+                    os.path.join(output_path, 'non_object','images_blur'),]
     
     for path in output_paths:
         if not os.path.exists(path):
@@ -313,36 +316,48 @@ def main(config):
 
 
     # Transform Data into desired dataset
+    f1 = open("/home/cxu/Datasets/wrong_labels.txt", "w")
+    
     for path in main_paths:
         # list all experiments in one of the main path
         dirs = os.listdir(path)
-
+        exp_n = path.split('/')[-2]
         for d in dirs:
+            if '7634' in d:
+                continue
+            
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
             instance_path = os.path.join(path, d, viewport, 'instance')
             bbox_path = os.path.join(path, d, viewport, 'bbox_2d_tight')
+            rgb_blur_path = os.path.join('/home/cxu/',exp_n, d, viewport, 'rgb')
 
             # Check repository
-            sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path]]
+            sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path, rgb_blur_path]]
             if np.any(sub_dirs):
                 print(d, ' HAVE INCOMPLETE DATA...')
                 continue
             
             # initialize ignored data list
-            wrong_ids = []
-            wrong_labels = [] # list with labels that can not be mapped
-            
+            wrong_labels = []
+            f2 = open(f"/home/cxu/Datasets/{d}_ignored_ids.txt", "w")
+            f3 = open(f"/home/cxu/Datasets/{d}_mapping.txt", "w")
+
             # initial the instance mapping dictionary
             if INSTANCE_FLAG:
                 instances = np.load(os.path.join(instance_path, f'{1}.npy'), allow_pickle = True)
                 wrong_labels = instance.convert_instance(instances, wrong_labels)
+                
+                if wrong_labels != []:
+                    for label in wrong_labels:
+                        f1.write('%s \n' %(label))
             
             for i in range(1,901):
                 # print(f"{2*i}/1800")
                 # check if all data exist
                 rgb_fn = os.path.join(rgb_path, f'{2*i}.png')
+                rgb_blur_fn = os.path.join(rgb_blur_path, f'{2*i}.png')
                 depth_fn = os.path.join(depth_path, f'{2*i}.npy')
                 instance_fn = os.path.join(instance_path, f'{2*i}.npy')
                 bbox_fn = os.path.join(bbox_path, f'{2*i}.npy')
@@ -358,11 +373,11 @@ def main(config):
                 # Detect Occlusion
                 perc_rgb_occluded, perc_depth_occluded = detect_occlusion(rgb, depth, 0.3)
                 if perc_rgb_occluded > 10 and perc_depth_occluded > 10:
-                    wrong_ids.append(2*i)
+                    f2.write('%d\n' %(2*i))
                     continue
                     
                 if perc_depth_occluded > 40:
-                    wrong_ids.append(2*i)
+                    f2.write('%d\n' %(2*i))
                     continue
                 
                 # resize image to output format size
@@ -419,9 +434,18 @@ def main(config):
                 else:
                     folder = 'non_object'
                     data_id = data_ids['non_obj_id']
+                
                 fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
                 cv2.imwrite(fn, rgb_resized)
                 
+                if os.path.exists(rgb_blur_fn):
+                    img_blur = cv2.imread(rgb_blur_fn)
+                    img = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
+                    cv2.imwrite(os.path.join(output_path, folder, 'images_blur', f"{data_id}.png"), img)
+                else:
+                    shutil.copyfile(fn, os.path.join(output_path, folder, 'images_blur', f"{data_id}.png") )
+                
+                f3.write('%s -> %s\n' %(os.path.join(d, f'{2*i}.png'), os.path.join(folder, f"{data_id}.png")))
                 print(os.path.join(d, f'{2*i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
                 del instances, bboxes
@@ -431,9 +455,10 @@ def main(config):
                 # cv2.imshow('bbox + mask', rgb_)
                 # cv2.waitKey(1)
             
+            f2.close()
+            f3.close()
             
-            np.save(os.path.join(output_path,f'ignored_ids_{d}.npy'), wrong_ids)
-            np.save(os.path.join(output_path,f'wrong_labels_{d}.npy'), wrong_labels)
+    f1.close()
 
 
 

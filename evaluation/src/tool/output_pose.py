@@ -55,6 +55,88 @@ def output_gt_pose(args):
         raise ValueError(
             'Ground Truth Pose Topic does not exist in the input rosbag...')
     f1.close()
+    
+def output_dynavins_rgbd(args):
+    """
+    Extract gt-camera Pose and Estimated Camera Pose from Recorded Bag
+    
+    :input args.path: Path to the single recorded result rosbag
+    :input args.start_time: Start time to output poses
+    :input args.end_time: End time to output poses
+    
+    :output estimated_pose_dynavins.txt: estimated camera pose from Dynamic-VINS
+    """
+    bag = rosbag.Bag(args.path)
+    outdir = args.od
+
+    f1 = open(os.path.join(outdir,"estimated_pose_dynavins.txt"), "w")
+
+    ts_init = None
+    ts_start = args.start_time
+    ts_stop = args.end_time
+
+    max_difference = args.max_difference
+
+    print('The evaluation will start at Timestamp: %.2f' % ts_start)
+    print('                     stop at Timestamp: %.2f' % ts_stop)
+
+    # Define the extrinsic Rotation from camera to odom
+    T_odom_to_camera = np.eye(4)
+    T_odom_to_camera[:3, :3] = np.array([
+                                        [1.,       0,  0.],
+                                        [0.0,         1.0,          0.0],
+                                        [0.0,         -0., 1.]])
+    T_odom_to_camera[:3, 3] = np.array([0, 0.0, 0.0])
+
+    ''' Find the Initialization Timestamp'''
+    for topic, msg, t in bag.read_messages():
+        if 'init_map_time' in topic:
+            ts = msg.header.stamp.to_sec()
+
+            if (ts < ts_start) or (ts > ts_stop):
+                continue
+
+            ts_init = ts
+            break
+
+    T_w2m = Quaternion(w=0.6293, x= -0.7747, y= -0.0534,
+                        z=0.0312).transformation_matrix
+    T_w2m[:3, 3] = [-0.5846, -2.7855, 1.4842]
+
+    print('Initialization Started at :', ts_init)
+
+    T_m2c_init = T_odom_to_camera
+    T_w2c_init = np.matmul(T_w2m, T_m2c_init)
+
+    p_init = T_w2c_init[:3, 3]
+    q_init = Quaternion(matrix=T_w2c_init)
+
+    # Write the first estimated pose
+    f1.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' % (
+        ts_init, p_init[0], p_init[1], p_init[2], q_init.x, q_init.y, q_init.z, q_init.w))
+
+    '''Output recorded poses to the txt files'''
+    for topic, msg, t in bag.read_messages():
+        if 'vins_estimator/camera_pose' in topic:
+            ts = msg.header.stamp.to_sec()
+
+            if (ts < ts_start) or (ts > ts_stop):
+                continue
+
+            p = msg.pose.position
+            q = msg.pose.orientation
+
+            T_m2c = Quaternion(w=q.w, x=q.x, y=q.y,
+                               z=q.z).transformation_matrix
+            T_m2c[:3, 3] = [p.x, p.y, p.z]
+
+            T_w2c = np.matmul(T_w2m, T_m2c)
+
+            p = T_w2c[:3, 3]
+            q = Quaternion(matrix=T_w2c)
+            f1.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' %
+                     (ts, p[0], p[1], p[2], q.x, q.y, q.z, q.w))
+    f1.close()
 
 def output_dynavins(args):
     """
@@ -398,6 +480,8 @@ if __name__ == '__main__':
         output_gt_pose(args)
     elif args.type == 'dynavins':
         output_dynavins(args)
+    elif args.type == 'dynavinstum':
+        output_dynavins_rgbd(args)
     elif args.type == 'tartan_gt':
         output_tartan_gt(args)
     elif args.type == 'tartan':
