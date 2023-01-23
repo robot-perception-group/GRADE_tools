@@ -20,7 +20,7 @@ def output_gt_pose(args):
     bags = os.listdir(os.path.join(bag_dir))
     bags.sort()
 
-    outdir = args.od
+    outdir = args.output
 
     f1 = open(os.path.join(outdir, "gt_pose.txt"), "w")
 
@@ -67,26 +67,25 @@ def output_dynavins_rgbd(args):
     :output estimated_pose_dynavins.txt: estimated camera pose from Dynamic-VINS
     """
     bag = rosbag.Bag(args.path)
-    outdir = args.od
+    outdir = args.output
 
     f1 = open(os.path.join(outdir,"estimated_pose_dynavins.txt"), "w")
+    
+    f2 = open(os.path.join(outdir,"groundtruth.txt"), "r")
+    gt_data = f2.readlines() # load groundtruth data
+    f2.close()
 
     ts_init = None
-    ts_start = args.start_time
-    ts_stop = args.end_time
+    ts_start = float(gt_data[0].split(' ')[0])
+    ts_stop = float(gt_data[-1].split(' ')[0])
 
     max_difference = args.max_difference
 
-    print('The evaluation will start at Timestamp: %.2f' % ts_start)
-    print('                     stop at Timestamp: %.2f' % ts_stop)
+    print('The evaluation will start at Timestamp: %.4f' % ts_start)
+    print('                     stop at Timestamp: %.4f' % ts_stop)
 
     # Define the extrinsic Rotation from camera to odom
     T_odom_to_camera = np.eye(4)
-    T_odom_to_camera[:3, :3] = np.array([
-                                        [1.,       0,  0.],
-                                        [0.0,         1.0,          0.0],
-                                        [0.0,         -0., 1.]])
-    T_odom_to_camera[:3, 3] = np.array([0, 0.0, 0.0])
 
     ''' Find the Initialization Timestamp'''
     for topic, msg, t in bag.read_messages():
@@ -99,9 +98,16 @@ def output_dynavins_rgbd(args):
             ts_init = ts
             break
 
-    T_w2m = Quaternion(w=0.6293, x= -0.7747, y= -0.0534,
-                        z=0.0312).transformation_matrix
-    T_w2m[:3, 3] = [-0.5846, -2.7855, 1.4842]
+    '''Find the Initialization Position of Map Frame'''
+    for gt in gt_data:
+        ts = float(gt.split(' ')[0])
+        if abs(ts_init - ts) < max_difference:
+            pose = gt.split(' ')
+            
+            T_w2m = Quaternion(w=float(pose[7]), x=float(pose[4]), y=float(pose[5]),
+                               z=float(pose[6])).transformation_matrix
+            T_w2m[:3, 3] = [float(pose[1]),float(pose[2]),float(pose[3])]
+            break
 
     print('Initialization Started at :', ts_init)
 
@@ -112,7 +118,7 @@ def output_dynavins_rgbd(args):
     q_init = Quaternion(matrix=T_w2c_init)
 
     # Write the first estimated pose
-    f1.write('%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f\n' % (
+    f1.write('%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n' % (
         ts_init, p_init[0], p_init[1], p_init[2], q_init.x, q_init.y, q_init.z, q_init.w))
 
     '''Output recorded poses to the txt files'''
@@ -150,7 +156,7 @@ def output_dynavins(args):
     :output estimated_pose_dynavins.txt: estimated camera pose from Dynamic-VINS
     """
     bag = rosbag.Bag(args.path)
-    outdir = args.od
+    outdir = args.output
 
     f1 = open(os.path.join(outdir,"estimated_pose_dynavins.txt"), "w")
     f2 = open(os.path.join(outdir,"gt_pose_dynavins.txt"), "w")
@@ -256,7 +262,7 @@ def output_tartan_gt(args):
     
     :output gt_pose_tartan.txt: ground truth pose [p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
-    outdir = args.od
+    outdir = args.output
     f1 = open(os.path.join(outdir, "gt_pose_tartan.txt"), "w")
 
     with open(args.path) as f:
@@ -299,7 +305,7 @@ def output_tartan(args):
     :output estimated_pose_tartan.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
     # Transform the tartan format result to the tum format result for evaluation
-    outdir = args.od
+    outdir = args.output
     f1 = open(os.path.join(outdir, "estimated_pose_tartan.txt"), "w")
 
     ts = 0.0
@@ -328,7 +334,7 @@ def output_sf(args):
     
     :output estimated_pose_sf.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
-    outdir = args.od
+    outdir = args.output
 
     f1 = open(os.path.join(outdir, "estimated_pose_sf.txt"), "w")
 
@@ -365,7 +371,7 @@ def output_vdo_gt(args):
     bags = os.listdir(os.path.join(bag_dir))
     bags.sort()
 
-    outdir = args.od
+    outdir = args.output
 
     # for VDO SLAM
     f1 = open(os.path.join(outdir,"pose_gt.txt"), "w")
@@ -431,7 +437,7 @@ def output_vdo(args):
     :output estimated_pose_vdo.txt: Estimated Pose [ts p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     """
     # for VDO SLAM
-    outdir = args.od
+    outdir = args.output
     f1 = open(os.path.join(outdir,"estimated_pose_vdo.txt"), "w")
 
     # # Obtain the initial transformation from map to world
@@ -467,20 +473,20 @@ if __name__ == '__main__':
     # Define parser arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="path to the desired rosbags")
-    parser.add_argument("--od", type=str, help="path to the desired outdir", default=".")
+    parser.add_argument("--output", type=str, help="path to the desired outdir", default=".")
     parser.add_argument("--type", type=str, help="type to output different results")
     parser.add_argument("--topic", type=str, help="camera pose topic")
     parser.add_argument("--start_time", type=float, default=0.0, help="start time")
     parser.add_argument("--end_time", type=float, default=60.0, help="end time")
     parser.add_argument("--image_freq", type=float, default=30.0)
-    parser.add_argument('--max_difference', help='maximally allowed time difference for matching', default=0.004)
+    parser.add_argument('--max_difference', help='maximally allowed time difference for matching', default=0.01)
     args, _ = parser.parse_known_args()
 
     if args.type == 'groundtruth':
         output_gt_pose(args)
     elif args.type == 'dynavins':
         output_dynavins(args)
-    elif args.type == 'dynavinstum':
+    elif args.type == 'dynavins_tum':
         output_dynavins_rgbd(args)
     elif args.type == 'tartan_gt':
         output_tartan_gt(args)

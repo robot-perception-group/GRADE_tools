@@ -5,133 +5,128 @@ import shutil
 import numpy as np
 from PIL import Image, ImageDraw
 
-# main_path  = '/home/cxu/Datasets2/object/'
-# main_path_ = '/home/cxu/Datasets3/object/'
+main_path_object = '/home/cxu/Datasets/object/'
+main_path_non_object = '/home/cxu/Datasets/non_object/'
 
-# image_path = 'images/'
-# label_path = 'labels/'
-# mask_path  = 'masks/'
+# output
+train_folder = '/home/cxu/GRADE_DATASET/train/'
+val_folder = '/home/cxu/GRADE_DATASET/valid/'
+test_folder = '/home/cxu/GRADE_DATASET/test/'
 
-# files = os.listdir(main_path + image_path)
-# for idx, file in enumerate(files):
-#     files[idx] = main_path + image_path + file
-
-# files_ = os.listdir(main_path_ + image_path)
-# for idx, file in enumerate(files_):
-#     files_[idx] = main_path_ + image_path +  file
-    
-# files = files + files_
-# #files.sort(key=lambda x:int(x[:-4]))
-
-# random.shuffle(files)
-
-# f1 = open("train_object.txt", "w")
-# f2 = open("valid_object.txt", "w")
-# f3 = open("test_object.txt", "w")
-
-# for idx, file in enumerate(files):
-#     folder = file.split('/')[3]
-#     img_id = str(file.split('/')[-1][:-4])
-#     mask  = os.path.join('/home/cxu', folder, 'object/masks',  img_id + '.npy')
-#     label = os.path.join('/home/cxu', folder, 'object/labels', img_id + '.txt')
-    
-#     if idx < 16200:
-#         shutil.copyfile(file,  '/home/cxu/GRADE_DATASET/train/images/' + str(2*idx+1)+'.png')
-#         shutil.copyfile(mask,  '/home/cxu/GRADE_DATASET/train/masks/'  + str(2*idx+1)+'.npy')
-#         shutil.copyfile(label, '/home/cxu/GRADE_DATASET/train/labels/' + str(2*idx+1)+'.txt')
-#         f1.write('%d %s\n' %(2*idx+1, file))
-#     elif idx < 17100:
-#         shutil.copyfile(file,  '/home/cxu/GRADE_DATASET/valid/images/' + str(2*idx+1)+'.png')
-#         shutil.copyfile(mask,  '/home/cxu/GRADE_DATASET/valid/masks/'  + str(2*idx+1)+'.npy')
-#         shutil.copyfile(label, '/home/cxu/GRADE_DATASET/valid/labels/' + str(2*idx+1)+'.txt')
-#         f2.write('%d %s\n' %(2*idx+1, file))
-#     elif idx < 18000:
-#         shutil.copyfile(file,  '/home/cxu/GRADE_DATASET/test/images/' + str(2*idx+1)+'.png')
-#         shutil.copyfile(mask,  '/home/cxu/GRADE_DATASET/test/masks/'  + str(2*idx+1)+'.npy')
-#         shutil.copyfile(label, '/home/cxu/GRADE_DATASET/test/labels/' + str(2*idx+1)+'.txt')
-#         f3.write('%d %s\n' %(2*idx+1, file))
-        
-# f1.close()
-# f2.close()
-# f3.close()
-
-
-main_path  = '/home/cxu/Datasets2/non_object/'
-main_path_ = '/home/cxu/Datasets3/non_object/'
-
+# sub directories
 image_path = 'images/'
+image_blur_path = 'images_blur/'
+label_path = 'labels/'
+mask_path = 'masks/'
 
-files = os.listdir(main_path + image_path)
-for idx, file in enumerate(files):
-    files[idx] = main_path + image_path + file
+max_number = 20000
+bg_num = 0.1 * max_number
+train_num_obj = 0.8 * (max_number-bg_num)
+val_num_obj = 0.1 * (max_number-bg_num)
+test_num_obj = 0.1 * (max_number-bg_num)
 
-files_ = os.listdir(main_path_ + image_path)
-for idx, file in enumerate(files_):
-    files_[idx] = main_path_ + image_path +  file
-    
-files = files + files_
-#files.sort(key=lambda x:int(x[:-4]))
+train_num_Nobj = 0.8 * (bg_num)
+val_num_Nobj = 0.1 * (bg_num)
+test_num_Nobj = 0.1 * (bg_num)
 
-random.shuffle(files)
+
+files_object = os.listdir(os.path.join(main_path_object, image_path))
+for idx, file in enumerate(files_object):
+    files_object[idx] = os.path.join(main_path_object, image_path, file)
+
+random.shuffle(files_object)
+
+
+files_non_object = os.listdir(os.path.join(main_path_non_object, image_path))
+for idx, file in enumerate(files_non_object):
+    files_non_object[idx] = os.path.join(main_path_non_object, image_path, file)
+
+random.shuffle(files_non_object)
+
+ids = [i for i in range(len(files_non_object) + len(files_object))]
+random.shuffle(ids)
+
+f1 = open("train_object.txt", "w")
+f2 = open("valid_object.txt", "w")
+f3 = open("test_object.txt", "w")
+
+for idx, file in enumerate(files_object):
+    img_id = str(file.split('/')[-1][:-4])
+    img_blur = os.path.join(
+        main_path_object, image_blur_path,  img_id + '.png')
+    mask = os.path.join(main_path_object, mask_path,  img_id + '.npy')
+    label = os.path.join(main_path_object, label_path, img_id + '.txt')
+
+    if idx < train_num_obj:
+        shutil.copyfile(file,  os.path.join(
+            train_folder, 'images/', str(ids[idx]) + '.png'))
+        shutil.copyfile(img_blur, os.path.join(
+            train_folder, 'images_blur/', str(ids[idx]) + '.png'))
+        shutil.copyfile(mask,  os.path.join(
+            train_folder, 'masks/', str(ids[idx]) + '.npy'))
+        shutil.copyfile(label, os.path.join(
+            train_folder, 'labels/', str(ids[idx]) + '.txt'))
+        f1.write('%d %s\n' % (ids[idx], file))
+    elif idx < max_number - bg_num - test_num_obj:
+        shutil.copyfile(file,  os.path.join(
+            val_folder, 'images/', str(ids[idx]) + '.png'))
+        shutil.copyfile(img_blur, os.path.join(
+            val_folder, 'images_blur/', str(ids[idx]) + '.png'))
+        shutil.copyfile(mask,  os.path.join(
+            val_folder, 'masks/', str(ids[idx]) + '.npy'))
+        shutil.copyfile(label, os.path.join(
+            val_folder, 'labels/', str(ids[idx]) + '.txt'))
+        f2.write('%d %s\n' % (ids[idx], file))
+    elif idx < max_number - bg_num:
+        shutil.copyfile(file, os.path.join(
+            test_folder, 'images/', str(ids[idx]) + '.png'))
+        shutil.copyfile(img_blur, os.path.join(
+            test_folder, 'images_blur/', str(ids[idx]) + '.png'))
+        shutil.copyfile(mask, os.path.join(
+            test_folder, 'masks/', str(ids[idx]) + '.npy'))
+        shutil.copyfile(label, os.path.join(
+            test_folder, 'labels/', str(ids[idx]) + '.txt'))
+        f3.write('%d %s\n' % (ids[idx], file))
+
+f1.close()
+f2.close()
+f3.close()
 
 f1 = open("train_non_object.txt", "w")
 f2 = open("valid_non_object.txt", "w")
 f3 = open("test_non_object.txt", "w")
 
-for idx, file in enumerate(files):
-    folder = file.split('/')[3]
+for idx, file in enumerate(files_non_object):
     img_id = str(file.split('/')[-1][:-4])
-    #mask  = os.path.join('/home/cxu', folder, 'non_object/masks',  img_id + '.npy')
-    label = os.path.join('/home/cxu', folder, 'non_object/labels', img_id + '.txt')
-    
-    if idx < 1800:
-        shutil.copyfile(file,  '/home/cxu/GRADE_DATASET/train/images/' + str(2*(idx+1))+'.png')
-        #shutil.copyfile(mask,  '/home/cxu/GRADE_DATASET/train/masks/'  + str(2*idx+1)+'.npy')
-        shutil.copyfile(label, '/home/cxu/GRADE_DATASET/train/labels/' + str(2*(idx+1))+'.txt')
-        f1.write('%d %s\n' %(2*idx+1, file))
-    elif idx < 1900:
-        shutil.copyfile(file,  '/home/cxu/GRADE_DATASET/valid/images/' + str(2*(idx+1))+'.png')
-        #shutil.copyfile(mask,  '/home/cxu/GRADE_DATASET/valid/masks/'  + str(2*idx+1)+'.npy')
-        shutil.copyfile(label, '/home/cxu/GRADE_DATASET/valid/labels/' + str(2*(idx+1))+'.txt')
-        f2.write('%d %s\n' %(2*idx+1, file))
-    elif idx < 2000:
-        shutil.copyfile(file,  '/home/cxu/GRADE_DATASET/test/images/' + str(2*(idx+1))+'.png')
-        #shutil.copyfile(mask,  '/home/cxu/GRADE_DATASET/test/masks/'  + str(2*idx+1)+'.npy')
-        shutil.copyfile(label, '/home/cxu/GRADE_DATASET/test/labels/' + str(2*(idx+1))+'.txt')
-        f3.write('%d %s\n' %(2*idx+1, file))
-        
+    img_blur = os.path.join(main_path_non_object,
+                            'images_blur',  img_id + '.png')
+    label = os.path.join(main_path_non_object, 'labels', img_id + '.txt')
+
+    if idx < train_num_Nobj:
+        shutil.copyfile(file,  os.path.join(
+            train_folder, 'images/', str(ids[idx + len(files_object)])+'.png'))
+        shutil.copyfile(label, os.path.join(
+            train_folder, 'labels/', str(ids[idx + len(files_object)])+'.txt'))
+        shutil.copyfile(img_blur, os.path.join(
+            train_folder, 'images_blur/', str(ids[idx + len(files_object)]) + '.png'))
+        f1.write('%d %s\n' % (ids[idx+len(files_object)], file))
+    elif idx < val_num_Nobj+train_num_Nobj:
+        shutil.copyfile(file,  os.path.join(
+            val_folder, 'images/', str(ids[idx + len(files_object)])+'.png'))
+        shutil.copyfile(img_blur, os.path.join(
+            val_folder, 'images_blur/', str(ids[idx + len(files_object)]) + '.png'))
+        shutil.copyfile(label, os.path.join(
+            val_folder, 'labels/', str(ids[idx + len(files_object)])+'.txt'))
+        f2.write('%d %s\n' % (ids[idx+len(files_object)], file))
+    elif idx < val_num_Nobj+train_num_Nobj+test_num_Nobj:
+        shutil.copyfile(file, os.path.join(
+            test_folder, 'images/', str(ids[idx + len(files_object)])+'.png'))
+        shutil.copyfile(img_blur, os.path.join(
+            test_folder, 'images_blur/', str(ids[idx + len(files_object)]) + '.png'))
+        shutil.copyfile(label, os.path.join(
+            test_folder, 'labels/', str(ids[idx + len(files_object)])+'.txt'))
+        f3.write('%d %s\n' % (ids[idx+len(files_object)], file))
+
 f1.close()
 f2.close()
 f3.close()
-
-# for test in test_data:
-#     test_txt = test[:-4]+'.txt'
-#     shutil.move(main_path+test, main_path + 'test/')
-#     shutil.move(label_path+test_txt, label_path + 'test/')
-
-
-# for file in files:
-#     img = cv2.imread(os.path.join(main_path, file))
-#     img = Image.fromarray(img)
-#     rgb_img_draw = ImageDraw.Draw(img)
-#     with open(os.path.join(label_path, file[:-4]+'.txt')) as f:
-#         data = f.readlines()
-#         if data != []:
-#             for bbox in data:
-#                 x_center = float(bbox.split(' ')[1])
-#                 y_center = float(bbox.split(' ')[2])
-#                 width = float(bbox.split(' ')[3])
-#                 height = float(bbox.split(' ')[4])
-#                 x1 = (x_center - (width/2)) * 960
-#                 x2 = (x_center + (width/2)) * 960
-#                 y1 = (y_center - (height/2)) * 720
-#                 y2 = (y_center + (height/2)) * 720
-#                 rgb_img_draw.rectangle([(x1, y1), (x2, y2)],  width=2)
-#     img_bbox = np.array(img)
-#     cv2.imshow('img',img_bbox)
-#     cv2.waitKey(0)
-
-# for train in train_data:
-#     train_txt = train[:-4]+'.txt'
-#     shutil.move(main_path+train, main_path + 'train/')
-#     shutil.move(label_path+train_txt, label_path + 'train/')

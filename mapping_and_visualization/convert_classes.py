@@ -322,10 +322,7 @@ def main(config):
         # list all experiments in one of the main path
         dirs = os.listdir(path)
         exp_n = path.split('/')[-2]
-        for d in dirs:
-            if '7634' in d:
-                continue
-            
+        for d in dirs:            
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
@@ -438,12 +435,13 @@ def main(config):
                 fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
                 cv2.imwrite(fn, rgb_resized)
                 
+                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
                 if os.path.exists(rgb_blur_fn):
                     img_blur = cv2.imread(rgb_blur_fn)
                     img = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
-                    cv2.imwrite(os.path.join(output_path, folder, 'images_blur', f"{data_id}.png"), img)
+                    cv2.imwrite(blur_fn, img)
                 else:
-                    shutil.copyfile(fn, os.path.join(output_path, folder, 'images_blur', f"{data_id}.png") )
+                    cv2.imwrite(blur_fn, rgb_resized)
                 
                 f3.write('%s -> %s\n' %(os.path.join(d, f'{2*i}.png'), os.path.join(folder, f"{data_id}.png")))
                 print(os.path.join(d, f'{2*i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
