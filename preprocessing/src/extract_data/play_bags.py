@@ -2,7 +2,6 @@ import sys
 import argparse
 import confuse
 
-import sys
 sys.path.append(sys.path[0][:-13])
 from extract_data import extract_data
 

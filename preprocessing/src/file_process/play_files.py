@@ -2,7 +2,6 @@ import sys
 import argparse
 import confuse
 
-import sys
 sys.path.append(sys.path[0][:-13])
 from add_noise import AddNoise
 
