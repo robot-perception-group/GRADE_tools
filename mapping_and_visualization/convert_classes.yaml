@@ -20,4 +20,4 @@ additional: {'robot':41,
 
 object_classes: ['human'] # Objects we want to detect
 
-filtered_classes: ['wallinner', 'baseboard', 'cabinet', 'wine cabinet']
+filtered_classes: ['wallinner', 'baseboard', 'cabinet']

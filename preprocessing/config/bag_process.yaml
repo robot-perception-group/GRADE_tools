@@ -25,7 +25,7 @@ topics: # topic name / publish frequency
     "signal_topic": { "/starting_experiment" }, # the topic that gets published when we start recording npy files
   }
 time_correction: {
-    "enable": False, # Flag to ReIndex the receive timestamp of each message
+    "enable": True, # Flag to ReIndex the receive timestamp of each message
     "duration": 60.0, # Define the original experiment time length in seconds
     "base_frame_id": "my_robot_0/yaw_link", # This frame_id is used in TF topic to seperate the base frame from the TF tree. This is useful if the SLAM system directly outputs an estimated odometry TF like in RTABMap
   }

@@ -70,6 +70,7 @@ class Instances(object):
                 self.instance_dict[idx-1]['semanticId'] = obj_ID
             except:
                 print(label, 'can not be mapped...')
+                print(idx, name, label)
                 wrong_labels.append(label)        
         
             if label.lower() in self.object_classes:
@@ -189,7 +190,7 @@ class Bboxes(object):
             obj_name  = bbox[1]
             
             # Filter out class labels
-            if obj_class in self.filtered_class_label or 'Armature' in obj_name:
+            if obj_class in self.filtered_classes or 'Armature' in obj_name:
                 continue
             
             # transform semantic ID to the mapping ID based on the semantic label
@@ -322,7 +323,10 @@ def main(config):
         # list all experiments in one of the main path
         dirs = os.listdir(path)
         exp_n = path.split('/')[-2]
-        for d in dirs:            
+        for d in dirs:
+            if '002c' not in d:
+                continue
+            
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
@@ -338,8 +342,8 @@ def main(config):
             
             # initialize ignored data list
             wrong_labels = []
-            f2 = open(f"/home/cxu/Datasets/{d}_ignored_ids.txt", "w")
-            f3 = open(f"/home/cxu/Datasets/{d}_mapping.txt", "w")
+            # f2 = open(f"/home/cxu/Datasets/{d}_ignored_ids.txt", "w")
+            # f3 = open(f"/home/cxu/Datasets/{d}_mapping.txt", "w")
 
             # initial the instance mapping dictionary
             if INSTANCE_FLAG:
@@ -350,51 +354,51 @@ def main(config):
                     for label in wrong_labels:
                         f1.write('%s \n' %(label))
             
-            for i in range(1,901):
+            for i in range(1,451):
                 # print(f"{2*i}/1800")
                 # check if all data exist
-                rgb_fn = os.path.join(rgb_path, f'{2*i}.png')
-                rgb_blur_fn = os.path.join(rgb_blur_path, f'{2*i}.png')
-                depth_fn = os.path.join(depth_path, f'{2*i}.npy')
-                instance_fn = os.path.join(instance_path, f'{2*i}.npy')
-                bbox_fn = os.path.join(bbox_path, f'{2*i}.npy')
+                # rgb_fn = os.path.join(rgb_path, f'{2*i}.png')
+                # rgb_blur_fn = os.path.join(rgb_blur_path, f'{2*i}.png')
+                # depth_fn = os.path.join(depth_path, f'{2*i}.npy')
+                # instance_fn = os.path.join(instance_path, f'{2*i}.npy')
+                bbox_fn = os.path.join(bbox_path, f'{4*i}.npy')
                 
-                fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn]]
-                if np.any(fns):
-                    continue
+                # fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn]]
+                # if np.any(fns):
+                #     continue
                 
-                # load rgb and depth image
-                rgb = cv2.imread(rgb_fn)
-                depth = np.load(depth_fn)
+                # # load rgb and depth image
+                # rgb = cv2.imread(rgb_fn)
+                # depth = np.load(depth_fn)
 
-                # Detect Occlusion
-                perc_rgb_occluded, perc_depth_occluded = detect_occlusion(rgb, depth, 0.3)
-                if perc_rgb_occluded > 10 and perc_depth_occluded > 10:
-                    f2.write('%d\n' %(2*i))
-                    continue
+                # # Detect Occlusion
+                # perc_rgb_occluded, perc_depth_occluded = detect_occlusion(rgb, depth, 0.3)
+                # if perc_rgb_occluded > 10 and perc_depth_occluded > 10:
+                #     f2.write('%d\n' %(2*i))
+                #     continue
                     
-                if perc_depth_occluded > 40:
-                    f2.write('%d\n' %(2*i))
-                    continue
+                # if perc_depth_occluded > 40:
+                #     f2.write('%d\n' %(2*i))
+                #     continue
                 
-                # resize image to output format size
-                rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
-                # rgb_ = rgb_resized.copy()
+                # # resize image to output format size
+                # rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
+                # # rgb_ = rgb_resized.copy()
                 
-                # Load instance
-                if INSTANCE_FLAG:
-                    instances =  np.load(instance_fn, allow_pickle = True)
-                    mask, classes = instance.load_mask(instances)  # generate mask and detected classes
+                # # Load instance
+                # if INSTANCE_FLAG:
+                #     instances =  np.load(instance_fn, allow_pickle = True)
+                #     mask, classes = instance.load_mask(instances)  # generate mask and detected classes
                     
-                    if len(classes) == 0:
-                        OBJ_FLAG = False # negative sample
-                        data_ids['non_obj_id'] += 1
-                    else:
-                        OBJ_FLAG = True # postive sample
-                        data_ids['obj_id'] += 1
+                #     if len(classes) == 0:
+                #         OBJ_FLAG = False # negative sample
+                #         data_ids['non_obj_id'] += 1
+                #     else:
+                #         OBJ_FLAG = True # postive sample
+                #         data_ids['obj_id'] += 1
                         
-                        # save mask data
-                        instance.generate_mask_data(output_path, data_ids, mask, classes)
+                #         # save mask data
+                #         instance.generate_mask_data(output_path, data_ids, mask, classes)
                     
                         # # # visualiza semantic mask
                         # for j in range(mask.shape[2]):
@@ -405,56 +409,58 @@ def main(config):
                     bboxes = np.load(bbox_fn, allow_pickle = True)
             
                     # Transform bboxes label ID to NYU40
-                    # bboxes, wrong_labels = bbox.convert_bbox(bboxes, wrong_labels)
-                    filtered_bboxes = bbox.load_bbox(bboxes)
+                    bboxes, wrong_labels = bbox.convert_bbox(bboxes, wrong_labels)
+                    if wrong_labels != []:
+                        print(4*i, wrong_labels[-1])
+            #         filtered_bboxes = bbox.load_bbox(bboxes)
                     
-                    # when only processing bbox data
-                    if not INSTANCE_FLAG:
-                        if filtered_bboxes.shape[0] == 0:
-                            OBJ_FLAG = False # negative sample
-                            data_ids['non_obj_id'] += 1
-                        else:
-                            OBJ_FLAG = True # postive sample
-                            data_ids['obj_id'] += 1
+            #         # when only processing bbox data
+            #         if not INSTANCE_FLAG:
+            #             if filtered_bboxes.shape[0] == 0:
+            #                 OBJ_FLAG = False # negative sample
+            #                 data_ids['non_obj_id'] += 1
+            #             else:
+            #                 OBJ_FLAG = True # postive sample
+            #                 data_ids['obj_id'] += 1
                             
-                    # save bbox data
-                    bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, filtered_bboxes)
+            #         # save bbox data
+            #         bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, filtered_bboxes)
                     
-                    # # bbox visualization
-                    # rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
+            #         # # bbox visualization
+            #         # rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
                 
                 
-                # Save RGB images
-                if OBJ_FLAG:
-                    folder = 'object'
-                    data_id = data_ids['obj_id']
-                else:
-                    folder = 'non_object'
-                    data_id = data_ids['non_obj_id']
+            #     # Save RGB images
+            #     if OBJ_FLAG:
+            #         folder = 'object'
+            #         data_id = data_ids['obj_id']
+            #     else:
+            #         folder = 'non_object'
+            #         data_id = data_ids['non_obj_id']
                 
-                fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
-                cv2.imwrite(fn, rgb_resized)
+            #     fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
+            #     cv2.imwrite(fn, rgb_resized)
                 
-                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
-                if os.path.exists(rgb_blur_fn):
-                    img_blur = cv2.imread(rgb_blur_fn)
-                    img = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
-                    cv2.imwrite(blur_fn, img)
-                else:
-                    cv2.imwrite(blur_fn, rgb_resized)
+            #     blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
+            #     if os.path.exists(rgb_blur_fn):
+            #         img_blur = cv2.imread(rgb_blur_fn)
+            #         img = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
+            #         cv2.imwrite(blur_fn, img)
+            #     else:
+            #         cv2.imwrite(blur_fn, rgb_resized)
                 
-                f3.write('%s -> %s\n' %(os.path.join(d, f'{2*i}.png'), os.path.join(folder, f"{data_id}.png")))
-                print(os.path.join(d, f'{2*i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
+            #     f3.write('%s -> %s\n' %(os.path.join(d, f'{2*i}.png'), os.path.join(folder, f"{data_id}.png")))
+            #     print(os.path.join(d, f'{2*i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
-                del instances, bboxes
-                del rgb, depth, rgb_resized
+            #     del instances, bboxes
+            #     del rgb, depth, rgb_resized
                 
-                # # visualize the image result
-                # cv2.imshow('bbox + mask', rgb_)
-                # cv2.waitKey(1)
+            #     # # visualize the image result
+            #     # cv2.imshow('bbox + mask', rgb_)
+            #     # cv2.waitKey(1)
             
-            f2.close()
-            f3.close()
+            # f2.close()
+            # f3.close()
             
     f1.close()
 
