@@ -15,8 +15,8 @@ if __name__ == '__main__':
             
             dataset = os.path.join(main_path, dataset)
             files = os.listdir(dataset)
-            # for file in files:
-            #     if '.bag' in file:
-            #         print(f'Copying {file} from ', dataset)
-            #         shutil.copyfile(os.path.join(dataset, file), os.path.join(local_path, file))
+            for file in files:
+                if '.bag' in file:
+                    print(f'Copying {file} from ', dataset)
+                    shutil.copyfile(os.path.join(dataset, file), os.path.join(local_path, file))
             os.system(f"./process_data.sh --type bag --path {local_path}")
