@@ -201,7 +201,7 @@ class Blur(object):
 
         for i in range(self.num_pose):
             h_mat = Hs[i]
-            img_dst = cv.warpPerspective(img, h_mat, (self.image_W, self.image_H))
+            img_dst = cv.warpPerspective(img, h_mat, (self.image_W, self.image_H),flags=cv.INTER_LINEAR+cv.WARP_FILL_OUTLIERS, borderMode=cv.BORDER_REPLICATE)
             frames.append(img_dst)
             
             
