@@ -19,6 +19,10 @@ def velocity_transform(t_img, ts_odom, odom_vels, ts_rot_cam, rots_cam):
     
 class Blur(object):
     def __init__(self, params, seed):
+        # Define random number
+        self.seed = seed
+        self.rng = np.random.default_rng(seed = self.seed)
+        
         # Parameter Initializaton
         self.blur_params = params["blur"]["config"].get()
         self.camera_params = params["camera"]["config"]["camera_params"].get()
@@ -27,9 +31,9 @@ class Blur(object):
         self.num_imu_sample = self.blur_params["num_imu_sample"] # Number of IMu data per interval
         
         # If num_pose != num_sample, it will interpolate the imu data
-        self.exposure_time = self.blur_params["exposure_time"]# Time Interval for recording camera motion
+        self.exposure_times = self.blur_params["exposure_time"]# Time Interval for recording camera motion
         self.num_pose = self.blur_params["num_pose"]# Number of poses during the exposure time
-        self.interval = self.exposure_time / self.num_pose
+        self.intervals = []
 
         self.readout_mean = self.blur_params["readout_mean"]
         self.readout_std = self.blur_params["readout_std"]
@@ -53,9 +57,6 @@ class Blur(object):
         # Initialize the list of RGB image need to be ignored
         self.rgb_ignore = []
         
-        self.seed = seed
-        self.rng = np.random.default_rng(seed = self.seed)
-        
     
     def generate_IMU(self, imu_camera, imu_camera_timestamps, rgb_timestamps):
         '''
@@ -69,14 +70,19 @@ class Blur(object):
         
         for i in range(len(rgb_timestamps)):
             # Define the exposure interval
-            init_t = rgb_timestamps[i] - self.exposure_time
+            exposure_time = self.rng.uniform(self.exposure_times[0],self.exposure_times[1])
+            interval = exposure_time / self.num_pose
+            self.intervals.append(interval)
+            print(exposure_time)
+            
+            init_t = rgb_timestamps[i] - exposure_time
             end_t = rgb_timestamps[i]
             
             # Define the sample data from imu for each interval
             imu_sample = []
             timestamps_old = []
             
-            timestamps = np.array([k * self.interval + init_t for k in range(self.num_pose+1)])
+            timestamps = np.array([k * interval + init_t for k in range(self.num_pose+1)])
             
             for j in range(len(imu_camera_timestamps)):
                 if imu_camera_timestamps[j] >= init_t and imu_camera_timestamps[j] <= end_t:
@@ -124,7 +130,7 @@ class Blur(object):
         
     def compute_rotations(self, index):
         rotations = []
-        dt = self.interval
+        dt = self.intervals[index]
         R = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
         
         for i in range(self.num_pose + 1):
@@ -141,7 +147,7 @@ class Blur(object):
     
     def compute_translations(self, rotations, index, v_init):
         translations = []
-        dt = self.interval
+        dt = self.intervals[index]
         T0_star = np.array([0, 0, 0]).reshape(3, 1)
         T = np.array([0, 0, 0]).reshape(3, 1)
         T_star = T0_star
@@ -194,26 +200,27 @@ class Blur(object):
         return Hs
     
         
-    def create_blur_image(self, img, Hs):
+    def create_blur_image(self, img, Hs, index):
         # Define the list of the images
         frames = []
         frames.append(img)
 
         for i in range(self.num_pose):
             h_mat = Hs[i]
-            img_dst = cv.warpPerspective(img, h_mat, (self.image_W, self.image_H))
+            img_dst = cv.warpPerspective(img, h_mat, (self.image_W, self.image_H),flags=cv.INTER_LINEAR+cv.WARP_FILL_OUTLIERS, borderMode=cv.BORDER_REPLICATE)
             frames.append(img_dst)
             
             
         frames = np.array(frames)
         blur_img = np.mean(frames, axis=0)
-        blur_img_rs = self.add_rolling_shutter(blur_img)
-        blur_img_rs = blur_img_rs.astype(np.uint8)
+        #blur_img_rs = self.add_rolling_shutter(blur_img, index)
+        blur_img_rs = blur_img.astype(np.uint8)
         
         return blur_img_rs
         
 
-    def add_rolling_shutter(self, img_blur):
+    def add_rolling_shutter(self, img_blur, index):
+        interval = self.intervals[index]
         t_readout = self.rng.normal(loc=self.readout_mean, scale=self.readout_std)
         piece_H = int(self.image_H/self.total_sub)
         H_last = self.extrinsic_mats[-1,:]
@@ -226,12 +233,12 @@ class Blur(object):
         while y <= self.image_H:
             # time and approximated rotation for y th row
             t_y = t_readout * y / self.image_H
-            H_y = self.interp_rot(t_y)
+            H_y = self.interp_rot(t_y, interval)
             H_new = np.matmul(H_y, np.linalg.inv(H_last))
             W_y = np.matmul(np.matmul(K, H_new), np.linalg.inv(K))
 
             old_piece = img_blur[y-piece_H:y, :, :]
-            new_piece = cv.warpPerspective(old_piece, W_y, (self.image_W, piece_H), flags=cv.INTER_LINEAR+cv.WARP_FILL_OUTLIERS, borderMode=cv.BORDER_REPLICATE)
+            new_piece = cv.warpPerspective(old_piece, W_y, (self.image_W, piece_H))
             new_pieces.append(new_piece)
             y += piece_H
 
@@ -239,14 +246,14 @@ class Blur(object):
         
         return img_blur_rs
         
-    def interp_rot(self, t):
+    def interp_rot(self, t, interval):
         """
         :param t: current timestamp: Float
         :param acc: acc of a specific axis: Array([float])
         :return: nearest acc: Float
         """
         h_array = self.extrinsic_mats
-        exposure_ts= np.array([i * self.interval for i in range(self.num_pose+1)])
+        exposure_ts= np.array([i * 0.02/30.0 for i in range(self.num_pose+1)])
         if t >= exposure_ts[-1]:
             H_last = h_array[-1, :]
             return H_last.reshape((3,3))
