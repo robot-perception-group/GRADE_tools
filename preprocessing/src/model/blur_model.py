@@ -73,7 +73,6 @@ class Blur(object):
             exposure_time = self.rng.uniform(self.exposure_times[0],self.exposure_times[1])
             interval = exposure_time / self.num_pose
             self.intervals.append(interval)
-            print(exposure_time)
             
             init_t = rgb_timestamps[i] - exposure_time
             end_t = rgb_timestamps[i]
@@ -85,7 +84,7 @@ class Blur(object):
             timestamps = np.array([k * interval + init_t for k in range(self.num_pose+1)])
             
             for j in range(len(imu_camera_timestamps)):
-                if imu_camera_timestamps[j] >= init_t and imu_camera_timestamps[j] <= end_t:
+                if imu_camera_timestamps[j] >= init_t-10**(-4) and imu_camera_timestamps[j] <= end_t+10**(-4):
                     timestamps_old.append(imu_camera_timestamps[j])
                     imu_sample.append(imu_camera[j])
             
@@ -213,8 +212,8 @@ class Blur(object):
             
         frames = np.array(frames)
         blur_img = np.mean(frames, axis=0)
-        #blur_img_rs = self.add_rolling_shutter(blur_img, index)
-        blur_img_rs = blur_img.astype(np.uint8)
+        blur_img_rs = self.add_rolling_shutter(blur_img, index)
+        blur_img_rs = blur_img_rs.astype(np.uint8)
         
         return blur_img_rs
         
@@ -238,7 +237,7 @@ class Blur(object):
             W_y = np.matmul(np.matmul(K, H_new), np.linalg.inv(K))
 
             old_piece = img_blur[y-piece_H:y, :, :]
-            new_piece = cv.warpPerspective(old_piece, W_y, (self.image_W, piece_H))
+            new_piece = cv.warpPerspective(old_piece, W_y, (self.image_W, piece_H), flags=cv.INTER_LINEAR+cv.WARP_FILL_OUTLIERS, borderMode=cv.BORDER_REPLICATE)
             new_pieces.append(new_piece)
             y += piece_H
 
@@ -253,7 +252,7 @@ class Blur(object):
         :return: nearest acc: Float
         """
         h_array = self.extrinsic_mats
-        exposure_ts= np.array([i * 0.02/30.0 for i in range(self.num_pose+1)])
+        exposure_ts= np.array([i * interval for i in range(self.num_pose+1)])
         if t >= exposure_ts[-1]:
             H_last = h_array[-1, :]
             return H_last.reshape((3,3))

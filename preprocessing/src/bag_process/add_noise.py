@@ -7,6 +7,7 @@ from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
 from pyquaternion import Quaternion
 from cv_bridge import CvBridge
+from PIL import Image
 
 from model import sensor_model, blur_model
 
@@ -145,16 +146,16 @@ class AddNoise:
                     self.camera_poses.append(rot)
         
         '''Interpolte IMU data for each RGB Frame'''
-        self.blur_0.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_0_ts)
+        #self.blur_0.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_0_ts)
         self.blur_1.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_1_ts)
     
-        # Update the rgb timestamps: deleting the ignored index
-        for i in self.blur_0.rgb_ignore:
-            print('Image Blur: Ignore RGB_IMAGE_0 at time: %.f' %(i))
-            self.rgb_0_ts.remove(i)
+        # # Update the rgb timestamps: deleting the ignored index
+        # for i in self.blur_0.rgb_ignore:
+        #     print('Image Blur: Ignore RGB_IMAGE_0 at time: %.f' %(i))
+        #     self.rgb_0_ts.remove(i)
         
         for i in self.blur_1.rgb_ignore:
-            print('Image Blur: Ignore RGB_IMAGE_1 at time: %.f' %(i))
+            print('Image Blur: Ignore RGB_IMAGE_1 at time: %.4f' %(i))
             self.rgb_1_ts.remove(i)
         
         
@@ -162,26 +163,27 @@ class AddNoise:
         # Store the Message Header
         msg_header = msg.header
         
-        '''TO DO: Check the calculation of initial velocity'''
-        # Calculate the initial velocity given specific timestamp
-        v_init = blur_model.velocity_transform(t_img, self.odom_ts, self.odom_lin_vels,
-                                                self.pose_ts, self.camera_poses)
-        
-        index = rgb_ts.index(t_img)
-        
         # Read the RGb images and generate corresponding H matrice
         img0 = self.bridge.imgmsg_to_cv2(msg,'rgb8')
-        Hs = blur.blur_homography(index, v_init)
         
-        # Create blur images
-        blur_img = blur.create_blur_image(img0, Hs, index)
+        '''TO DO: Check the calculation of initial velocity'''        
+        if t_img not in blur.rgb_ignore:
+            # Calculate the initial velocity given specific timestamp
+            v_init = blur_model.velocity_transform(t_img, self.odom_ts, self.odom_lin_vels,
+                                                    self.pose_ts, self.camera_poses)
+            
+            index = rgb_ts.index(t_img)
         
-        rgb_resized = cv2.resize(blur_img, dsize=(960, 720))
+            Hs = blur.blur_homography(index, v_init)
+            # Create blur images
+            img0 = blur.create_blur_image(img0, Hs, index)
+        
+        rgb_resized = cv2.resize(img0, dsize=(960, 720))
+        
         idx = self.idx
         fn = os.path.join(self.noisy_dir,f"{idx}.png")
-        cv2.imshow("img",rgb_resized)
-        cv2.waitKey(1)
-        # cv2.imwrite(fn, rgb_resized)
+
+        Image.fromarray(rgb_resized).save(fn)
         
         self.idx += 1
         
@@ -267,8 +269,8 @@ class AddNoise:
                     if topic == self.rgb_topic_1:                         
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
-                        if t_img in self.blur_1.rgb_ignore:
-                            continue
+                        # if t_img in self.blur_1.rgb_ignore:
+                        #     continue
                         
                         self.blur_image(msg, t_img, self.blur_1, self.rgb_1_ts)                    
 
