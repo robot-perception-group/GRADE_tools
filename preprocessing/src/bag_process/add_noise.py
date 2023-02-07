@@ -176,15 +176,16 @@ class AddNoise:
         
             Hs = blur.blur_homography(index, v_init)
             # Create blur images
-            img0 = blur.create_blur_image(img0, Hs, index)
+            img0 = blur.create_blur_image(img0, Hs)
         
         rgb_resized = cv2.resize(img0, dsize=(960, 720))
         
         idx = self.idx
         fn = os.path.join(self.noisy_dir,f"{idx}.png")
 
-        Image.fromarray(rgb_resized).save(fn)
-        
+        #Image.fromarray(rgb_resized).save(fn)
+        cv2.imshow('img',rgb_resized)
+        cv2.waitKey(1)
         self.idx += 1
         
         # # Define the new image msg
