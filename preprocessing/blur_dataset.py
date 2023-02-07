@@ -3,7 +3,8 @@ import shutil
 import subprocess
 
 if __name__ == '__main__':
-    main_paths = ['/ps/project/irotate/DE_cam1', '/ps/project/irotate/DE_cam1_horiz', '/ps/project/irotate/DE_cam0_horiz']
+    # Extract the noisy images from the bags
+    main_paths = ['/ps/project/irotate/DE_cam1']
     for main_path in main_paths:
         datasets = os.listdir(main_path)
         

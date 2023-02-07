@@ -209,7 +209,7 @@ if __name__=="__main__":
         data = f.readlines()
         ts_gt_final = float((data[-1].split(' ')[0]).replace(",","."))
     
-    ts_end = min(args.end_time, ts_gt_final)
+    ts_end = max(args.end_time, ts_gt_final)
         
     with open(args.second_file) as f:
         data = f.readlines()
