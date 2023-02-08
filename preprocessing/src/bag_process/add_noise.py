@@ -41,11 +41,9 @@ class AddNoise:
         self.bags = os.listdir(os.path.join(self.bag_dir,'reindex_bags'))
         self.bags.sort()
             
-        self.noisy_dir = os.path.join(self.bag_dir, 'Viewport0_occluded/rgb')
-        if not os.path.exists(self.noisy_dir):
-            os.makedirs(self.noisy_dir)
-            
-        self.idx = 1
+        self.noisy_bag_dir = self.bag_dir + '/noisy_bags'
+        if not os.path.exists(self.noisy_bag_dir):
+            os.makedirs(self.noisy_bag_dir)
             
             
     def initial_topics(self):
@@ -146,13 +144,13 @@ class AddNoise:
                     self.camera_poses.append(rot)
         
         '''Interpolte IMU data for each RGB Frame'''
-        #self.blur_0.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_0_ts)
+        self.blur_0.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_0_ts)
         self.blur_1.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_1_ts)
     
-        # # Update the rgb timestamps: deleting the ignored index
-        # for i in self.blur_0.rgb_ignore:
-        #     print('Image Blur: Ignore RGB_IMAGE_0 at time: %.f' %(i))
-        #     self.rgb_0_ts.remove(i)
+        # Update the rgb timestamps: deleting the ignored index
+        for i in self.blur_0.rgb_ignore:
+            print('Image Blur: Ignore RGB_IMAGE_0 at time: %.f' %(i))
+            self.rgb_0_ts.remove(i)
         
         for i in self.blur_1.rgb_ignore:
             print('Image Blur: Ignore RGB_IMAGE_1 at time: %.4f' %(i))
@@ -164,7 +162,7 @@ class AddNoise:
         msg_header = msg.header
         
         # Read the RGb images and generate corresponding H matrice
-        img0 = self.bridge.imgmsg_to_cv2(msg,'rgb8')
+        img = self.bridge.imgmsg_to_cv2(msg,'rgb8')
         
         '''TO DO: Check the calculation of initial velocity'''        
         if t_img not in blur.rgb_ignore:
@@ -173,26 +171,18 @@ class AddNoise:
                                                     self.pose_ts, self.camera_poses)
             
             index = rgb_ts.index(t_img)
-        
-            Hs = blur.blur_homography(index, v_init)
-            # Create blur images
-            img0 = blur.create_blur_image(img0, Hs)
-        
-        rgb_resized = cv2.resize(img0, dsize=(960, 720))
-        
-        idx = self.idx
-        fn = os.path.join(self.noisy_dir,f"{idx}.png")
 
-        #Image.fromarray(rgb_resized).save(fn)
-        cv2.imshow('img',rgb_resized)
-        cv2.waitKey(1)
-        self.idx += 1
+                        # Create blur images
+            Hs = blur.blur_homography(index, v_init)
+            blur_img = blur.create_blur_image(img, Hs)
+        else:
+            blur_img = img
         
-        # # Define the new image msg
-        # msg = self.bridge.cv2_to_imgmsg(blur_img, 'rgb8')
-        # msg.header = msg_header
+        # Define the new image msg
+        msg = self.bridge.cv2_to_imgmsg(blur_img, 'rgb8')
+        msg.header = msg_header
         
-        # return msg
+        return msg
     
     
     def create_pointcloud(self, x, y, z, header):
@@ -239,9 +229,9 @@ class AddNoise:
             bag_path = os.path.join(self.bag_dir,'reindex_bags', bag)
             bag = rosbag.Bag(bag_path)
             
-            # # Noisy rosbags
-            # w_bag = rosbag.Bag(os.path.join(self.noisy_bag_dir,
-            #                                 f"{bag.filename.split('/')[-1][:-4]}_noisy.bag"), "w")
+            # Noisy rosbags
+            w_bag = rosbag.Bag(os.path.join(self.noisy_bag_dir,
+                                            f"{bag.filename.split('/')[-1][:-4]}_noisy.bag"), "w")
                     
             '''Create New ROS bags'''
             for topic, msg, t in bag.read_messages(topics=self.topics):
@@ -259,53 +249,49 @@ class AddNoise:
                     
                 '''Add blur to RGB images'''
                 if self.blur_enable == True:
-                    # if topic == self.rgb_topic_0:                        
-                    #     # Some RGB Image does not contain enough IMU data
-                    #     t_img = t.to_sec()
-                    #     if t_img in self.blur_0.rgb_ignore:
-                    #         continue
+                    if topic == self.rgb_topic_0:                        
+                        # Some RGB Image does not contain enough IMU data
+                        t_img = t.to_sec()
                         
-                    #     self.blur_image(msg, t_img, self.blur_0, self.rgb_0_ts)
+                        self.blur_image(msg, t_img, self.blur_0, self.rgb_0_ts)
                         
                     if topic == self.rgb_topic_1:                         
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
-                        # if t_img in self.blur_1.rgb_ignore:
-                        #     continue
                         
                         self.blur_image(msg, t_img, self.blur_1, self.rgb_1_ts)                    
 
 
                 '''Add noise to IMU'''
-                # if 'imu' in topic:
-                #     topic_type = 'imu'
+                if 'imu' in topic:
+                    topic_type = 'imu'
                     
-                #     if topic not in self.noise_models:
-                #         # todo check noise model is valid and correctly init
-                #         self.noise_models[topic] = sensor_model.SensorModel(topic_type, self.config[topic_type]['noise_model'].get(),
-                #                                                     self.config[topic_type]['config'].get(), self.seed)
+                    if topic not in self.noise_models:
+                        # todo check noise model is valid and correctly init
+                        self.noise_models[topic] = sensor_model.SensorModel(topic_type, self.config[topic_type]['noise_model'].get(),
+                                                                    self.config[topic_type]['config'].get(), self.seed)
                     
-                #     data = sensor_model.IMU(msg.angular_velocity, msg.linear_acceleration, t)
+                    data = sensor_model.IMU(msg.angular_velocity, msg.linear_acceleration, t)
                     
-                #     msg.angular_velocity, msg.linear_acceleration = self.noise_models[topic].callback(data)
+                    msg.angular_velocity, msg.linear_acceleration = self.noise_models[topic].callback(data)
                 
                 
-                # '''Add noise to Depth Image'''
-                # if 'depth' in topic:
-                #     # Extract message header
-                #     header = msg.header
-                #     topic_type = 'camera'
+                '''Add noise to Depth Image'''
+                if 'depth' in topic:
+                    # Extract message header
+                    header = msg.header
+                    topic_type = 'camera'
                     
-                #     if topic not in self.noise_models:
-                #         # todo check noise model is valid and correctly init
-                #         self.noise_models[topic] = sensor_model.SensorModel(topic_type, self.config[topic_type]['noise_model'].get(),
-                #                                                     self.config[topic_type]['config'].get(), self.seed)
+                    if topic not in self.noise_models:
+                        # todo check noise model is valid and correctly init
+                        self.noise_models[topic] = sensor_model.SensorModel(topic_type, self.config[topic_type]['noise_model'].get(),
+                                                                    self.config[topic_type]['config'].get(), self.seed)
                         
-                #     data = sensor_model.Image(self.bridge.imgmsg_to_cv2(msg, 'passthrough'),  pointcloud_enable=self.pointcloud_enable)
-                #     x, y, z, depth = self.noise_models[topic].callback(data)
+                    data = sensor_model.Image(self.bridge.imgmsg_to_cv2(msg, 'passthrough'),  pointcloud_enable=self.pointcloud_enable)
+                    x, y, z, depth = self.noise_models[topic].callback(data)
                     # todo finish up kinect case with correct image
                     
-                    # '''Debug for visualization of PCD'''
+                    '''Debug for visualization of PCD'''
                     # if '/1/' in topic and t.to_sec()>5.0:
                     #     cv2.imshow('depth', depth)
                     #     cv2.waitKey(10)
@@ -314,30 +300,30 @@ class AddNoise:
                     #     ax.scatter(x, y, z, s=0.05)
                     #     plt.show()
                     
-                    # msg = self.bridge.cv2_to_imgmsg(depth, 'passthrough')
-                    # msg.header = header
+                    msg = self.bridge.cv2_to_imgmsg(depth, 'passthrough')
+                    msg.header = header
                     
-                    # '''Output Pointcloud Data'''
-                    # if self.pointcloud_enable == True:
-                    #     msg_pcd, msg_pcd2 = self.create_pointcloud(x, y, z, header)
+                    '''Output Pointcloud Data'''
+                    if self.pointcloud_enable == True:
+                        msg_pcd, msg_pcd2 = self.create_pointcloud(x, y, z, header)
                         
-                    #     w_bag.write(topic[:-9]+'pointcloud', msg_pcd, t)
-                    #     w_bag.write(topic[:-9]+'pointcloud2', msg_pcd2, t)
+                        w_bag.write(topic[:-9]+'pointcloud', msg_pcd, t)
+                        w_bag.write(topic[:-9]+'pointcloud2', msg_pcd2, t)
                 
                 
                 # '''Filter the TF Transformation'''           
                 # if topic == '/tf':
                 #     msg = self.tf_transform(msg)
                 
-            #     '''Rewrite the Topic Name'''
-            #     if topic in self.config['mapping'].get():
-            #         topic_name = self.config['mapping'].get()[topic]
-            #     else:
-            #         topic_name = topic
+                '''Rewrite the Topic Name'''
+                if topic in self.config['mapping'].get():
+                    topic_name = self.config['mapping'].get()[topic]
+                else:
+                    topic_name = topic
                 
-            #     # Write the msg into the target topics
-            #     w_bag.write(topic_name, msg, t)
+                # Write the msg into the target topics
+                w_bag.write(topic_name, msg, t)
             
-            # w_bag.close()
+            w_bag.close()
         
             
