@@ -48,7 +48,7 @@ blur:
     "config":
       {
         "num_imu_sample": 10,
-        "exposure_time": 0.02,
+        "exposure_time": [0, 0.1],
         "num_pose": 30,
         "readout_mean": 0.015,
         "readout_std": 0.006,

@@ -13,8 +13,8 @@ In practice, given an input folder, the script can:
 - correct the topic times of the bags to account for possible wrong clock times due to `isaac_sim` known issues
 - add noise to the IMU and depths
 - limit the recorded depth to a maximum distance
-- add motion blur noise and rolling shutter effect to the RGB data
-- extract rgb and depth PNG images
+- add motion blur noise and rolling shutter effect to the RGB Images
+- extract RGB and depth PNG images
 - extract odom and imu in npy files
 - ...
 
