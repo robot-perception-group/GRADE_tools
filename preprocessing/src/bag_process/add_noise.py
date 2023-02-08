@@ -7,7 +7,6 @@ from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
 from pyquaternion import Quaternion
 from cv_bridge import CvBridge
-from PIL import Image
 
 from model import sensor_model, blur_model
 
@@ -253,13 +252,13 @@ class AddNoise:
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
                         
-                        self.blur_image(msg, t_img, self.blur_0, self.rgb_0_ts)
+                        msg = self.blur_image(msg, t_img, self.blur_0, self.rgb_0_ts)
                         
                     if topic == self.rgb_topic_1:                         
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
                         
-                        self.blur_image(msg, t_img, self.blur_1, self.rgb_1_ts)                    
+                        msg = self.blur_image(msg, t_img, self.blur_1, self.rgb_1_ts)                    
 
 
                 '''Add noise to IMU'''
