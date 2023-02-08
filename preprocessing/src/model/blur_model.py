@@ -19,6 +19,10 @@ def velocity_transform(t_img, ts_odom, odom_vels, ts_rot_cam, rots_cam):
     
 class Blur(object):
     def __init__(self, params, seed):
+        # Define random number
+        self.seed = seed
+        self.rng = np.random.default_rng(seed = self.seed)
+        
         # Parameter Initializaton
         self.blur_params = params["blur"]["config"].get()
         self.camera_params = params["camera"]["config"]["camera_params"].get()
@@ -27,8 +31,8 @@ class Blur(object):
         self.num_imu_sample = self.blur_params["num_imu_sample"] # Number of IMu data per interval
         
         # If num_pose != num_sample, it will interpolate the imu data
-        self.exposure_time = self.blur_params["exposure_time"]# Time Interval for recording camera motion
-        self.num_pose = self.blur_params["num_pose"]# Number of poses during the exposure time
+        self.exposure_time = self.rng.uniform(self.blur_params["exposure_time"][0], self.blur_params["exposure_time"][1]) # Time Interval for recording camera motion
+        self.num_pose = self.blur_params["num_pose"] # Number of poses during the exposure time
         self.interval = self.exposure_time / self.num_pose
 
         self.readout_mean = self.blur_params["readout_mean"]
@@ -53,9 +57,6 @@ class Blur(object):
         # Initialize the list of RGB image need to be ignored
         self.rgb_ignore = []
         
-        self.seed = seed
-        self.rng = np.random.default_rng(seed = self.seed)
-        
     
     def generate_IMU(self, imu_camera, imu_camera_timestamps, rgb_timestamps):
         '''
@@ -67,8 +68,7 @@ class Blur(object):
         '''
         imu_camera = np.array(imu_camera)
         
-        for i in range(len(rgb_timestamps)):
-            # Define the exposure interval
+        for i in range(len(rgb_timestamps)):          
             init_t = rgb_timestamps[i] - self.exposure_time
             end_t = rgb_timestamps[i]
             
@@ -79,7 +79,7 @@ class Blur(object):
             timestamps = np.array([k * self.interval + init_t for k in range(self.num_pose+1)])
             
             for j in range(len(imu_camera_timestamps)):
-                if imu_camera_timestamps[j] >= init_t and imu_camera_timestamps[j] <= end_t:
+                if imu_camera_timestamps[j] >= init_t-10**(-4) and imu_camera_timestamps[j] <= end_t+10**(-4):
                     timestamps_old.append(imu_camera_timestamps[j])
                     imu_sample.append(imu_camera[j])
             

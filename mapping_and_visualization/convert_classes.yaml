@@ -1,0 +1,23 @@
+bbox: True
+instance: True
+main_path: ['/ps/project/irotate/DE_cam1/',
+            '/ps/project/irotate/DE_cam1_horiz/',
+            '/ps/project/irotate/DE_cam0_horiz/',] # specify data path
+
+output_path: "/home/cxu/Datasets"
+
+mapping_file: "mapping_and_visualization/mapping.pkl" # Relatiave path to mapping.pkl
+
+viewport_name: "Viewport0_occluded"
+
+input_image_size: [1920, 1080] # input image size
+output_image_size: [960, 720] # output image size
+
+allow_40_plus: False
+additional: {'robot':41,
+            'flying-object':42,
+            'clothes':43}
+
+object_classes: ['human'] # Objects we want to detect
+
+filtered_classes: ['wallinner', 'baseboard', 'cabinet']

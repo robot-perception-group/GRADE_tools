@@ -88,7 +88,7 @@ def read_trajectory(filename, matrix=True):
     """
     file = open(filename)
     data = file.read()
-    lines = data.replace(",", " ").replace("\t", " ").split("\n")
+    lines = data.replace(",", ".").replace("\t", " ").split("\n")
     list = [[float(v.strip()) for v in line.split(" ") if v.strip() != ""]
             for line in lines if len(line) > 0 and line[0] != "#"]
     list_ok = []

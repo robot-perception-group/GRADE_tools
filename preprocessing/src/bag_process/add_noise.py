@@ -152,7 +152,7 @@ class AddNoise:
             self.rgb_0_ts.remove(i)
         
         for i in self.blur_1.rgb_ignore:
-            print('Image Blur: Ignore RGB_IMAGE_1 at time: %.f' %(i))
+            print('Image Blur: Ignore RGB_IMAGE_1 at time: %.4f' %(i))
             self.rgb_1_ts.remove(i)
         
         
@@ -160,19 +160,22 @@ class AddNoise:
         # Store the Message Header
         msg_header = msg.header
         
-        '''TO DO: Check the calculation of initial velocity'''
-        # Calculate the initial velocity given specific timestamp
-        v_init = blur_model.velocity_transform(t_img, self.odom_ts, self.odom_lin_vels,
-                                                self.pose_ts, self.camera_poses)
-        
-        index = rgb_ts.index(t_img)
-        
         # Read the RGb images and generate corresponding H matrice
-        img0 = self.bridge.imgmsg_to_cv2(msg,'rgb8')
-        Hs = blur.blur_homography(index, v_init)
+        img = self.bridge.imgmsg_to_cv2(msg,'rgb8')
         
-        # Create blur images
-        blur_img = blur.create_blur_image(img0, Hs)
+        '''TO DO: Check the calculation of initial velocity'''        
+        if t_img not in blur.rgb_ignore:
+            # Calculate the initial velocity given specific timestamp
+            v_init = blur_model.velocity_transform(t_img, self.odom_ts, self.odom_lin_vels,
+                                                    self.pose_ts, self.camera_poses)
+            
+            index = rgb_ts.index(t_img)
+
+                        # Create blur images
+            Hs = blur.blur_homography(index, v_init)
+            blur_img = blur.create_blur_image(img, Hs)
+        else:
+            blur_img = img
         
         # Define the new image msg
         msg = self.bridge.cv2_to_imgmsg(blur_img, 'rgb8')
@@ -248,16 +251,12 @@ class AddNoise:
                     if topic == self.rgb_topic_0:                        
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
-                        if t_img in self.blur_0.rgb_ignore:
-                            continue
                         
                         msg = self.blur_image(msg, t_img, self.blur_0, self.rgb_0_ts)
                         
                     if topic == self.rgb_topic_1:                         
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
-                        if t_img in self.blur_1.rgb_ignore:
-                            continue
                         
                         msg = self.blur_image(msg, t_img, self.blur_1, self.rgb_1_ts)                    
 
