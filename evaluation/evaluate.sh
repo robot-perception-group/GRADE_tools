@@ -58,6 +58,7 @@ then
     BASEDIR=$(dirname $FILE)
     rtabmap-report --poses $FILE
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${BASEDIR}/rtabmap_gt.txt ${BASEDIR}/rtabmap_slam.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${BASEDIR}/rtabmap_gt.txt ${BASEDIR}/rtabmap_slam.txt  --verbose
     mv ${BASEDIR}/rtabmap_gt.txt ${OD}
     mv ${BASEDIR}/rtabmap_slam.txt ${OD}
     mv $FILE ${OD}
@@ -65,11 +66,13 @@ elif [[ $TYPE == "dynavins" ]];
 then
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type dynavins --path $FILE --st $ST --et $ET --output $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose_dynavins.txt ${OD}/estimated_pose_dynavins.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/gt_pose_dynavins.txt ${OD}/estimated_pose_dynavins.txt  --verbose
     mv $FILE ${OD}
 elif [[ $TYPE == "dynavins_tum" ]];
 then
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type dynavins_tum --path $FILE --output $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/groundtruth.txt ${OD}/estimated_pose_dynavins.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time 10e9 # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/groundtruth.txt ${OD}/estimated_pose_dynavins.txt  --verbose
     mv $FILE ${OD}
 elif [[ $TYPE == "tartan" ]];
 then
@@ -79,6 +82,7 @@ then
                                   --output ${OD}
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type tartan --path $FILE --output $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt ${OD}/estimated_pose_tartan.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/gt_pose.txt ${OD}/estimated_pose_tartan.txt  --verbose
     mv $FILE ${OD}
 elif [[ $TYPE == "staticfusion" ]];
 then
@@ -88,17 +92,19 @@ then
                                   --output ${OD}
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type staticfusion --path $FILE --output $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt ${OD}/estimated_pose_sf.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/gt_pose.txt ${OD}/estimated_pose_sf.txt  --verbose
     mv $FILE ${OD}
     BASEDIR=$(dirname $FILE)
     mv ${BASEDIR}/sf-* ${OD}
 elif [[ $TYPE == "dynaslam" ]];
 then
-  python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \
-                                  --path ${GB} \
-                                  --topic /my_robot_0/camera/pose \
-                                  --output ${OD}
-  python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt $FILE  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
-  mv $FILE $OD/
+    python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \
+                                    --path ${GB} \
+                                    --topic /my_robot_0/camera/pose \
+                                    --output ${OD}
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt $FILE  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/gt_pose.txt $FILE  --verbose
+    mv $FILE $OD/
 elif [[ $TYPE == "orbslam2" ]];
 then
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type groundtruth \
@@ -106,6 +112,7 @@ then
                                   --topic /my_robot_0/camera/pose \
                                   --output ${OD}
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt $FILE  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/gt_pose.txt $FILE  --verbose
     mv $FILE ${OD}
 elif [[ $TYPE == "vdo" ]];
 then
@@ -115,5 +122,6 @@ then
                                   --output ${OD}
     python3 ${SCRIPT_DIR}/src/tool/output_pose.py --type vdo --path $FILE --output $OD
     python3 ${SCRIPT_DIR}/src/tool/evaluate_ate.py ${OD}/gt_pose.txt ${OD}/estimated_pose_vdo.txt  --verbose --plot ${OD}/result.png --start_time $ST --end_time $ET # -- umeyama True
+    python3 ${SCRIPT_DIR}/src/tool/evaluate_rpe.py ${OD}/gt_pose.txt ${OD}/estimated_pose_vdo.txt  --verbose
     mv $FILE ${OD}
 fi
