@@ -1,7 +1,6 @@
 bbox: True
 instance: True
-main_path: ['/ps/project/irotate/DE_cam1/',
-            '/ps/project/irotate/DE_cam1_horiz/',
+main_path: ['/ps/project/irotate/DE_cam0/',
             '/ps/project/irotate/DE_cam0_horiz/',] # specify data path
 
 output_path: "/home/cxu/Datasets"

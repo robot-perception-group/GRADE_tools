@@ -426,7 +426,7 @@ def main(config):
                 
                 if wrong_labels != []:
                     for label in wrong_labels:
-                        f1.write('%s \n' %(label))
+                        f1.write('%s : %s \n' %(d, label))
             
             for i in range(1,901):
                 print(f"{2*i}/1800")
