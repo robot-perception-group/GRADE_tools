@@ -192,8 +192,7 @@ class Instances(object):
             # encode mask
             encode_mask = mask.encode(np.asfortranarray(bin_mask))
             encode_mask["counts"] = encode_mask["counts"].decode("ascii")
-            size = int(mask.area(encode_mask))
-            x, y, w, h = bbox2(bin_mask)
+            size = 0
 
             instance_anno = {
                 "id": instance_id,
@@ -201,7 +200,7 @@ class Instances(object):
                 "category_id": 1, #use data['class'] to map
                 "segmentation": encode_mask,
                 "area": size,
-                "bbox": [x, y, w, h],
+                "bbox": [0, 0, 0, 0],
                 "iscrowd": 0,
             }
 
@@ -476,7 +475,7 @@ def main(config):
                         data_ids['obj_id'] += 1
                         
                     # save mask data
-                    instance.generate_mask_data(output_path, data_ids, masks, classes)
+                    instance.generate_mask_data(data_ids, OBJ_FLAG, masks)
                     
                     # # # visualiza semantic mask
                     # for j in range(mask.shape[2]):
