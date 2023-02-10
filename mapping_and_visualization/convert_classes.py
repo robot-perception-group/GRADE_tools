@@ -403,7 +403,7 @@ def main(config):
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             rgb_static_path = os.path.join(path, d, 'Viewport0', 'rgb')
-            rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb_blur')
+            rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
             instance_path = os.path.join(path, d, viewport, 'instance')
             bbox_path = os.path.join(path, d, viewport, 'bbox_2d_tight')
@@ -458,7 +458,7 @@ def main(config):
                     continue
                 
                 # resize image to output format size
-                rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
+                # rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
                 rgb_static_resized = cv2.resize(rgb_static, dsize=(output_img_size[0], output_img_size[1]))
                 # rgb_ = rgb_resized.copy()
                 
@@ -514,15 +514,16 @@ def main(config):
                     data_id = data_ids['non_obj_id']
                 
                 # write the rgb and rgb_static images
-                fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
+                # fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
                 static_fn = os.path.join(output_path, folder, 'images_static', f"{data_id}.png")
-                cv2.imwrite(fn, rgb_resized)
+                # cv2.imwrite(fn, rgb_resized)
                 cv2.imwrite(static_fn, rgb_static_resized)
                 
                 # write the blur images
                 blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
                 
                 if not os.path.exists(rgb_blur_fn):
+                    rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
                     cv2.imwrite(blur_fn, rgb_resized)
                 else:
                     shutil.copyfile(rgb_blur_fn, blur_fn)
@@ -532,7 +533,7 @@ def main(config):
                 print(os.path.join(d, f'{2*i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
                 del instances, bboxes
-                del rgb, depth, rgb_resized
+                del rgb, depth, rgb_static, rgb_static_resized
                 
                 # # visualize the image result
                 # cv2.imshow('bbox + mask', rgb_)
@@ -544,8 +545,8 @@ def main(config):
     f1.close()
     
     # Save the semantic mask json data
-    anno_path_object = os.path.join(output_path, 'object','masks' "annos_gt.json")
-    anno_path_non_object = os.path.join(output_path, 'non_object','masks' "annos_gt.json")
+    anno_path_object = os.path.join(output_path, 'object','masks', "annos_gt.json")
+    anno_path_non_object = os.path.join(output_path, 'non_object','masks', "annos_gt.json")
     json.dump(instance.annotations_obj, open(anno_path_object, "w+"))
     json.dump(instance.annotations_non_obj, open(anno_path_non_object, "w+"))
 
