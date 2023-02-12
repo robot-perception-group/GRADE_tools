@@ -1,9 +1,9 @@
 bbox: True
 instance: True
 main_path: ['/ps/project/irotate/DE_cam0/',
-            '/ps/project/irotate/DE_cam0_horiz/',] # specify data path
+            '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
 
-output_path: "/home/cxu/Datasets"
+output_path: "/home/cxu/Datasets_new"
 
 mapping_file: "mapping_and_visualization/mapping.pkl" # Relatiave path to mapping.pkl
 

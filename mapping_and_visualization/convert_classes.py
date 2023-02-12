@@ -186,7 +186,7 @@ class Instances(object):
             }
             self.annotations_non_obj["images"].append(img_anno)
             
-            bin_mask = masks[:, :, :].astype(bool).astype(np.uint8)
+            bin_mask = masks[:, :, 0].astype(bool).astype(np.uint8)
             instance_id = data_id * 100  # create id for instance, increment val
 
             # encode mask
@@ -197,7 +197,7 @@ class Instances(object):
             instance_anno = {
                 "id": instance_id,
                 "image_id": data_id,
-                "category_id": 1, #use data['class'] to map
+                "category_id": 1, # use data['class'] to map
                 "segmentation": encode_mask,
                 "area": size,
                 "bbox": [0, 0, 0, 0],
@@ -347,13 +347,11 @@ def main(config):
                     os.path.join(output_path, 'object','masks'),
                     os.path.join(output_path, 'object','labels'),
                     os.path.join(output_path, 'object','images'),
-                    os.path.join(output_path, 'object','images_static'),
                     os.path.join(output_path, 'object','images_blur'),
                     os.path.join(output_path, 'non_object'),
                     os.path.join(output_path, 'non_object','masks'),
                     os.path.join(output_path, 'non_object','labels'),
                     os.path.join(output_path, 'non_object','images'),
-                    os.path.join(output_path, 'non_object','images_static'),
                     os.path.join(output_path, 'non_object','images_blur'),]
     
     for path in output_paths:
@@ -383,44 +381,37 @@ def main(config):
     OBJ_FLAG = None
     INSTANCE_FLAG = config['instance'].get()
     BBOX_FLAG = config['bbox'].get()
-    
-    # initialize data classes
-    if INSTANCE_FLAG:
-        instance = Instances(mapping, object_classes, output_img_size, allow_40_plus)
-        
-    if BBOX_FLAG:
-        bbox = Bboxes(mapping, object_classes, filtered_classes, input_img_size, output_img_size, allow_40_plus)
-
 
     # Transform Data into desired dataset
-    f1 = open("/home/cxu/Datasets/wrong_labels.txt", "w")
+    f1 = open(os.path.join(output_path, "wrong_labels.txt"), "w")
     
     for path in main_paths:
         # list all experiments in one of the main path
         dirs = os.listdir(path)
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
-        for d in dirs:
+        for d in dirs:             
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
-            rgb_static_path = os.path.join(path, d, 'Viewport0', 'rgb')
             rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
             instance_path = os.path.join(path, d, viewport, 'instance')
             bbox_path = os.path.join(path, d, viewport, 'bbox_2d_tight')
 
             # Check repository
-            sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, rgb_static_path, depth_path, instance_path, bbox_path, rgb_blur_path]]
+            sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path, rgb_blur_path]]
             if np.any(sub_dirs):
                 print(d, ' HAVE INCOMPLETE DATA...')
                 continue
             
             # initialize ignored data list
             wrong_labels = []
-            f2 = open(f"/home/cxu/Datasets/{d}_ignored_ids.txt", "w")
-            f3 = open(f"/home/cxu/Datasets/{d}_mapping.txt", "w")
+            f2 = open(os.path.join(output_path,f"{d}_ignored_ids.txt"), "w")
+            f3 = open(os.path.join(output_path,f"{d}_mapping.txt"), "w")
 
             # initial the instance mapping dictionary
             if INSTANCE_FLAG:
+                instance = Instances(mapping, object_classes, output_img_size, allow_40_plus)
+
                 instances = np.load(os.path.join(instance_path, f'{1}.npy'), allow_pickle = True)
                 wrong_labels = instance.convert_instance(instances, wrong_labels)
                 
@@ -428,38 +419,39 @@ def main(config):
                     for label in wrong_labels:
                         f1.write('%s : %s \n' %(d, label))
             
-            for i in range(1,901):
-                print(f"{2*i}/1800")
+            # initial the bbox mapping dictionary 
+            if BBOX_FLAG:
+                bbox = Bboxes(mapping, object_classes, filtered_classes, input_img_size, output_img_size, allow_40_plus)
+            
+            for i in range(1,1802):
+                print(f"{i}/1801")
                 # check if all data exist
-                rgb_fn = os.path.join(rgb_path, f'{2*i}.png')
-                rgb_static_fn = os.path.join(rgb_static_path, f'{2*i}.png')
-                rgb_blur_fn = os.path.join(rgb_blur_path, f'{2*i}.png')
-                depth_fn = os.path.join(depth_path, f'{2*i}.npy')
-                instance_fn = os.path.join(instance_path, f'{2*i}.npy')
-                bbox_fn = os.path.join(bbox_path, f'{2*i}.npy')
+                rgb_fn = os.path.join(rgb_path, f'{i}.png')
+                rgb_blur_fn = os.path.join(rgb_blur_path, f'{i}.png')
+                depth_fn = os.path.join(depth_path, f'{i}.npy')
+                instance_fn = os.path.join(instance_path, f'{i}.npy')
+                bbox_fn = os.path.join(bbox_path, f'{i}.npy')
                 
-                fns = [not os.path.exists(fn) for fn in [rgb_fn, rgb_static_fn, depth_fn, instance_fn, bbox_fn]]
+                fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn]]
                 if np.any(fns):
                     continue
                 
                 # load rgb and depth image
                 rgb = cv2.imread(rgb_fn)
-                rgb_static = cv2.imread(rgb_static_fn)
                 depth = np.load(depth_fn)
 
                 # Detect Occlusion
                 perc_rgb_occluded, perc_depth_occluded = detect_occlusion(rgb, depth, 0.3)
                 if perc_rgb_occluded > 10 and perc_depth_occluded > 10:
-                    f2.write('%d\n' %(2*i))
+                    f2.write('%d\n' %(i))
                     continue
                     
                 if perc_depth_occluded > 40:
-                    f2.write('%d\n' %(2*i))
+                    f2.write('%d\n' %(i))
                     continue
                 
                 # resize image to output format size
                 # rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
-                rgb_static_resized = cv2.resize(rgb_static, dsize=(output_img_size[0], output_img_size[1]))
                 # rgb_ = rgb_resized.copy()
                 
                 # Load instance
@@ -515,40 +507,41 @@ def main(config):
                 
                 # write the rgb and rgb_static images
                 # fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
-                static_fn = os.path.join(output_path, folder, 'images_static', f"{data_id}.png")
                 # cv2.imwrite(fn, rgb_resized)
-                cv2.imwrite(static_fn, rgb_static_resized)
                 
                 # write the blur images
-                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
+                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.jpg")
                 
                 if not os.path.exists(rgb_blur_fn):
                     rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
                     cv2.imwrite(blur_fn, rgb_resized)
                 else:
-                    shutil.copyfile(rgb_blur_fn, blur_fn)
+                    blur_img = cv2.imread(rgb_blur_fn)
+                    cv2.imwrite(blur_fn, blur_img)
+                    #shutil.copyfile(rgb_blur_fn, blur_fn)
                 
                 # Record the mapping relations
-                f3.write('%s -> %s\n' %(os.path.join(d, f'{2*i}.png'), os.path.join(folder, f"{data_id}.png")))
-                print(os.path.join(d, f'{2*i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
+                f3.write('%s -> %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.jpg")))
+                print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.jpg"))
                 
-                del instances, bboxes
-                del rgb, depth, rgb_static, rgb_static_resized
+                del instances, bboxes, masks
+                del rgb, depth
                 
                 # # visualize the image result
                 # cv2.imshow('bbox + mask', rgb_)
                 # cv2.waitKey(1)
             
+            # Close the files for mapping relations and ignored ids
             f2.close()
             f3.close()
             
+            # Save the semantic mask json data
+            anno_path_object = os.path.join(output_path, 'object','masks', f"{d}_annos_gt.json")
+            anno_path_non_object = os.path.join(output_path, 'non_object','masks', f"{d}_annos_gt.json")
+            json.dump(instance.annotations_obj, open(anno_path_object, "w+"))
+            json.dump(instance.annotations_non_obj, open(anno_path_non_object, "w+"))
+            
     f1.close()
-    
-    # Save the semantic mask json data
-    anno_path_object = os.path.join(output_path, 'object','masks', "annos_gt.json")
-    anno_path_non_object = os.path.join(output_path, 'non_object','masks', "annos_gt.json")
-    json.dump(instance.annotations_obj, open(anno_path_object, "w+"))
-    json.dump(instance.annotations_non_obj, open(anno_path_non_object, "w+"))
 
 
 
