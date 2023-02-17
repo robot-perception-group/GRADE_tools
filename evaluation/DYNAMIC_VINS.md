@@ -65,7 +65,7 @@ python3 -m pip install --upgrade pip
 
 We suggest to use a virtual env. You can do that either with `conda` or `python-venv`.
 
-```
+```bash
 sudo apt install python3.8-venv
 python3 -m venv /path/to/venv
 source /path/to/venv/bin/activate
@@ -76,7 +76,7 @@ pip3 install python3-empy
 ```
 
 #### Note that the build process need to be made while sourcing the venv/conda environment.
-```
+```bash
 # build
 cd {your_catkin}
 catkin_make
@@ -104,7 +104,7 @@ Estimation process may be delayed. Slowing down the rosbag play speed may improv
   roslaunch vins_estimator vins_rviz.launch
   rosbag play /dataset/*.bag --clock
   ```
-- Visual Odometry:
+- Visual Odometry (GRADE Dataset):
   ```bash
   roslaunch vins_estimator tum_rgbd_pytorch_mpi.launch \
   rgb:="/my_robot_0/camera_link/0/rgb/image_raw" \
@@ -112,20 +112,25 @@ Estimation process may be delayed. Slowing down the rosbag play speed may improv
   roslaunch vins_estimator vins_rviz.launch
   rosbag play /dataset/*.bag --clock
   ```
-  
+- Visual Odometry (Default TUM RGBD-Dataset):
+  ```bash
+  roslaunch vins_estimator tum_rgbd_pytorch.launch
+  roslaunch vins_estimator vins_rviz.launch
+  rosbag play /dataset/*.bag --clock
+  ```
 - To save Estimated Result during experiments:
   ```bash
   rosbag record /my_robot_0/camera/pose \
-              /my_robot_0/odom \
-              /vins_estimator/camera_pose \
-              /vins_estimator/init_map_time -O result.bag
+                /my_robot_0/odom \
+                /vins_estimator/camera_pose \
+                /vins_estimator/init_map_time -O result.bag
   ```
 #### Known issues:
 - `Service call failed: service [/yolo_service] responded with an error: error processing request: 'Upsample' object has no attribute 'recompute_scale_factor'` look [here](https://github.com/openai/DALL-E/issues/54) how to solve this.
 
 ### 4. Evaluation
 
-- Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
+- Evaluate Estimated Result for **GRADE** using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
   ```bash
   ./evaluate.sh -t dynavins -f result.bag (-s 0.0) (-e 60.0)
   ```
@@ -133,6 +138,13 @@ Estimation process may be delayed. Slowing down the rosbag play speed may improv
     - `-f|--file` refers to the recorded rosbag that contains the gt/estimated poses
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
+
+- Evaluate Estimated Result for **TUM-RGBD** using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
+  ```bash
+  ./evaluate.sh -t dynavins_tum -f result.bag
+  ```
+    - `-t|--type` refers to the SLAM method type
+    - `-f|--file` refers to the recorded rosbag that contains the gt/estimated poses
   
 ### 5. Run your own data
 

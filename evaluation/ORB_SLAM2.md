@@ -99,11 +99,13 @@ make -j && sudo make install
 ### 4. Evaluation
 
 - Estimated result will be saved in `CameraTrajectory.txt` at `ORB_SLAM2` folder
-- Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
+- Evaluate Estimated Result using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
   ```bash
-  ./evaluate.sh -t orbslam2 -f ESTIMATED_RESULT_TXT (-s 0.0) (-e 60.0)
+  ./evaluate.sh -t orbslam2 -f ESTIMATED_RESULT_TXT -g GROUNTRUTH_BAG_FOLDER (-o OUTPUTDIR) (-s 0.0) (-e 60.0)
   ```
     - `-t|--type` refers to the SLAM method type
     - `-f|--file` refers to the estimated result from ORB-SLAM2 method
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
+    - `-o|--od` refers to the output directory
+    - `-g|--gb` refers to the folder of grountruth bags from which we extract `gt_pose.txt`

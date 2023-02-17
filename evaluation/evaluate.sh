@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]];do
         ;;
         -g|--gb)
         GB=${2}
-        echo "GROUNDTRUTH BAG : $GB"
+        echo "GROUNDTRUTH BAGS : $GB"
         shift 2
         ;;
         *)

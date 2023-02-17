@@ -56,7 +56,8 @@ Before installation, please apply the following modification:
   # generate gt_pose_vdo.txt
   python3 src/tool/output_pose.py --type vdo_gt \
                                   --path REINDEX_BAG_SEQUENCE \
-                                  --topic /my_robot_0/camera/pose
+                                  --topic /my_robot_0/camera/pose \
+                                  --output OUTPUT_DIR
   ```
   remember to move the scripts output eventually (or use `-d`).
   
@@ -97,16 +98,16 @@ YAML file can be found in `GRADE-eval/evaluation/config/vdo-mpi.yaml`
 
 - Estimated result will be saved in `refined_stereo_new.txt` in your defined folder [here](https://github.com/robot-perception-group/VDO_SLAM/blob/master/example/vdo_slam.cc#L145).
   
-- Evaluate Estimated Result using Absolute Trajectory Error (ATE) and Trajecotry Plot
+- Evaluate Estimated Result using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
   ```bash
-  ./evaluate.sh -t vdo -f ESTIMATED_RESULT_TXT -g GT_BAGS (-o OUTPUT) (-s 0.0) (-e 60.0)
+  ./evaluate.sh -t vdo -f ESTIMATED_RESULT_TXT -g GROUNTRUTH_BAG_FOLDER (-o OUTPUT) (-s 0.0) (-e 60.0)
   ```
     - `-t|--type` refers to the SLAM method type
     - `-f|--file` refers to the estimated result from VDO-SLAM method
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
     - `-o|--od` refers to the output dir. Default to local.
-    - `-g|--gb` refers to the grountruth bags from which we extract gt_pose.
+    - `-g|--gb` refers to the folder of grountruth bags from which we extract `gt_pose.txt`
   
 ### 6. Run your own data
 

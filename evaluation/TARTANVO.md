@@ -41,8 +41,8 @@ wget https://cmu.box.com/shared/static/t1a5u4x6dxohl89104dyrsiz42mvq2sz.pkl -O m
     - Generate Default Pose Ground Truth File `gt_pose.txt`
       ```bash
       python3 GRADE-eval/evaluation/src/tool/output_pose.py --type groundtruth \
-          --path BAG_SEQUENCE_FOLDER[reindex_bags_folder] \
-          --topic /my_robot_0/camera/pose
+                              --path BAG_SEQUENCE_FOLDER[reindex_bags_folder] \
+                              --topic /my_robot_0/camera/pose
       ```
     - Transform `gt_pose.txt` to generate `gt_pose_tartan.txt`
       ```bash
@@ -60,7 +60,7 @@ wget https://cmu.box.com/shared/static/t1a5u4x6dxohl89104dyrsiz42mvq2sz.pkl -O m
 ### 4. Evaluation
 
 - The system will automatically evaluate the absolute trajectory error (ATE) after completing the experiments. The estimated poses and ATE plot results will be saved in `./results` folder.
-- (Optional) Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
+- (Optional) Evaluate Estimated Result using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
 
   `ESTIMATED_RESULT_TXT` is by default `./results/grade_tartanvo_1914.txt`.
   
@@ -74,8 +74,7 @@ wget https://cmu.box.com/shared/static/t1a5u4x6dxohl89104dyrsiz42mvq2sz.pkl -O m
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
     - `-o|--od` refers to the output dir
-    - `-g|--gb` refers to the grountruth bag folder
-  
+    - `-g|--gb` refers to the folder of grountruth bags from which we extract `gt_pose.txt`
 ### 5. Your own data
 
 Add your own intrinsic on the `Dataset/utils.py` file.

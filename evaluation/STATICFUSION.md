@@ -81,22 +81,22 @@ make
   You have to copy that file to the corresponding dataset folder. 
   
 
-- ####USE `./StaticFusion-ImageSeqAssoc PATH_TO_DATASET` [from the build folder]
+- #### USE `./StaticFusion-ImageSeqAssoc PATH_TO_DATASET` [from the build folder]
     - Run `sudo ldconfig` if error occurs when loading shared libraries: `libpango_windowing.so`
     - Click **SAVE** button after completing entire experiment to generate **estimated pose** `sf-mesh.txt` and **pointcloud** `st-mesh.ply` results in `/build` folder.
 
 ### 4.Evaluation
 
-- Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
+- Evaluate Estimated Result using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
   ```bash
-  ./evaluate.sh -t staticfusion -f sf-mesh.txt -g original_bags (-o OUTPUT_DIR) (-s 0.0) (-e 60.0)
+  ./evaluate.sh -t staticfusion -f sf-mesh.txt -g GROUNTRUTH_BAG_FOLDER (-o OUTPUT_DIR) (-s 0.0) (-e 60.0)
   ```
     - `-t|--type` refers to the SLAM method type
     - `-f|--file` refers to the estimated result from Tartan VO method
     - `-o|--od` refers to the output_dir. If not specified `.` is used
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
-    - `-g|--gb` refers to the bags from which you want to extract the groundtruth
+    - `-g|--gb` refers to the folder of grountruth bags from which we extract `gt_pose.txt`
 
 ### 5. Running on your own data
 

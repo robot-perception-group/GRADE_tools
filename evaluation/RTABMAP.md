@@ -60,9 +60,9 @@ By default `rtabmap_ros` will save the database is `.ros/rtabmap.db`.
 
 Please change it in the config file or move it after running the experiment if you desire something different.
 
-- Evaluate Estimated Result using Absolute Trajecotry Error (ATE) and Trajecotry Plot
+- Evaluate Estimated Result using Absolute Trajectory Error (ATE), Relative Pose Error (RPE) and Trajecotry Plot
   ```bash
-  ./evaluate.sh -t rtabmap -f .ros/rtabmap.db -od OUTPUT_DIR (-s 0.0) (-e 60.0)
+  ./evaluate.sh -t rtabmap -f .ros/rtabmap.db -o OUTPUT_DIR (-s 0.0) (-e 60.0)
   ```
     - `-t|--type` refers to the SLAM method type
     - `-f|--file` refers to the RTABMAP database
@@ -70,7 +70,7 @@ Please change it in the config file or move it after running the experiment if y
     - `-s|--st` refers to the **start time** for evaluation
     - `-e|--et` refers to the **end time** for evaluation
 
-  The resulting files will be placed in the `od` if specified. You can find the `rtabmap_gt.txt` `rtabmap_slam.txt` and the plot.
+  The resulting files will be placed in the `output_dir` if specified. You can find the `rtabmap_gt.txt` `rtabmap_slam.txt` and the plot.
 
 ### 5. Run on your own data
 Simply change the topics in the launch file and follow plenty of instructions of RTABMap official repo.

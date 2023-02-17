@@ -27,7 +27,7 @@ As per the python packages, we leave to the reader the choice if they want to ru
   python3 src/tool/output_pose.py --type groundtruth \
                                   --path BAG_SEQUENCE_FOLDER[reindex_bags_folder] \
                                   --topic /my_robot_0/camera/pose
-                                  --od output_dir
+                                  --output OUTPUT_DIR
   ```
 - VDO-SLAM requried Ground Truth Pose File `gt_pose_vdo.txt`
   ```bash
@@ -35,12 +35,14 @@ As per the python packages, we leave to the reader the choice if they want to ru
   python3 src/tool/output_pose.py --type vdo_gt \
                                   --path BAG_SEQUENCE_FOLDER[reindex_bags_folder] \
                                   --topic /my_robot_0/camera/pose
-                                  --od output_dir
+                                  --output OUTPUT_DIR
   mv gt_pose_vdo.txt pose_gt.txt # Rename pose groundtruth file
   ```
 - Tartan VO required Ground Truth Pose File `gt_pose_tartan.txt` by transforming **Default `gt_pose.txt`**
   ```bash
-  python3 src/tool/output_pose.py --type tartan_gt --path gt_pose.txt --od output_dir
+  python3 src/tool/output_pose.py --type tartan_gt \
+                                  --path gt_pose.txt \ # default groundtruth pose
+                                  --output OUTPUT_DIR
   ```
 
 ### EVALUATION INSTALLATION INSTRUCTIONS
