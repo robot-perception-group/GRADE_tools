@@ -470,8 +470,8 @@ def main(config):
                     instance.generate_mask_data(data_ids, OBJ_FLAG, masks)
                     
                     # # # visualiza semantic mask
-                    # for j in range(mask.shape[2]):
-                    #     rgb_[np.where((mask[:,:,j] > 0))] = [255,255,255]
+                    # for j in range(masks.shape[2]):
+                    #     rgb_[np.where((masks[:,:,j] > 0))] = [255,255,255]
                         
                 # Load bboxes
                 if BBOX_FLAG:
