@@ -4,7 +4,7 @@ import subprocess
 
 if __name__ == '__main__':
     # Extract the noisy images from the bags
-    main_paths = ['/ps/project/irotate/DE_cam1']
+    main_paths = ['/ps/project/irotate/DE_cam1', '/ps/project/irotate/DE_cam1_horiz']
     for main_path in main_paths:
         datasets = os.listdir(main_path)
         

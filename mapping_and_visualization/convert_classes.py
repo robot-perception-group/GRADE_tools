@@ -224,7 +224,7 @@ class Instances(object):
                 "id": data_id,
                 "width": int(masks.shape[1]),
                 "height": int(masks.shape[2]),
-                "file_name": "{}.png".format(data_id),
+                "file_name": "{}.jpg".format(data_id),
             }
             self.annotations_obj["images"].append(img_anno)
             
