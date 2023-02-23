@@ -50,15 +50,15 @@ then
      python3 src/extract_data/play_bags.py --path $FOLDER  --config config/extract_data.yaml
 fi
 
-for FILE in `ls $FOLDER`
-do
-     FILE="$FOLDER/$FILE"
-     if [[ "$FILE" =~ ".bag" ]];
-     then
-          rm $FILE
-     fi
-     if [[ "$FILE" =~ "reindex" ]];
-     then
-          rm -rf $FILE
-     fi
-done
+# for FILE in `ls $FOLDER`
+# do
+#      FILE="$FOLDER/$FILE"
+#      if [[ "$FILE" =~ ".bag" ]];
+#      then
+#           rm $FILE
+#      fi
+#      if [[ "$FILE" =~ "reindex" ]];
+#      then
+#           rm -rf $FILE
+#      fi
+# done

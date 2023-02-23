@@ -14,10 +14,10 @@ if __name__ == '__main__':
             if not os.path.exists(local_path):
                 os.makedirs(local_path)
             
-            dataset = os.path.join(main_path, dataset)
-            files = os.listdir(dataset)
-            for file in files:
-                if '.bag' in file:
-                    print(f'Copying {file} from ', dataset)
-                    shutil.copyfile(os.path.join(dataset, file), os.path.join(local_path, file))
-            os.system(f"./process_data.sh --type bag --path {local_path}")
+                dataset = os.path.join(main_path, dataset)
+                files = os.listdir(dataset)
+                for file in files:
+                    if '.bag' in file:
+                        print(f'Copying {file} from ', dataset)
+                        shutil.copyfile(os.path.join(dataset, file), os.path.join(local_path, file))
+                os.system(f"./process_data.sh --type bag --path {local_path}")

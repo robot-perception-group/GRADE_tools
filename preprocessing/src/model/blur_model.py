@@ -1,6 +1,7 @@
 import confuse
 import numpy as np
 import cv2 as cv
+from scipy.spatial.transform import Rotation
 
 def velocity_transform(t_img, ts_odom, odom_vels, ts_rot_cam, rots_cam):
     # Find the index of current time in /odom list
@@ -136,8 +137,15 @@ class Blur(object):
             R = np.matmul(rotation_operator, R)
 
             rotations.append(R)
-            
-        return rotations
+                
+        euler14 = Rotation.from_matrix(rotations[14]).as_euler('zyx',degrees=False)
+        euler15 = Rotation.from_matrix(rotations[15]).as_euler('zyx',degrees=False)
+        euler_avg = np.arctan((np.sin(euler14)+np.sin(euler15))/(np.cos(euler14)+np.cos(euler15)))
+        
+        rot = Rotation.from_euler('zyx', euler_avg, degrees=False)
+        rotation_mean = rot.as_matrix()
+        
+        return rotations, rotation_mean
     
     def compute_translations(self, rotations, index, v_init):
         translations = []
@@ -163,13 +171,14 @@ class Blur(object):
 
             translations.append(T)
             
-        return translations
-        
+        translation_mean = np.mean(translations[14:16],axis=0)
+
+        return translations, translation_mean
             
         
     def blur_homography(self, index, v_init):
-        rotations = self.compute_rotations(index)
-        translations = self.compute_translations(rotations, index, v_init)
+        rotations,rotation_mean = self.compute_rotations(index)
+        translations,translation_mean = self.compute_translations(rotations, index, v_init)
         # print("\n Rotation: \n", self.rotations)
         # print("\n Translation: \n",self.translations)
         
@@ -190,8 +199,12 @@ class Blur(object):
             extrinsic_mats.append(E)
             Hs.append(H)
 
+        H_mean = np.matmul(np.matmul(K, rotation_mean + np.matmul(translation_mean, norm_v)), np.linalg.inv(K))
+        H_mean = H_mean/H_mean[2][2]
+        
         self.extrinsic_mats = np.array(extrinsic_mats).reshape(self.num_pose+1, 9)
-        return Hs
+        
+        return Hs, H_mean
     
         
     def create_blur_image(self, img, Hs):
@@ -214,7 +227,7 @@ class Blur(object):
         
 
     def add_rolling_shutter(self, img_blur):
-        t_readout = self.rng.normal(loc=self.readout_mean, scale=self.readout_std)
+        self.t_readout = self.rng.normal(loc=self.readout_mean, scale=self.readout_std)
         piece_H = int(self.image_H/self.total_sub)
         H_last = self.extrinsic_mats[-1,:]
         H_last = H_last.reshape((3,3))
@@ -225,7 +238,7 @@ class Blur(object):
 
         while y <= self.image_H:
             # time and approximated rotation for y th row
-            t_y = t_readout * y / self.image_H
+            t_y = self.t_readout * y / self.image_H
             H_y = self.interp_rot(t_y)
             H_new = np.matmul(H_y, np.linalg.inv(H_last))
             W_y = np.matmul(np.matmul(K, H_new), np.linalg.inv(K))
