@@ -518,7 +518,7 @@ def main(config):
                     continue
                 
                 # load rgb and depth image
-                # rgb = cv2.imread(rgb_blur_fn)
+                # rgb = cv2.imread(rgb_fn)
                 # depth = np.load(depth_fn)
 
                 '''TODO: Occlusion Pass'''
@@ -595,6 +595,7 @@ def main(config):
                 rgb_blur_fn_new = os.path.join(output_path, folder, 'images_blur', f"{data_id}.jpg")
                 
                 if not os.path.exists(rgb_blur_fn):
+                    rgb = cv2.imread(rgb_fn)
                     rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
                     cv2.imwrite(rgb_blur_fn_new, rgb_resized)
                 else:
@@ -605,7 +606,7 @@ def main(config):
                 print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.jpg"))
                 
                 del instances, bboxes, masks
-                del rgb, depth
+                # del rgb, depth
                 
                 # # visualize the image result
                 # cv2.imshow('bbox + mask', rgb_)
