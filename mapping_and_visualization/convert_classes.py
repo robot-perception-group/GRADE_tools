@@ -80,7 +80,6 @@ class Instances(object):
                 self.instance_dict[idx-1]['semanticId'] = obj_ID
             except:
                 print(label, 'can not be mapped...')
-                print(idx, name, label)
                 wrong_labels.append(label)        
         
             if label.lower() in self.object_classes:
@@ -99,9 +98,10 @@ class Instances(object):
 
     def load_mask(self, instances):
         '''
-        Specific Mask Generation for MASK RCNN
+        Generate masks matrix for each instance for Mask-RCNN
         '''
         classes = [] # empty detections
+        bboxes = []
         semantic_mask = np.zeros([self.imgsz[1], self.imgsz[0], 1], dtype=np.uint8)
         
         for index, obj_name in enumerate(self.object_ids):
@@ -119,13 +119,19 @@ class Instances(object):
                 masks = masks[:,:,None] # add one dimension
                 
                 # Filter object with very small area
-                obj_height = np.max(np.where(masks > 0)[0]) - np.min(np.where(masks > 0)[0]) + 1
-                obj_width  = np.max(np.where(masks > 0)[1]) - np.min(np.where(masks > 0)[1]) + 1
+                rows = np.any(masks, axis=1)
+                cols = np.any(masks, axis=0)
+                rmin, rmax = np.where(rows)[0][[0, -1]]
+                cmin, cmax = np.where(cols)[0][[0, -1]]
+                
+                obj_height = abs(rmax - rmin) + 1
+                obj_width  = abs(cmax - cmin) + 1
                 
                 if obj_height/obj_width > 100 or obj_width/obj_height > 100 or obj_width < 3 or obj_height < 3:
                     continue
                 
                 classes.append(self.labels[index])
+                bboxes.append([classes[-1], cmin, rmin, cmax, rmax])
                 
                 # merge multi channels semantic mask
                 if len(classes) == 1:
@@ -133,10 +139,10 @@ class Instances(object):
                 else:
                     semantic_mask = np.concatenate((semantic_mask, masks),axis=2)
             
-        return semantic_mask, classes
+        return semantic_mask, classes, bboxes
 
 
-    def generate_mask_data(self, data_ids, OBJ_FLAG, masks):
+    def generate_mask_data(self, data_ids, OBJ_FLAG, masks, bboxes):
         if OBJ_FLAG == True:
             data_id = data_ids['obj_id']
             img_anno = {
@@ -151,19 +157,15 @@ class Instances(object):
                 # get binary mask
                 bin_mask = masks[:, :, val].astype(bool).astype(np.uint8)
                 instance_id = data_id * 100 + (val + 1)  # create id for instance, increment val
-                # find bounding box
-                def bbox2(img):
-                    rows = np.any(img, axis=1)
-                    cols = np.any(img, axis=0)
-                    rmin, rmax = np.where(rows)[0][[0, -1]]
-                    cmin, cmax = np.where(cols)[0][[0, -1]]
-                    return int(cmin), int(rmin), int(cmax - cmin), int(rmax - rmin)
 
+                # find bounding box
+                bbox = bboxes[val]
+                x, y, w, h = int(bbox[1]), int(bbox[2]), int(bbox[3])-int(bbox[1]),int(bbox[4])-int(bbox[2]) 
+                
                 # encode mask
                 encode_mask = mask.encode(np.asfortranarray(bin_mask))
                 encode_mask["counts"] = encode_mask["counts"].decode("ascii")
                 size = int(mask.area(encode_mask))
-                x, y, w, h = bbox2(bin_mask)
 
                 instance_anno = {
                     "id": instance_id,
@@ -457,7 +459,7 @@ def main(config):
                 # Load instance
                 if INSTANCE_FLAG:
                     instances =  np.load(instance_fn, allow_pickle = True)
-                    masks, classes = instance.load_mask(instances)  # generate mask and detected classes
+                    masks, classes, bboxes = instance.load_mask(instances)  # generate mask and detected classes
                     
                     if len(classes) == 0:
                         OBJ_FLAG = False # negative sample
@@ -467,7 +469,7 @@ def main(config):
                         data_ids['obj_id'] += 1
                         
                     # save mask data
-                    instance.generate_mask_data(data_ids, OBJ_FLAG, masks)
+                    instance.generate_mask_data(data_ids, OBJ_FLAG, masks, bboxes)
                     
                     # # # visualiza semantic mask
                     # for j in range(masks.shape[2]):
@@ -510,15 +512,13 @@ def main(config):
                 # cv2.imwrite(fn, rgb_resized)
                 
                 # write the blur images
-                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.jpg")
+                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
                 
                 if not os.path.exists(rgb_blur_fn):
                     rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
                     cv2.imwrite(blur_fn, rgb_resized)
                 else:
-                    blur_img = cv2.imread(rgb_blur_fn)
-                    cv2.imwrite(blur_fn, blur_img)
-                    #shutil.copyfile(rgb_blur_fn, blur_fn)
+                    shutil.copyfile(rgb_blur_fn, blur_fn)
                 
                 # Record the mapping relations
                 f3.write('%s -> %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.jpg")))
