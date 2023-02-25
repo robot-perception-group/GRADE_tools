@@ -95,6 +95,8 @@ As a suggestion, you should use a virtualenv. Instructions will not include that
   ```cmake
   find_package(OpenCV 2.4.11 EXACT REQUIRED PATHS YOUR_OPENCV_PATH)
   ```
+  
+  4. Run `./build.sh`
 
 - Install Required Libaries for MASK-RCNN
 
