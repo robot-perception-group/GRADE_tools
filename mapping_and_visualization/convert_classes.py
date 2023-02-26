@@ -259,7 +259,7 @@ class Instances(object):
                 "id": data_id,
                 "width": int(masks.shape[1]),
                 "height": int(masks.shape[2]),
-                "file_name": "{}.png".format(data_id),
+                "file_name": "{}.jpg".format(data_id),
             }
             self.annotations_non_obj["images"].append(img_anno)
             
@@ -419,6 +419,18 @@ def main(config):
     output_path = config['output_path'].get()
     viewport = config['viewport_name'].get()
     
+    '''Pass Occlusion Check'''
+    ignored_ids = {}
+    for path in os.listdir('/home/cxu'):
+        if 'Datasets' in path:
+            for file in os.listdir('/home/cxu/' + path):
+                if 'ignored' in file:
+                    ignored_fn = os.path.join('/home/cxu', path, file)
+                    with open(ignored_fn, 'r') as f:
+                        data = f.readlines()
+                    ignored_ids[file.split('ignored')[0][:-1]] = [int(x) for x in data]
+    
+    
     # Create output directories
     output_paths = [os.path.join(output_path, 'object'),
                     os.path.join(output_path, 'object','masks'),
@@ -463,12 +475,12 @@ def main(config):
     f1 = open(os.path.join(output_path, "wrong_labels.txt"), "w")
     
     for path in main_paths:
+        
         # list all experiments in one of the main path
         dirs = os.listdir(path)
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
-        for d in dirs:      
-            if not '2509242c' in d:
-                continue             
+        
+        for d in dirs:        
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
@@ -521,7 +533,10 @@ def main(config):
                 # rgb = cv2.imread(rgb_fn)
                 # depth = np.load(depth_fn)
 
-                '''TODO: Occlusion Pass'''
+                if i in ignored_ids[d]:
+                    f2.write('%d\n' %(i))
+                    continue
+                    
                 # Detect Occlusion
                 # perc_rgb_occluded, perc_depth_occluded = detect_occlusion(rgb, depth, 0.3)
                 # if perc_rgb_occluded > 10 and perc_depth_occluded > 10:
