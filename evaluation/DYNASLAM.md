@@ -172,3 +172,8 @@ The main thing you need to take care is the association that you can obtain with
 `python evaluation/src/tool/associate.py PATH_TO_SEQUENCE/rgb.txt PATH_TO_SEQUENCE/depth.txt > associations.txt`
 
 Change the yaml file according to your camera parameters.
+
+
+### 6. Run on detectron2 models and with python3
+
+Follow the above and use the fork we did located [https://github.com/eliabntt/DynaSLAM/tree/master](here).
