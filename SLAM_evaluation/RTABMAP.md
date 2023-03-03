@@ -41,7 +41,7 @@
   source devel/setup.bash
   ```
 
-- Copy/move the `GRADE-eval/evaluation/launch/rtabmap_test.launch` in `your_catkin_ws/src/rtabmap_ros/launch/`
+- Copy/move the `GRADE-eval/SLAM_evaluation/launch/rtabmap_test.launch` in `your_catkin_ws/src/rtabmap_ros/launch/`
 
 ### 3. Run
 

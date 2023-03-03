@@ -74,7 +74,7 @@ make
     - Depth images - 16 bit monochrome in PNG, scaled by 1000.
 
 
-- `rgbd_assoc.txt` contain a list of items of the form as shown below, which can be found in `GRADE-eval/evaluation/config/rgbd_assoc.txt` to associate corresponding color and depth images.
+- `rgbd_assoc.txt` contain a list of items of the form as shown below, which can be found in `GRADE-eval/SLAM_evaluation/config/rgbd_assoc.txt` to associate corresponding color and depth images.
   ```
   timestamp1 /rgb/rgb_id.png timestamp2 /depth/depth_id.png
   ```
@@ -101,4 +101,4 @@ make
 ### 5. Running on your own data
 
 Edit the `StaticFusion.h` accordingly.
-Generate the association file through the TUM-RGBD associate file you can find in `GRADE-eval/evaluation/src/tool/associate.py`.
+Generate the association file through the TUM-RGBD associate file you can find in `GRADE-eval/SLAM_evaluation/src/tool/associate.py`.

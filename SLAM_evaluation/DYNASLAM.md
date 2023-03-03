@@ -126,9 +126,9 @@ As a suggestion, you should use a virtualenv. Instructions will not include that
 
   ```
   ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt \
-           PATH_TO_GRADE/evaluation/config/DynaSLAM-mpi.yaml \
+           PATH_TO_GRADE/SLAM_evaluation/config/DynaSLAM-mpi.yaml \
            PATH_TO_DATA_FOLDER \
-           PATH_TO_GRADE/evaluation/config/rgbd_assoc.txt \
+           PATH_TO_GRADE/SLAM_evaluation/config/rgbd_assoc.txt \
            (PATH_TO_MASKS) (PATH_TO_OUTPUT)
   ```
   
@@ -169,7 +169,7 @@ As a suggestion, you should use a virtualenv. Instructions will not include that
 ### 5. Run on your own data
 You can run on your own data. 
 The main thing you need to take care is the association that you can obtain with
-`python evaluation/src/tool/associate.py PATH_TO_SEQUENCE/rgb.txt PATH_TO_SEQUENCE/depth.txt > associations.txt`
+`python SLAM_evaluation/src/tool/associate.py PATH_TO_SEQUENCE/rgb.txt PATH_TO_SEQUENCE/depth.txt > associations.txt`
 
 Change the yaml file according to your camera parameters.
 

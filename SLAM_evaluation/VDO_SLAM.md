@@ -74,11 +74,11 @@ Before installation, please apply the following modification:
 - Define the output folder [here](https://github.com/robot-perception-group/VDO_SLAM/blob/master/example/vdo_slam.cc#L145) and build VDO again.
 
 - Flow data can be generated using [PWC-NET](https://github.com/NVlabs/PWC-Net) with Python 2.7 & PyTorch 0.2 & CUDA 8.0.
-  A simple script to process all the data inside a folder and output the flow can be found [here](https://github.com/robot-perception-group/GRADE-eval/tree/main/evaluation/src/script_pwc.py)
+  A simple script to process all the data inside a folder and output the flow can be found [here](https://github.com/robot-perception-group/GRADE-eval/tree/main/SLAM_evaluation/src/script_pwc.py)
 
 - Semantic data can be generated using [MASK-RCNN](https://github.com/matterport/Mask_RCNN) with Python 3.6 & tensorflow 1.15.0 & keras 2.2.4 & CUDA 10.2 & cupy-cuda102. **Note** remember to install `pycocotools` as explained in MaskRCNN readme and to `install` it (not just make it, see [here](https://github.com/matterport/Mask_RCNN/issues/1595)).
-  We provide a notebook [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/evaluation/src/maskrcnn/demo.ipynb) and a script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/evaluation/src/maskrcnn/mask_gen.py) (run it as `./mask_gen.py input_rgb_folder out_semantic_folder`) to generate the data. Both need to be copied in the main MaskRCNN folder. 
-  The modified visualization script can be found [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/evaluation/src/maskrcnn/visualize.py), please copy it to `Mask_RCNN\mrcnn\visualize.py` and then install Mask_RCNN.
+  We provide a notebook [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/SLAM_evaluation/src/maskrcnn/demo.ipynb) and a script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/SLAM_evaluation/src/maskrcnn/mask_gen.py) (run it as `./mask_gen.py input_rgb_folder out_semantic_folder`) to generate the data. Both need to be copied in the main MaskRCNN folder. 
+  The modified visualization script can be found [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/SLAM_evaluation/src/maskrcnn/visualize.py), please copy it to `Mask_RCNN\mrcnn\visualize.py` and then install Mask_RCNN.
   If you want you can use newer python versions according your own system. If you have issues with tensorflow/keras when you want to use the newer version you may need to check [this](https://github.com/matterport/Mask_RCNN/issues/2075#issuecomment-905845632).
   
 
@@ -92,7 +92,7 @@ Before installation, please apply the following modification:
 
 The original `VDO_SLAM\example\vdo_slam.cc` considers KITTI filename convention. To change this please change [this](https://github.com/robot-perception-group/VDO_SLAM/blob/master/example/vdo_slam.cc#L188) line and run `build.sh` again.
 
-YAML file can be found in `GRADE-eval/evaluation/config/vdo-mpi.yaml`
+YAML file can be found in `GRADE-eval/SLAM_evaluation/config/vdo-mpi.yaml`
 
 ### 5. Evaluation
 
