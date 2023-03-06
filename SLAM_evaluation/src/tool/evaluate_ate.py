@@ -201,15 +201,15 @@ if __name__=="__main__":
     parser.add_argument('--start_time', type=float, default=0.0)
     parser.add_argument('--end_time', type=float, default=60.0)
     args = parser.parse_args()
-
-    # Calulate the Missing Tiemstamps    
-    ts = args.start_time # initilize the first timestamp
+    
     # Define the stop timestamp
     with open(args.first_file) as f:
         data = f.readlines()
+        ts_gt_start = float((data[0].split(' ')[0]).replace(",","."))
         ts_gt_final = float((data[-1].split(' ')[0]).replace(",","."))
     
-    ts_end = max(args.end_time, ts_gt_final)
+    ts = max(args.start_time, ts_gt_start)  # initilize the first timestamp
+    ts_end = min(args.end_time, ts_gt_final) # initilize the final timestamp
         
     with open(args.second_file) as f:
         data = f.readlines()
@@ -218,6 +218,7 @@ if __name__=="__main__":
             if "timestamp" in d.split(' ')[0]: continue
 
             ts_ = float((d.split(' ')[0]).replace(",","."))
+            
             # Start from the "start_time"
             if ts_ < ts:
                 continue
@@ -234,7 +235,7 @@ if __name__=="__main__":
         if ts_diff > 1/30. + 10**(-5):
             total_time_missing += ts_diff
             
-        print("Estimated Pose: Missing %.2f seconds." %total_time_missing)
+        print("Estimated Pose: Missing %.3f seconds." %total_time_missing)
 
     first_list = associate.read_file_list(args.first_file)
     second_list = associate.read_file_list(args.second_file)
@@ -309,13 +310,3 @@ if __name__=="__main__":
         ax.set_title("%f"%numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error)))
         
         plt.savefig(args.plot,dpi=90)
-        
-        # ts = []
-        # for i in range(len(matches)):
-        #     ts.append(matches[i][0])
-        # fig = plt.figure(1)
-        # ax = fig.add_subplot(111)
-        # ax.plot(ts, trans_error)
-        # ax.set_xlabel('TimeStamp [s]')
-        # ax.set_ylabel('Trans Error [m]')
-        # plt.savefig(args.plot[:-4]+'_error.png',dpi=90)

@@ -33,7 +33,7 @@ time_correction: {
 # IMU params
 imu: {
     # from https://github.com/ethz-asl/rotors_simulator/blob/7f6b5529bfc793e77275ca32d8e4970a0c755e5d/rotors_gazebo/models/rotors_description/urdf/iris_base.xacro#L52
-    "enable": False, # if add noise
+    "enable": True, # if add noise
     "noise_model": "gaussian", # or groundtruth
     "config":
       {

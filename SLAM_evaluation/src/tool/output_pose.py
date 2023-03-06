@@ -92,22 +92,30 @@ def output_dynavins_rgbd(args):
         if 'init_map_time' in topic:
             ts = msg.header.stamp.to_sec()
 
-            if (ts < ts_start) or (ts > ts_stop):
-                continue
-
             ts_init = ts
             break
 
     '''Find the Initialization Position of Map Frame'''
-    for gt in gt_data:
-        ts = float(gt.split(' ')[0])
-        if abs(ts_init - ts) < max_difference:
-            pose = gt.split(' ')
+    if ts_init < ts_start:
+        pose = gt_data[0].split(' ')
+        
+        T_w2m = Quaternion(w=float(pose[7]), x=float(pose[4]), y=float(pose[5]),
+                            z=float(pose[6])).transformation_matrix
+        T_w2m[:3, 3] = [float(pose[1]),float(pose[2]),float(pose[3])]
+        ts_init = ts_start
+    else:
+        for gt in gt_data:
+            ts = float(gt.split(' ')[0])
             
-            T_w2m = Quaternion(w=float(pose[7]), x=float(pose[4]), y=float(pose[5]),
-                               z=float(pose[6])).transformation_matrix
-            T_w2m[:3, 3] = [float(pose[1]),float(pose[2]),float(pose[3])]
-            break
+            ts_error = 1e10
+            if abs(ts_init - ts) < max_difference and abs(ts_init - ts) < ts_error:
+                ts_error = abs(ts_init - ts)
+                pose = gt.split(' ')
+                
+                T_w2m = Quaternion(w=float(pose[7]), x=float(pose[4]), y=float(pose[5]),
+                                z=float(pose[6])).transformation_matrix
+                T_w2m[:3, 3] = [float(pose[1]),float(pose[2]),float(pose[3])]
+        ts_init = ts
 
     print('Initialization Started at :', ts_init)
 
