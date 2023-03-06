@@ -9,12 +9,12 @@ This repository contains all the files necessary to process the data generated b
 Find more information about the GRADE by looking at the [paper](), the [video](), or the [project website](https://eliabntt.github.io/GRADE-RR/home).
 
 
-## (Pre)Processing - Add Noise, Reorder ...
+## (Pre)Processing - Add Noise, Reorder Timestamps...
 The first step you need to do is the pre-processing of the experiment data.
 You can find all the necessary information [here](preprocessing/PREPROCESSING.md).
-This will guide you on adding noise to the data, limit the depth, and much more.
+This will guide you on adding noise to the data, limitting the depth, generating rgb/depth images, and much more.
 ___
-## Evaluation
+## SLAM Evaluation
 Then you can run evaluation scripts. You can find all the information [here](SLAM_evaluation/EVAL.md).
 Those are the settings used in the evaluations that you can find in the paper.
 ___
