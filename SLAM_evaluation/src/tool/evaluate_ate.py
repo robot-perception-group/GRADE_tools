@@ -197,7 +197,7 @@ if __name__=="__main__":
     parser.add_argument('--save_associations', help='save associated first and aligned second trajectory to disk (format: stamp1 x1 y1 z1 stamp2 x2 y2 z2)')
     parser.add_argument('--plot', help='plot the first and the aligned second trajectory to an image (format: png)')
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the RMSE absolute translational error in meters after alignment will be printed)', action='store_true')
-    parser.add_argument('--umeyama', help='Another Umeyama Alignment Method',type=int, default=False)
+    parser.add_argument('--umeyama', help='Another Umeyama Alignment Method',type=bool, default=False)
     parser.add_argument('--start_time', type=float, default=0.0)
     parser.add_argument('--end_time', type=float, default=60.0)
     args = parser.parse_args()
