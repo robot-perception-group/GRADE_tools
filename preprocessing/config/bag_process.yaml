@@ -69,7 +69,6 @@ camera: {
 blur:
   {
     "enable": True,
-    "save": True, # Save blur params into *.npy files for MASK GENERATION IN BLURRED IMAGES
     "config":
       {
         "num_imu_sample": 10,

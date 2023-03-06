@@ -148,7 +148,7 @@ class AddNoise:
     
         # Update the rgb timestamps: deleting the ignored index
         for i in self.blur_0.rgb_ignore:
-            print('Image Blur: Ignore RGB_IMAGE_0 at time: %.f' %(i))
+            print('Image Blur: Ignore RGB_IMAGE_0 at time: %.4f' %(i))
             self.rgb_0_ts.remove(i)
         
         for i in self.blur_1.rgb_ignore:
@@ -324,5 +324,3 @@ class AddNoise:
                 w_bag.write(topic_name, msg, t)
             
             w_bag.close()
-        
-            
