@@ -30,19 +30,16 @@ def random_colours(N, enable_random=True, num_channels=3):
         random.shuffle(colours)
     return colours
 
-def detect_occlusion(rgb, depth, depth_thr): # TO DO: add seg
+def detect_occlusion(rgb, depth, depth_thr): # todo add segmentation perhaps
     rgb_mask = np.zeros(rgb.shape, dtype=np.uint8)
     depth_mask = np.zeros(rgb.shape, dtype=np.uint8)
-    #seg_mask = np.zeros(rgb.shape, dtype=np.uint8)
     
     rgb_mask[np.where((rgb <= [15,15,15]).all(axis=2))] = [255,255,255]
     depth_mask[depth < depth_thr] = [255,255,255]
-    #seg_mask[seg >= 40] = [255,255,255] # assuming 40 are flying objects/humans
     
     # calculate the percentage of the rgb / depth are occluded
     perc_rgb = (np.count_nonzero(rgb_mask) / (3 * rgb.shape[0] * rgb.shape[1])) * 100
     perc_depth = (np.count_nonzero(depth_mask) / (3 * rgb.shape[0] * rgb.shape[1])) * 100
-    #perc_seg = (np.count_nonzero(seg_mask) / (3 * rgb.shape[0] * rgb.shape[1])) * 100
     
     return perc_rgb, perc_depth
 
@@ -59,7 +56,7 @@ class Instances(object):
         self.annotations_obj = {
             "images": [],
             "annotations": [],
-            "categories": [{"name": "person", "id": 1, "supercategory": "person"}],}
+            "categories": [{"name": "person", "id": 1, "supercategory": "person"}],} #todo allow more cats
         self.annotations_non_obj = {
             "images": [],
             "annotations": [],
@@ -170,7 +167,7 @@ class Instances(object):
                 instance_anno = {
                     "id": instance_id,
                     "image_id": data_id,
-                    "category_id": 1, # use data['class'] to map
+                    "category_id": 1, # todo use data['class'] to map
                     "segmentation": encode_mask,
                     "area": size,
                     "bbox": [x, y, w, h],
