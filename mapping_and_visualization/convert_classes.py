@@ -464,8 +464,8 @@ def main(config):
     
     # initialize data file id
     data_ids = {}
-    data_ids['obj_id'] = 0 # data with desired objects (positive data)
-    data_ids['non_obj_id'] = 0 # data with no object (background/negative data)
+    data_ids['obj_id'] =  20511 # data with desired objects (positive data)
+    data_ids['non_obj_id'] = 15640 # data with no object (background/negative data)
     
     OBJ_FLAG = None
     INSTANCE_FLAG = config['instance'].get()
@@ -482,6 +482,9 @@ def main(config):
         
         for d in dirs:        
             print(f"processing {path}{d}")
+            if f'{d}_mapping.txt' in os.listdir('/home/cxu/Datasets_Blur_3'):
+                continue
+            
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
             blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'blur')

@@ -1,8 +1,8 @@
 bbox: True
 instance: True
-main_path: ['/ps/project/irotate/DE_horiz_fligth_few_obs_cam1/', '/ps/project/irotate/DE_horiz_flight_lot_obs_cam1/']
+main_path: ['/ps/project/irotate/DE_lot_obs_cam0/', '/ps/project/irotate/DE_horiz_flight_lot_obs_cam0/']
 
-output_path: "/home/cxu/Datasets_Blur_2"
+output_path: "/home/cxu/Datasets_Blur_3"
 
 mapping_file: "mapping_and_visualization/mapping.pkl" # Relatiave path to mapping.pkl
 
