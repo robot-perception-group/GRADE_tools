@@ -137,8 +137,16 @@ class Blur(object):
             R = np.matmul(rotation_operator, R)
 
             rotations.append(R)
-            
-        return rotations
+        
+        # calculate the average rotation
+        euler14 = Rotation.from_matrix(rotations[14]).as_euler('zyx',degrees=False)
+        euler15 = Rotation.from_matrix(rotations[15]).as_euler('zyx',degrees=False)
+        euler_avg = np.arctan((np.sin(euler14)+np.sin(euler15))/(np.cos(euler14)+np.cos(euler15)))
+
+        rot = Rotation.from_euler('zyx', euler_avg, degrees=False)
+        rotation_mean = rot.as_matrix()
+
+        return rotations, rotation_mean
     
     def compute_translations(self, rotations, index, v_init):
         translations = []
@@ -163,14 +171,17 @@ class Blur(object):
             T = T_star - np.matmul(R, T0_star)
 
             translations.append(T)
+            
+        # calculate the average translation for generating masks for blurred images
+        translation_mean = np.mean(translations[14:16],axis=0)
 
-        return translations
+        return translations, translation_mean
         
             
         
     def blur_homography(self, index, v_init):
-        rotations = self.compute_rotations(index)
-        translations = self.compute_translations(rotations, index, v_init)
+        rotations,rotation_mean = self.compute_rotations(index)
+        translations,translation_mean = self.compute_translations(rotations, index, v_init)
         # print("\n Rotation: \n", self.rotations)
         # print("\n Translation: \n",self.translations)
         
@@ -191,8 +202,12 @@ class Blur(object):
             extrinsic_mats.append(E)
             Hs.append(H)
         
+        # calculate the average matrix for generating masks for blurred images
+        H_mean = np.matmul(np.matmul(K, rotation_mean + np.matmul(translation_mean, norm_v)), np.linalg.inv(K))
+        H_mean = H_mean/H_mean[2][2]
+
         self.extrinsic_mats = np.array(extrinsic_mats).reshape(self.num_pose+1, 9)
-        return Hs
+        return Hs, H_mean
     
         
     def create_blur_image(self, img, Hs):

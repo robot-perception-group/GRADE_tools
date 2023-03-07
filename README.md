@@ -1,6 +1,6 @@
 # GRADE PROCESSING & EVALUATION
 
-## This repository is part of the [GRADE](https://eliabntt.github.io/GRADE-RR/home) project
+### This repository is part of the [GRADE](https://eliabntt.github.io/GRADE-RR/home) project
 
 Many of the tools (especially the noise scripts) can be used for different projects and different scopes.
 
@@ -8,8 +8,14 @@ This repository contains all the files necessary to process the data generated b
 
 Find more information about the GRADE by looking at the [paper](), the [video](), or the [project website](https://eliabntt.github.io/GRADE-RR/home).
 
-
-## (Pre)Processing - Add Noise, Reorder Timestamps...
+----
+## Quick Guide
+- To obtain **rosbags** with reordered timestamps or noise, please refer to [bag processing](preprocessing/PREPROCESSING.md#L74) part
+- To obtain (noisy) **rgb/depth images (640X480)**, etc., please refer to [data extraction](preprocessing/PREPROCESSING.md#L88) part
+- To obtain **noisy rgb/depth images (1920X1080)**, etc., please refer to [file processing](preprocessing/PREPROCESSING.md#L88) part
+- To obtain **training dataset** with bbox labels and instance masks, please refer to [dataset generation](training_dataset_generation/MAPPING.md) part
+___
+## (Pre)Processing  -  Add Noise, Reorder Timestamps...
 The first step you need to do is the pre-processing of the experiment data.
 You can find all the necessary information [here](preprocessing/PREPROCESSING.md).
 This will guide you on adding noise to the data, limitting the depth, generating rgb/depth images, and much more.
