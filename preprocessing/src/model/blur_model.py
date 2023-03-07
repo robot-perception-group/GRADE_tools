@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import cv2 as cv
 from scipy.spatial.transform import Rotation
@@ -58,6 +59,8 @@ class Blur(object):
         # Initialize the list of RGB image need to be ignored
         self.rgb_ignore = []
         
+        # Initialize output directory for blur params
+        self.output_dir = None
     
     def generate_IMU(self, imu_camera, imu_camera_timestamps, rgb_timestamps):
         '''
@@ -204,10 +207,10 @@ class Blur(object):
         
         # calculate the average matrix for generating masks for blurred images
         H_mean = np.matmul(np.matmul(K, rotation_mean + np.matmul(translation_mean, norm_v)), np.linalg.inv(K))
-        H_mean = H_mean/H_mean[2][2]
+        self.H_mean = H_mean/H_mean[2][2]
 
         self.extrinsic_mats = np.array(extrinsic_mats).reshape(self.num_pose+1, 9)
-        return Hs, H_mean
+        return Hs
     
         
     def create_blur_image(self, img, Hs):
@@ -271,3 +274,16 @@ class Blur(object):
             rot_t[i] = np.interp(t, exposure_ts, h_array[:, i])
 
         return rot_t.reshape((3, 3))
+    
+    def save_params(self, index):
+        # load all params
+        blur_params = {}
+        blur_params['exposure_time'] = self.exposure_time
+        blur_params['readout_time'] = self.t_readout
+        blur_params['interval'] = self.interval
+        blur_params['num_pose'] = self.num_pose
+        blur_params['H_mean'] = self.H_mean
+        blur_params['extrinsic_mats'] = self.extrinsic_mats
+        blur_params['intrinsic_mat'] = self.intrinsic_mat
+        
+        np.save(os.path.join(self.output_dir,f"{index+1}.npy"), blur_params)

@@ -33,14 +33,15 @@ class AddNoise:
         self.started = False
         self.noise_enable = self.config['noise'].get()
         self.pointcloud_enable = self.config['camera']['pointcloud'].get()
-        self.blur_enable = self.config['blur']['enable'].get()
+        self.blur_enable = self.config['blur']['enable'].get() # generate blur images
+        self.blur_save_enable = self.config['blur']['save']['enable'].get() # save blur params
 
         # Check the direction of bag folder
         self.bag_dir = self.config['path'].get()
         self.bags = os.listdir(os.path.join(self.bag_dir,'reindex_bags'))
         self.bags.sort()
             
-        self.noisy_bag_dir = self.bag_dir + '/noisy_bags'
+        self.noisy_bag_dir = self.bag_dir + 'noisy_bags'
         if not os.path.exists(self.noisy_bag_dir):
             os.makedirs(self.noisy_bag_dir)
             
@@ -155,7 +156,13 @@ class AddNoise:
             print('Image Blur: Ignore RGB_IMAGE_1 at time: %.4f' %(i))
             self.rgb_1_ts.remove(i)
         
-        
+        if self.blur_save_enable:
+            for idx, blur in enumerate([self.blur_0,self.blur_1]):
+                blur.output_dir = os.path.join(self.noisy_bag_dir,self.config['blur']['save']['output_dirs'][idx].get())
+                if not os.path.exists(blur.output_dir):
+                    os.makedirs(blur.output_dir)
+                    
+                    
     def blur_image(self, msg, t_img, blur, rgb_ts):
         # Store the Message Header
         msg_header = msg.header
@@ -171,9 +178,13 @@ class AddNoise:
             
             index = rgb_ts.index(t_img)
 
-                        # Create blur images
+            # Create blur images
             Hs = blur.blur_homography(index, v_init)
             blur_img = blur.create_blur_image(img, Hs)
+            
+            # output blur params
+            if self.blur_save_enable:
+                blur.save_params(index)
         else:
             blur_img = img
         

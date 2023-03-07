@@ -233,7 +233,7 @@ class AddNoise:
             v_init = blur_model.velocity_transform(rgb_ts[i], odom_ts, odom_lin_vels, pose_ts, poses)
             
             img = cv2.imread(self.rgb_dir + str(i+1) + ".png")
-            Hs, H_mean = blur.blur_homography(i, v_init)
+            Hs = blur.blur_homography(i, v_init)
 
             blur_img = blur.create_blur_image(img, Hs)
             cv2.imwrite(os.path.join(self.rgb_blurry_dir,str(i+1)+".png"), blur_img)

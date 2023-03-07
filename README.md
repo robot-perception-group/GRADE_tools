@@ -8,7 +8,6 @@ This repository contains all the files necessary to process the data generated b
 
 Find more information about the GRADE by looking at the [paper](), the [video](), or the [project website](https://eliabntt.github.io/GRADE-RR/home).
 
-----
 ## Quick Guide
 - To obtain **rosbags** with reordered timestamps or noise, please refer to [bag processing](preprocessing/PREPROCESSING.md#L74) part
 - To obtain (noisy) **rgb/depth images (640X480)**, etc., please refer to [data extraction](preprocessing/PREPROCESSING.md#L88) part
