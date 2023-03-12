@@ -1,5 +1,7 @@
-bbox: True
-instance: True
+bbox: True # generate bbox labels
+instance: True # generate instance mask labels
+noisy: True # generate the dataset with blurry images
+
 main_path: ['/ps/project/irotate/DE_cam0/',
             '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
 
@@ -19,4 +21,4 @@ additional: {'robot':41,
 
 object_classes: ['human'] # Objects we want to detect
 
-filtered_classes: ['wallinner', 'baseboard', 'cabinet']
+filtered_classes: ['wallinner', 'baseboard', 'cabinet'] # classes we  want to ignore

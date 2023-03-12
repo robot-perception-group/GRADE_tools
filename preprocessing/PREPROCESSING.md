@@ -4,7 +4,7 @@ This document will help you processing the data recorded during the experiments 
 
 There are many options.
 
-The first choice you need to make is if you want to process the **rosbags** or the **full size data** (the saved `npy` files).
+The first choice you need to make is if you want to process the **rosbags** or the **full size data** (the stored `npy` files).
 In the first case go to [ROSBAG Processing](https://github.com/robot-perception-group/GRADE-eval/blob/main/preprocessing/PREPROCESSING.md#1-rosbag-processing), in the latter go to [File Processing](https://github.com/robot-perception-group/GRADE-eval/blob/main/preprocessing/PREPROCESSING.md#3-file-processing).
 
 In practice, given an input folder, the script can:
@@ -80,8 +80,9 @@ The `process_data.sh` will take care of:
 - Customized parameters are defined in `config/bag_process.yaml`. Please refer to that for the complete set of parameters.
   - If message timestamps are overlapped, set `time_correction/enable` to `True` to generate reindex bags.
   - Set `noise` to `True` to generate **Noisy Bags**
-  - Set `camera/pointcloud` to `True` to generate **Pointcloud** in Noisy Bags
-  - Set `blur/enable` to `True` to generate **Blurry Image** in Noisy Bags
+  - Set `camera/pointcloud` to `True` to generate **Pointcloud Message** in Noisy Bags
+  - Set `blur/enable` to `True` to generate **Blurry Image Message** in Noisy Bags
+  - Set `blur/save/enable` to `True` to save **Blur Parameter Files** for each image, which can be used to generate **corresponding transformed masks** for blurry images
 - Reindex Bags will be saved in `/reindex_bags` folder
 - Noisy Bags will be saved in `/noisy_bags` folder
 
@@ -93,7 +94,7 @@ The `process_data.sh` will take care of:
 
 - Data extraction should be performed **after processing rosbags** and **before processing files**
 - Customized parameters are defined in `config/extract_data.yaml`
-  - Set `out_dir` to your desired output directory, or it will be saved in `/INPUT_PATH/data`
+  - Set `out_dir` to your desired output directory, or it will be saved in `/{INPUT_PATH}/data`
   - Each topic row is composed of three elements. `[topic_name, out_subfolder, True/False]`. If `False` it won't be saved.
   - The `imu_reference_topic` is used to link the imu messages to the images. The output names will have a structure like `img_idx_imu_idx2.npy` to distinguish imu intercoming between two images.
 - **NOTE that most SLAM methods require `rgb` folder, so you'll need to manually rename it or change the config of the SLAM.**
@@ -107,8 +108,8 @@ The `process_data.sh` will take care of:
 - Customized parameters are defined in `config/file_process.yaml`
   - Set `raw_data_dir` to the extracted data folder from **Data Extraction** procedure.
     **Since we are going to add noise to the full images using this data, this will be the `reindexed_bag` data folder.**
-  - Set `out_dir` to your desired output directory, or it will be saved in `/INPUT_PATH/data`
-  - Set `camera/enable` to `True` to generate **Noisy Depth files** in \*npy files (1920X1080)
+  - Set `out_dir` to your desired output directory, or it will be saved in `/{INPUT_PATH}/data`
+  - Set `camera/enable` to `True` to generate **Noisy Depth files** in \*.npy files (1920X1080)
   - Set `camera/output_img` to `True` to generate **Original and Noisy Depth Images** in \*.png files (1920X1080)
   - Set `blur/enable` to `True` to generate **Blurry RGB Images** in \*.png files (1920X1080)
   - Set `imu/enable` to `True` to generate **Noisy IMU Data** in \*.npy files

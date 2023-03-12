@@ -1,34 +1,15 @@
 import os
 import cv2
 import json
-import random
 import shutil
 import confuse
-import colorsys
 import argparse
 import numpy as np
 import pickle as pkl
-from PIL import Image, ImageDraw
-from pycocotools import mask
+import matplotlib.pyplot as plt
 
-def random_colours(N, enable_random=True, num_channels=3):
-    """
-    Generate random colors.
-    Generate visually distinct colours by linearly spacing the hue
-    channel in HSV space and then convert to RGB space.
-    """
-    start = 0
-    if enable_random:
-        random.seed(10)
-        start = random.random()
-    hues = [(start + i / N) % 1.0 for i in range(N)]
-    colours = [list(colorsys.hsv_to_rgb(h, 0.9, 1.0)) for i, h in enumerate(hues)]
-    if num_channels == 4:
-        for color in colours:
-            color.append(1.0)
-    if enable_random:
-        random.shuffle(colours)
-    return colours
+from instance import Instances
+from bbox import Bboxes
 
 def detect_occlusion(rgb, depth, depth_thr): # todo add segmentation perhaps
     rgb_mask = np.zeros(rgb.shape, dtype=np.uint8)
@@ -43,297 +24,23 @@ def detect_occlusion(rgb, depth, depth_thr): # todo add segmentation perhaps
     
     return perc_rgb, perc_depth
 
+def visualize_mask(rgb, masks):
+    # masks shape: [rgb.shape[0], rgb.shape[1]]
+    rgb = rgb.astype(float)
 
-class Instances(object):
-    '''
-    For each experiment, the mapping dictionary of `Instances` Class remains the same.
-    '''
-    def __init__(self, mapping, object_classes, output_img_size, allow_40_plus):
-        self.imgsz = output_img_size
-        self.object_classes = object_classes
-        self.allow_40_plus =  allow_40_plus
-        self.mapping = mapping
-        self.annotations_obj = {
-            "images": [],
-            "annotations": [],
-            "categories": [{"name": "person", "id": 1, "supercategory": "person"}],} #todo allow more cats
-        self.annotations_non_obj = {
-            "images": [],
-            "annotations": [],
-            "categories": [{"name": "person", "id": 1, "supercategory": "person"}],}
-        
-    def convert_instance(self, instances, wrong_labels):
-        self.instance_dict = instances[1]
-        self.object_ids = {}
-        self.labels = []
-    
-        for idx, name, label in zip(self.instance_dict['uniqueId'], self.instance_dict['name'], self.instance_dict['semanticLabel']):
-            if self.allow_40_plus and "human" == label and "body" not in name:
-                label = "clothes"
-        
-            # Transform the label ID to NYU 40
-            try:
-                obj_ID = self.mapping[label.lower()]
-                self.instance_dict[idx-1]['semanticId'] = obj_ID
-            except:
-                print(label, 'can not be mapped...')
-                wrong_labels.append(label)        
-        
-            if label.lower() in self.object_classes:
-                if label.lower() == 'human':
-                    obj_name = name.split('/')[1]
-                else:
-                    obj_name = name.split('/')[-1]
+    overlay = np.zeros((rgb.shape[0], rgb.shape[1], 3), dtype="float")
+    alpha_mask = np.zeros(overlay.shape)
+    alpha_bg = np.ones(overlay.shape)
 
-                if obj_name not in self.object_ids:
-                    self.object_ids[obj_name] = [] # One object may have multiple components
-                    self.labels.append(label.lower())
-                self.object_ids[obj_name].append(idx)
-        
-        return wrong_labels
+    overlay[np.where((masks[:,:] > 0))] = [255,255,255]
+    alpha_mask[np.where((masks[:,:] > 0))] = 0.5
 
+    foreground = cv2.multiply(alpha_mask, overlay)
+    background = cv2.multiply(alpha_bg-alpha_mask, rgb)
+    rgb = cv2.add(foreground[...,:3], background)
 
-    def load_mask(self, instances):
-        '''
-        Generate masks matrix for each instance for Mask-RCNN
-        '''
-        classes = [] # empty detections
-        bboxes = []
-        semantic_mask = np.zeros([self.imgsz[1], self.imgsz[0], 1], dtype=np.uint8)
-        
-        for index, obj_name in enumerate(self.object_ids):
-            # merge several components into one object
-            masks = np.zeros(instances[0].shape, dtype=np.uint8)
-            
-            ids = self.object_ids[obj_name]
-            for idx in ids:
-                masks[instances[0]==idx] = 255
-            
-            # objects exist in this image
-            if masks.any():     
-                # resize the full size image mask
-                masks = cv2.resize(masks, dsize=self.imgsz)
-                masks = masks[:,:,None] # add one dimension
-                
-                # Filter object with very small area
-                rows = np.any(masks, axis=1)
-                cols = np.any(masks, axis=0)
-                rmin, rmax = np.where(rows)[0][[0, -1]]
-                cmin, cmax = np.where(cols)[0][[0, -1]]
-                
-                obj_height = abs(rmax - rmin) + 1
-                obj_width  = abs(cmax - cmin) + 1
-                
-                if obj_height/obj_width > 100 or obj_width/obj_height > 100 or obj_width < 3 or obj_height < 3:
-                    continue
-                
-                classes.append(self.labels[index])
-                bboxes.append([classes[-1], cmin, rmin, cmax, rmax])
-                
-                # merge multi channels semantic mask
-                if len(classes) == 1:
-                    semantic_mask = masks
-                else:
-                    semantic_mask = np.concatenate((semantic_mask, masks),axis=2)
-            
-        return semantic_mask, classes, bboxes
-
-
-    def generate_mask_data(self, data_ids, OBJ_FLAG, masks, bboxes):
-        if OBJ_FLAG == True:
-            data_id = data_ids['obj_id']
-            img_anno = {
-                "id": data_id,
-                "width": int(masks.shape[1]),
-                "height": int(masks.shape[2]),
-                "file_name": "{}.png".format(data_id),
-            }
-            self.annotations_obj["images"].append(img_anno)
-            
-            for val in range(masks.shape[-1]):
-                # get binary mask
-                bin_mask = masks[:, :, val].astype(bool).astype(np.uint8)
-                instance_id = data_id * 100 + (val + 1)  # create id for instance, increment val
-
-                # find bounding box
-                bbox = bboxes[val]
-                x, y, w, h = int(bbox[1]), int(bbox[2]), int(bbox[3])-int(bbox[1]),int(bbox[4])-int(bbox[2]) 
-                
-                # encode mask
-                encode_mask = mask.encode(np.asfortranarray(bin_mask))
-                encode_mask["counts"] = encode_mask["counts"].decode("ascii")
-                size = int(mask.area(encode_mask))
-
-                instance_anno = {
-                    "id": instance_id,
-                    "image_id": data_id,
-                    "category_id": 1, # todo use data['class'] to map
-                    "segmentation": encode_mask,
-                    "area": size,
-                    "bbox": [x, y, w, h],
-                    "iscrowd": 0,
-                }
-
-                self.annotations_obj["annotations"].append(instance_anno)
-        else:
-            data_id = data_ids['non_obj_id']
-            img_anno = {
-                "id": data_id,
-                "width": int(masks.shape[1]),
-                "height": int(masks.shape[2]),
-                "file_name": "{}.png".format(data_id),
-            }
-            self.annotations_non_obj["images"].append(img_anno)
-            
-            bin_mask = masks[:, :, 0].astype(bool).astype(np.uint8)
-            instance_id = data_id * 100  # create id for instance, increment val
-
-            # encode mask
-            encode_mask = mask.encode(np.asfortranarray(bin_mask))
-            encode_mask["counts"] = encode_mask["counts"].decode("ascii")
-            size = 0
-
-            instance_anno = {
-                "id": instance_id,
-                "image_id": data_id,
-                "category_id": 1, # use data['class'] to map
-                "segmentation": encode_mask,
-                "area": size,
-                "bbox": [0, 0, 0, 0],
-                "iscrowd": 0,
-            }
-
-            self.annotations_non_obj["annotations"].append(instance_anno)
-
-class Bboxes(object):
-    def __init__(self, mapping, object_classes, filtered_classes, input_img_size, output_img_size, allow_40_plus):
-        self.input_imgsz = input_img_size
-        self.output_imgsz = output_img_size
-        self.object_classes = object_classes
-        self.filtered_classes = filtered_classes
-        self.allow_40_plus =  allow_40_plus
-        self.mapping = mapping   
-    
-
-    def load_bbox(self, bbox_2d_data):
-        """ Resize RGB image and corresponding coordinates of bbox rectangle.
-
-            Args:
-                rgb (numpy.ndarray): RGB data from the sensor to embed bounding box.
-                bboxes_2d_data (numpy.ndarray): 2D bounding box data from the sensor.
-                input_img_size(tuple): Desired output image size
-        """
-        new_bbox_data = []
-        img_width = self.input_imgsz[0]
-        img_height = self.input_imgsz[1]
-        
-        for bbox in bbox_2d_data:
-            obj_class = bbox[2].lower() 
-            obj_name  = bbox[1]
-            
-            if obj_class in self.object_classes and 'Armature' not in obj_name:
-                bbox[6] = bbox[6] / img_width  * self.output_imgsz[0]
-                bbox[7] = bbox[7] / img_height * self.output_imgsz[1]
-                bbox[8] = bbox[8] / img_width  * self.output_imgsz[0]
-                bbox[9] = bbox[9] / img_height * self.output_imgsz[1]
-                
-                # Filter based on the area
-                bbox_width = abs(bbox[8] - bbox[6]) + 1
-                bbox_height = abs(bbox[9] - bbox[7]) + 1
-                
-                if bbox_height/bbox_width > 100 or bbox_width/bbox_height > 100 or bbox_width < 3 or bbox_height < 3:
-                    continue
-                
-                new_bbox_data.append(bbox)
-            
-        new_bbox_data = np.array(new_bbox_data)
-                
-        return new_bbox_data
-
-
-    def convert_bbox(self, bbox_2d_data, wrong_labels):
-        """ Transform the semantic label ID of bbox_2d_data
-
-        Args:
-            bboxes_2d_data (numpy.ndarray): 2D bounding box data from the sensor.
-        """
-        for bbox in bbox_2d_data:
-            obj_class = bbox[2].lower()
-            obj_name  = bbox[1]
-            
-            # Filter out class labels
-            if obj_class in self.filtered_classes or 'Armature' in obj_name:
-                continue
-            
-            # transform semantic ID to the mapping ID based on the semantic label
-            try:
-                obj_ID = self.mapping[obj_class]
-                bbox[5] = obj_ID
-            except:
-                print(obj_class, 'can not be mapped...')
-                wrong_labels.append(obj_class)
-        
-        return bbox_2d_data, wrong_labels
-    
-    @staticmethod
-    def colorize_bboxes(bboxes_2d_data, rgb, num_channels=3):
-        """ Colorizes 2D bounding box data for visualization.
-
-
-            Args:
-                bboxes_2d_data (numpy.ndarray): 2D bounding box data from the sensor.
-                rgb (numpy.ndarray): RGB data from the sensor to embed bounding box.
-                num_channels (int): Specify number of channels i.e. 3 or 4.
-        """
-        obj_name_list = []
-        rgb_img = Image.fromarray(rgb)
-        rgb_img_draw = ImageDraw.Draw(rgb_img)
-        
-        for bbox_2d in bboxes_2d_data:
-            obj_name_list.append(bbox_2d[1])
-
-        obj_name_list_np = np.unique(np.array(obj_name_list))
-        color_list = random_colours(len(obj_name_list_np.tolist()), True, num_channels)
-        
-        for bbox_2d in bboxes_2d_data:
-            index = np.where(obj_name_list_np == bbox_2d[1])[0][0]
-            bbox_color = color_list[index]
-            outline = (int(255 * bbox_color[0]), int(255 * bbox_color[1]), int(255 * bbox_color[2]))
-            if num_channels == 4:
-                outline = (
-                    int(255 * bbox_color[0]),
-                    int(255 * bbox_color[1]),
-                    int(255 * bbox_color[2]),
-                    int(255 * bbox_color[3]),
-                )
-            rgb_img_draw.rectangle([(bbox_2d[6], bbox_2d[7]), (bbox_2d[8], bbox_2d[9])], outline=outline, width=3)
-            bboxes_2d_rgb = np.array(rgb_img)
-        return bboxes_2d_rgb
-
-
-    def generate_bbox_data(self, output_path, data_ids, data_type, bboxes_data):
-        if data_type:
-            folder = 'object'
-            data_id = data_ids['obj_id']
-        else:
-            folder = 'non_object'
-            data_id = data_ids['non_obj_id']
-        
-        img_width = self.output_imgsz[0]
-        img_height = self.output_imgsz[1]
-        
-        f1 = open(os.path.join(output_path, folder, 'labels', f"{data_id}.txt"), "w")
-        for bbox in bboxes_data:
-            obj_label = bbox[2]
-            if obj_label.lower() in self.object_classes:
-                index = self.object_classes.index(obj_label.lower())
-                width    = (bbox[8] - bbox[6]) / img_width
-                height   = (bbox[9] - bbox[7]) / img_height
-                x_center = (bbox[8] + bbox[6]) / (2 * img_width)
-                y_center = (bbox[9] + bbox[7]) / (2 * img_height)
-                f1.write('%d %.6f %.6f %.6f %.6f\n' %(index, x_center, y_center, width, height))
-        f1.close()
-
+    plt.imshow(rgb/255)
+    plt.show()
 
 def main(config):
     # Define input variables
@@ -346,12 +53,10 @@ def main(config):
                     os.path.join(output_path, 'object','masks'),
                     os.path.join(output_path, 'object','labels'),
                     os.path.join(output_path, 'object','images'),
-                    os.path.join(output_path, 'object','images_blur'),
                     os.path.join(output_path, 'non_object'),
                     os.path.join(output_path, 'non_object','masks'),
                     os.path.join(output_path, 'non_object','labels'),
-                    os.path.join(output_path, 'non_object','images'),
-                    os.path.join(output_path, 'non_object','images_blur'),]
+                    os.path.join(output_path, 'non_object','images'),]
     
     for path in output_paths:
         if not os.path.exists(path):
@@ -380,6 +85,7 @@ def main(config):
     OBJ_FLAG = None
     INSTANCE_FLAG = config['instance'].get()
     BBOX_FLAG = config['bbox'].get()
+    NOISY_FLAG = config['noisy'].get()
 
     # Transform Data into desired dataset
     f1 = open(os.path.join(output_path, "wrong_labels.txt"), "w")
@@ -391,16 +97,22 @@ def main(config):
         for d in dirs:             
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
-            rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
             instance_path = os.path.join(path, d, viewport, 'instance')
             bbox_path = os.path.join(path, d, viewport, 'bbox_2d_tight')
 
             # Check repository
-            sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path, rgb_blur_path]]
+            sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path]]
             if np.any(sub_dirs):
                 print(d, ' HAVE INCOMPLETE DATA...')
                 continue
+            
+            if NOISY_FLAG:
+                rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
+                blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'blur')
+                if not os.path.exists(rgb_blur_path) or not os.path.exists(blur_path):
+                    print(d, ' HAVE INCOMPLETE DATA...')
+                    continue
             
             # initialize ignored data list
             wrong_labels = []
@@ -409,7 +121,7 @@ def main(config):
 
             # initial the instance mapping dictionary
             if INSTANCE_FLAG:
-                instance = Instances(mapping, object_classes, output_img_size, allow_40_plus)
+                instance = Instances(mapping, object_classes, output_img_size, NOISY_FLAG, allow_40_plus)
 
                 instances = np.load(os.path.join(instance_path, f'{1}.npy'), allow_pickle = True)
                 wrong_labels = instance.convert_instance(instances, wrong_labels)
@@ -426,7 +138,6 @@ def main(config):
                 print(f"{i}/1801")
                 # check if all data exist
                 rgb_fn = os.path.join(rgb_path, f'{i}.png')
-                rgb_blur_fn = os.path.join(rgb_blur_path, f'{i}.png')
                 depth_fn = os.path.join(depth_path, f'{i}.npy')
                 instance_fn = os.path.join(instance_path, f'{i}.npy')
                 bbox_fn = os.path.join(bbox_path, f'{i}.npy')
@@ -435,6 +146,10 @@ def main(config):
                 if np.any(fns):
                     continue
                 
+                if NOISY_FLAG:
+                    rgb_blur_fn = os.path.join(rgb_blur_path, f'{i}.png')
+                    blur_fn = os.path.join(blur_path, f'{i}.npy')
+                    
                 # load rgb and depth image
                 rgb = cv2.imread(rgb_fn)
                 depth = np.load(depth_fn)
@@ -456,8 +171,12 @@ def main(config):
                 # Load instance
                 if INSTANCE_FLAG:
                     instances =  np.load(instance_fn, allow_pickle = True)
-                    masks, classes, bboxes = instance.load_mask(instances)  # generate mask and detected classes
                     
+                    if NOISY_FLAG:
+                        masks, classes, bboxes = instance.load_mask(instance, blur_fn)  # generate mask and detected classes
+                    else:
+                        masks, classes, bboxes = instance.load_mask(instance)
+                        
                     if len(classes) == 0:
                         OBJ_FLAG = False # negative sample
                         data_ids['non_obj_id'] += 1
@@ -473,7 +192,9 @@ def main(config):
                     #     rgb_[np.where((masks[:,:,j] > 0))] = [255,255,255]
                         
                 # Load bboxes
-                if BBOX_FLAG:
+                if NOISY_FLAG:
+                    bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, bboxes)
+                elif BBOX_FLAG:
                     bboxes = np.load(bbox_fn, allow_pickle = True)
             
                     # Transform bboxes label ID to NYU40
@@ -509,17 +230,17 @@ def main(config):
                 # cv2.imwrite(fn, rgb_resized)
                 
                 # write the blur images
-                blur_fn = os.path.join(output_path, folder, 'images_blur', f"{data_id}.png")
+                rgb_fn_new = os.path.join(output_path, folder, 'images', f"{data_id}.png")
                 
-                if not os.path.exists(rgb_blur_fn):
+                if not NOISY_FLAG or not os.path.exists(rgb_blur_fn):
                     rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
-                    cv2.imwrite(blur_fn, rgb_resized)
+                    cv2.imwrite(rgb_fn_new, rgb_resized)
                 else:
-                    shutil.copyfile(rgb_blur_fn, blur_fn)
+                    shutil.copyfile(rgb_blur_fn, rgb_fn_new)
                 
                 # Record the mapping relations
-                f3.write('%s -> %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.jpg")))
-                print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.jpg"))
+                f3.write('%s  %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.png")))
+                print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
                 del instances, bboxes, masks
                 del rgb, depth
