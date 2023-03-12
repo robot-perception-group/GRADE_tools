@@ -1,4 +1,5 @@
 #!/bin/bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 usage() {
      echo "Usage: ${0} [-t|--type] [-p|--path]]" 1>&2
      exit 1
@@ -32,7 +33,7 @@ do
           mv $FILE ${FILE:0:-7} #notice it is .bag.active
           rosbag reindex ${FILE:0:-7}
      fi
-     if [[ "$FILE" =~ ".orig" ]];
+     if [[ "$FILE" =~ ".orig.bag" ]];
      then
           rm $FILE
      fi
@@ -41,11 +42,11 @@ done
 
 if [[ $TYPE == "bag" ]];
 then
-     python3 src/bag_process/play_bags.py --path $FOLDER  --config config/bag_process.yaml
+     python3 $SCRIPT_DIR/src/bag_process/play_bags.py --path $FOLDER  --config $SCRIPT_DIR/config/bag_process.yaml
 elif [[ $TYPE == "file" ]];
 then
-     python3 src/file_process/play_files.py --path $FOLDER  --config config/file_process.yaml
+     python3 $SCRIPT_DIR/src/file_process/play_files.py --path $FOLDER  --config $SCRIPT_DIR/config/file_process.yaml
 elif [[ $TYPE == "extract" ]];
 then
-     python3 src/extract_data/play_bags.py --path $FOLDER  --config config/extract_data.yaml
+     python3 $SCRIPT_DIR/src/extract_data/play_bags.py --path $FOLDER  --config $SCRIPT_DIR/config/extract_data.yaml
 fi
