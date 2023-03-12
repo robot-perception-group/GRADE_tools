@@ -33,7 +33,11 @@ class Blur(object):
         self.num_imu_sample = self.blur_params["num_imu_sample"] # Number of IMu data per interval
         
         # If num_pose != num_sample, it will interpolate the imu data
-        self.exposure_time = self.rng.uniform(self.blur_params["exposure_time"][0], self.blur_params["exposure_time"][1]) # Time Interval for recording camera motion
+        if isinstance(self.blur_params["exposure_time"],list):
+            print("got an interval")
+            self.exposure_time = self.rng.uniform(self.blur_params["exposure_time"][0], self.blur_params["exposure_time"][1]) # Time Interval for recording camera motion
+        else:
+            self.exposure_time = self.blur_params["exposure_time"]
         self.num_pose = self.blur_params["num_pose"] # Number of poses during the exposure time
         self.interval = self.exposure_time / self.num_pose
 

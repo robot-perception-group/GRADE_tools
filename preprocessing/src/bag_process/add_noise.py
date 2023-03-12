@@ -41,7 +41,7 @@ class AddNoise:
         self.bags = os.listdir(os.path.join(self.bag_dir,'reindex_bags'))
         self.bags.sort()
             
-        self.noisy_bag_dir = self.bag_dir + 'noisy_bags'
+        self.noisy_bag_dir = os.path.join(self.bag_dir, 'noisy_bags')
         if not os.path.exists(self.noisy_bag_dir):
             os.makedirs(self.noisy_bag_dir)
             
@@ -55,17 +55,13 @@ class AddNoise:
             raise ValueError('The input Signal Topic does not match the config file,,,')
         
         # Define RGB image topic
-        self.rgb_topic_0 = self.config['topics']['rgb_topic'].keys()[0]
-        self.rgb_topic_1 = self.config['topics']['rgb_topic'].keys()[1]
-        print('RGB Image Topic: ', self.rgb_topic_0)
-        print('RGB Image Topic: ', self.rgb_topic_1)
-        
+        self.rgb_topics = self.config['topics']['rgb_topic'].keys()
+        print('RGB Image Topics: ', self.rgb_topics)
+
         # Define depth image topic
-        self.depth_topic_0 = self.config['topics']['depth_topic'].keys()[0]
-        self.depth_topic_1 = self.config['topics']['depth_topic'].keys()[1]
-        print('Depth Image Topic: ', self.depth_topic_0)
-        print('Depth Image Topic: ', self.depth_topic_1)
-        
+        self.depth_topics = self.config['topics']['depth_topic'].keys()
+        print('Depth Image Topics: ', self.depth_topics)
+
         self.odom_topic = self.config['topics']['odom_topic'].keys()[0]
         self.imu_camera_topic = self.config['topics']['imu_camera_topic'].keys()[0]
         self.pose_camera_topic = self.config['topics']['pose_camera_topic'].keys()[0]
@@ -87,8 +83,9 @@ class AddNoise:
     def blur_preprocess(self):
         # Load Blur Parameters 
         self.imu_cam_ts = []
-        self.rgb_0_ts = []
-        self.rgb_1_ts = []
+        self.rgb_ts = {}
+        for i in range(len(self.rgb_topics)):
+            self.rgb_ts[self.rgb_topics[i]] = []
         self.odom_ts = []
         self.pose_ts = []
         
@@ -97,9 +94,10 @@ class AddNoise:
         self.odom_lin_vels = []
         
         # Blur Class for RGB Images
-        self.blur_0 = blur_model.Blur(self.config, self.seed)
-        self.blur_1 = blur_model.Blur(self.config, self.seed)
-        
+        self.blur_proc = {}
+        for i in range(len(self.rgb_topics)):
+            self.blur_proc[self.rgb_topics[i]] = blur_model.Blur(self.config, self.seed)
+
         '''First Loop: Generate new Timestamp and Interpolation for IMU data''' 
         for bag in self.bags:
             if '.bag' not in bag or 'orig' in bag:
@@ -121,14 +119,10 @@ class AddNoise:
                     acc = msg.linear_acceleration
                     self.camera_imus.append([omega.x, omega.y, omega.z, acc.x, acc.y, acc.z])
                     
-                if topic == self.rgb_topic_0:
+                if topic in self.rgb_topics:
                     t_img = t.to_sec()
-                    self.rgb_0_ts.append(t_img)
-                
-                if topic == self.rgb_topic_1:
-                    t_img = t.to_sec()
-                    self.rgb_1_ts.append(t_img)
-                    
+                    self.rgb_ts[topic].append(t_img)
+
                 '''Calculate the Initial Velocity for Each Frame'''
                 if topic == self.odom_topic:
                     t_odom = t.to_sec()
@@ -144,23 +138,20 @@ class AddNoise:
                     self.camera_poses.append(rot)
         
         '''Interpolte IMU data for each RGB Frame'''
-        self.blur_0.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_0_ts)
-        self.blur_1.generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_1_ts)
-    
+        for idx, blur in enumerate(self.rgb_topics):
+            self.blur_proc[blur].generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_ts[self.rgb_topics[idx]])
+
         # Update the rgb timestamps: deleting the ignored index
-        for i in self.blur_0.rgb_ignore:
-            print('Image Blur: Ignore RGB_IMAGE_0 at time: %.4f' %(i))
-            self.rgb_0_ts.remove(i)
-        
-        for i in self.blur_1.rgb_ignore:
-            print('Image Blur: Ignore RGB_IMAGE_1 at time: %.4f' %(i))
-            self.rgb_1_ts.remove(i)
-        
+        for idx, blur in enumerate(self.rgb_topics):
+            for i in self.blur_proc[blur].rgb_ignore:
+                print('Image Blur: Ignore RGB_IMAGE at time: %.4f' %(i))
+                self.rgb_ts[self.rgb_topics[idx]].remove(i)
+
         if self.blur_save_enable:
-            for idx, blur in enumerate([self.blur_0,self.blur_1]):
-                blur.output_dir = os.path.join(self.noisy_bag_dir,self.config['blur']['save']['output_dirs'][idx].get())
-                if not os.path.exists(blur.output_dir):
-                    os.makedirs(blur.output_dir)
+            for idx, blur in enumerate(self.rgb_topics):
+                self.blur_proc[blur].output_dir = os.path.join(self.noisy_bag_dir, self.config['blur']['save']['output_dirs'][idx].get())
+                if not os.path.exists(self.blur_proc[blur].output_dir):
+                    os.makedirs(self.blur_proc[blur].output_dir)
                     
                     
     def blur_image(self, msg, t_img, blur, rgb_ts):
@@ -259,18 +250,11 @@ class AddNoise:
                     
                 '''Add blur to RGB images'''
                 if self.blur_enable == True:
-                    if topic == self.rgb_topic_0:                        
+                    if topic in self.rgb_topics:                        
                         # Some RGB Image does not contain enough IMU data
                         t_img = t.to_sec()
+                        msg = self.blur_image(msg, t_img, self.blur_proc[topic], self.rgb_ts[topic])
                         
-                        msg = self.blur_image(msg, t_img, self.blur_0, self.rgb_0_ts)
-                        
-                    if topic == self.rgb_topic_1:                         
-                        # Some RGB Image does not contain enough IMU data
-                        t_img = t.to_sec()
-                        
-                        msg = self.blur_image(msg, t_img, self.blur_1, self.rgb_1_ts)                    
-
 
                 '''Add noise to IMU'''
                 if 'imu' in topic:
@@ -287,7 +271,7 @@ class AddNoise:
                 
                 
                 '''Add noise to Depth Image'''
-                if 'depth' in topic:
+                if 'depth' in topic and topic in self.depth_topics:
                     # Extract message header
                     header = msg.header
                     topic_type = 'camera'
