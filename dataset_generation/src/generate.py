@@ -115,7 +115,6 @@ def main(config):
                     continue
             
             # initialize ignored data list
-            wrong_labels = []
             f2 = open(os.path.join(output_path, f"{d}_ignored_ids.txt"), "w")
             f3 = open(os.path.join(output_path, f"{d}_mapping.txt"), "w")
 
@@ -124,7 +123,7 @@ def main(config):
                 instance = Instances(mapping, object_classes, output_img_size, NOISY_FLAG, allow_40_plus)
 
                 instances = np.load(os.path.join(instance_path, f'{1}.npy'), allow_pickle = True)
-                wrong_labels = instance.convert_instance(instances, wrong_labels)
+                wrong_labels = instance.convert_instance(instances)
                 
                 if wrong_labels != []:
                     f1 = open(os.path.join(output_path, f"{d}_wrong_labels.txt"), "w")
@@ -174,14 +173,12 @@ def main(config):
                     else:
                         blur = None
                         rgb_blur = rgb_resized
-                    
-                rgb_ = rgb_blur.copy()
                 
                 # Load instance
                 if INSTANCE_FLAG:
                     instances =  np.load(instance_fn, allow_pickle = True)
                     
-                    if NOISY_FLAG and os.path.exists(blur_fn):
+                    if NOISY_FLAG:
                         masks, classes, bboxes = instance.load_mask(instances, blur)  # generate mask and detected classes
                     else:
                         masks, classes, bboxes = instance.load_mask(instances)
@@ -201,10 +198,10 @@ def main(config):
                     for j in range(masks.shape[2]):
                         masks_[masks[:,:,j] > 0] = 255
                         
-                # Load bboxes
+                # Load bboxes from instance when processing blur images
                 if BBOX_FLAG and NOISY_FLAG:
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, bboxes)
-                    
+                # Load bboxes from bbox files when processing original images
                 elif BBOX_FLAG:
                     bboxes = np.load(bbox_fn, allow_pickle = True)
             
@@ -250,6 +247,7 @@ def main(config):
                 #del rgb, depth, rgb_resized
                 
                 # visualize the image result
+                rgb_ = rgb_blur.copy()
                 rgb__ = visualize(rgb_, masks_)
                 rgb_ = bbox.colorize_bboxes(bboxes, rgb_)
                 cv2.imshow('bbox', rgb_)

@@ -126,7 +126,7 @@ class Bboxes(object):
                     int(255 * bbox_color[3]),
                 )
             rgb_img_draw.rectangle([(bbox_2d[6], bbox_2d[7]), (bbox_2d[8], bbox_2d[9])], outline=outline, width=3)
-            bboxes_2d_rgb = np.array(rgb_img)
+        bboxes_2d_rgb = np.array(rgb_img)
         return bboxes_2d_rgb
 
 

@@ -24,10 +24,17 @@ class Instances(object):
             "annotations": [],
             "categories": [{"name": "person", "id": 1, "supercategory": "person"}],}
         
-    def convert_instance(self, instances, wrong_labels):
+    def convert_instance(self, instances):
+        '''
+        1) convert the object ID from GRADE framework to NYU40 format using mapping.pkl
+        2) save all object IDs in OBJECT_CLASSES
+        3) return labels can not be mapped
+        '''
         self.instance_dict = instances[1]
         self.object_ids = {}
         self.labels = []
+        
+        wrong_labels = []
     
         for idx, name, label in zip(self.instance_dict['uniqueId'], self.instance_dict['name'], self.instance_dict['semanticLabel']):
             if self.allow_40_plus and "human" == label and "body" not in name:
@@ -71,8 +78,11 @@ class Instances(object):
             for idx in ids:
                 masks[instances[0]==idx] = 255
             
+            # resize masks to output image size
+            masks = cv2.resize(masks, dsize=(self.imgsz[0], self.imgsz[1]))
+            
             # Transform mask for blurry images
-            if masks.any() and self.noisy_flag:
+            if masks.any() and self.noisy_flag and blur != None:
                 masks = blur.blur_mask(masks)
             
             # objects exist in this image

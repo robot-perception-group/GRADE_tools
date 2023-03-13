@@ -16,7 +16,6 @@ class Blur(object):
         self.K = blur['intrinsic_mat']
     
     def blur_mask(self, masks):
-        masks = cv.resize(masks, dsize=(self.img_w, self.img_h))
         masks = cv.warpPerspective(masks, self.H_mean, (self.img_w, self.img_h), flags=cv.INTER_LINEAR+cv.WARP_FILL_OUTLIERS, borderMode=cv.BORDER_REPLICATE)
 
         # add rolling shutter effect
