@@ -1,6 +1,6 @@
 bbox: True # generate bbox labels
 instance: True # generate instance mask labels
-noisy: True # generate the dataset with blurry images
+noise: True # generate the dataset with blurry images
 
 main_path: ['/ps/project/irotate/DE_few_obs_cam0_horiz/',
             '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
@@ -12,7 +12,7 @@ mapping_file: "mapping.pkl" # Relatiave path to mapping.pkl
 viewport_name: "Viewport0_occluded"
 
 input_image_size: [1920, 1080] # input image size
-output_image_size: [320, 240] # output image size
+output_image_size: [960, 720] # output image size
 
 allow_40_plus: False
 additional: {'robot':41,

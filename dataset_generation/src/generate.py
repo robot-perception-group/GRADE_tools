@@ -83,7 +83,7 @@ def main(config):
     OBJ_FLAG = None
     INSTANCE_FLAG = config['instance'].get()
     BBOX_FLAG = config['bbox'].get()
-    NOISY_FLAG = config['noisy'].get() # Generate Blur datasets
+    NOISY_FLAG = config['noise'].get() # Generate Blur datasets
 
     # Transform Data into desired dataset
     for path in main_paths:
@@ -109,7 +109,6 @@ def main(config):
             
             if NOISY_FLAG:
                 blur_path = os.path.join('/home/cxu', exp_n, d, viewport, 'blur')
-                blur_path = os.path.join('/home/cxu/Test_BLUR/blur_params1')
                 if not os.path.exists(blur_path):
                     print(d, ' MISSING BLUR DATA ...')
                     continue
@@ -192,13 +191,8 @@ def main(config):
                         
                     # save mask data
                     instance.generate_mask_data(data_ids, OBJ_FLAG, masks, bboxes)
-                    
-                    # # visualiza semantic mask
-                    masks_ = np.zeros((output_img_size[1],output_img_size[0]))
-                    for j in range(masks.shape[2]):
-                        masks_[masks[:,:,j] > 0] = 255
                         
-                # Load bboxes from instance when processing blur images
+                # Load bboxes directly from instance when processing blur images
                 if BBOX_FLAG and NOISY_FLAG:
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, bboxes)
                 # Load bboxes from bbox files when processing original images
@@ -220,7 +214,6 @@ def main(config):
                             
                     # save bbox data
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, filtered_bboxes)
-                    
                 
                 
                 # Save RGB images
@@ -231,9 +224,8 @@ def main(config):
                     folder = 'non_object'
                     data_id = data_ids['non_obj_id']
                 
-                # write the blur images
-                rgb_fn_new = os.path.join(output_path, folder, 'images', f"{data_id}.jpg")
-                
+                # output the images
+                rgb_fn_new = os.path.join(output_path, folder, 'images', f"{data_id}.png")
                 if NOISY_FLAG:
                     cv2.imwrite(rgb_fn_new, rgb_blur)
                 else:
@@ -243,16 +235,24 @@ def main(config):
                 f3.write('%s  %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.png")))
                 print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
-                #del instances, bboxes, masks
-                #del rgb, depth, rgb_resized
+                # # visualize the image result
+                # masks_ = np.zeros((output_img_size[1],output_img_size[0]))
+                # for j in range(masks.shape[2]):
+                #     masks_[masks[:,:,j] > 0] = 255
+                # if NOISY_FLAG:
+                #     rgb_ = rgb_blur.copy()
+                #     rgb_mask = visualize(rgb_, masks_)
+                #     rgb_bbox = bbox.colorize_bboxes(bboxes, rgb_)
+                # else:
+                #     rgb_ = rgb_resized.copy()
+                #     rgb_mask = visualize(rgb_, masks_)
+                #     rgb_bbox = bbox.colorize_bboxes(filtered_bboxes, rgb_)
+                # cv2.imshow('bbox', rgb_bbox)
+                # cv2.imshow('mask', rgb_mask)
+                # cv2.waitKey(1)
                 
-                # visualize the image result
-                rgb_ = rgb_blur.copy()
-                rgb__ = visualize(rgb_, masks_)
-                rgb_ = bbox.colorize_bboxes(bboxes, rgb_)
-                cv2.imshow('bbox', rgb_)
-                cv2.imshow('mask', rgb__)
-                cv2.waitKey(1)
+                del instances, bboxes, masks
+                del rgb, depth, rgb_resized
             
             # Close the files for mapping relations and ignored ids
             f2.close()
