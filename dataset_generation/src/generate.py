@@ -1,12 +1,10 @@
 import os
 import cv2
 import json
-import shutil
 import confuse
 import argparse
 import numpy as np
 import pickle as pkl
-import matplotlib.pyplot as plt
 
 from instance import Instances
 from bbox import Bboxes
@@ -94,7 +92,9 @@ def main(config):
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
         
         # loop through each complete experiment [60s with 1801 images]
-        for d in dirs:             
+        for d in dirs:
+            if not 'd94ec' in d:
+                continue             
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
@@ -109,6 +109,7 @@ def main(config):
             
             if NOISY_FLAG:
                 blur_path = os.path.join('/home/cxu', exp_n, d, viewport, 'blur')
+                blur_path = os.path.join('/home/cxu/Test_BLUR/blur_params1')
                 if not os.path.exists(blur_path):
                     print(d, ' MISSING BLUR DATA ...')
                     continue
@@ -167,16 +168,20 @@ def main(config):
                 # Generate blur rgb image
                 if NOISY_FLAG:
                     blur_fn = os.path.join(blur_path, f'{i}.npy')
-                    blur = Blur(blur_fn, output_img_size)
-                    rgb_blur = blur.blur_image(rgb_resized)
+                    if os.path.exists(blur_fn):
+                        blur = Blur(blur_fn, output_img_size)
+                        rgb_blur = blur.blur_image(rgb_resized)
+                    else:
+                        blur = None
+                        rgb_blur = rgb_resized
                     
-                #rgb_ = rgb_resize.copy()
+                rgb_ = rgb_blur.copy()
                 
                 # Load instance
                 if INSTANCE_FLAG:
                     instances =  np.load(instance_fn, allow_pickle = True)
                     
-                    if NOISY_FLAG:
+                    if NOISY_FLAG and os.path.exists(blur_fn):
                         masks, classes, bboxes = instance.load_mask(instances, blur)  # generate mask and detected classes
                     else:
                         masks, classes, bboxes = instance.load_mask(instances)
@@ -241,13 +246,14 @@ def main(config):
                 f3.write('%s  %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.png")))
                 print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
-                del instances, bboxes, masks
-                del rgb, depth, rgb_resized
+                #del instances, bboxes, masks
+                #del rgb, depth, rgb_resized
                 
                 # visualize the image result
-                rgb_ = visualize(rgb_, masks_)
+                rgb__ = visualize(rgb_, masks_)
                 rgb_ = bbox.colorize_bboxes(bboxes, rgb_)
-                cv2.imshow('bbox + mask', rgb_)
+                cv2.imshow('bbox', rgb_)
+                cv2.imshow('mask', rgb__)
                 cv2.waitKey(1)
             
             # Close the files for mapping relations and ignored ids
@@ -265,7 +271,7 @@ def main(config):
 if __name__ == '__main__':
     # Define parser arguments
     parser = argparse.ArgumentParser(description="Dataset Generation")
-    parser.add_argument("--config", type=str, default="convert_classes.yaml", help="Path to Config File")
+    parser.add_argument("--config", type=str, default="config.yaml", help="Path to Config File")
     args, _ = parser.parse_known_args()
     
     # load configuration file

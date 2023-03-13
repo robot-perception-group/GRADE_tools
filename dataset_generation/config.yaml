@@ -2,7 +2,7 @@ bbox: True # generate bbox labels
 instance: True # generate instance mask labels
 noisy: True # generate the dataset with blurry images
 
-main_path: ['/ps/project/irotate/DE_cam1_horiz/',
+main_path: ['/ps/project/irotate/DE_few_obs_cam0_horiz/',
             '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
 
 output_path: "/home/cxu/Test_BLUR"

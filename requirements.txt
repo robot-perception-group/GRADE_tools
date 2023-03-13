@@ -7,3 +7,4 @@ opencv-python
 PyYAML
 confuse
 pyquaternion
+pycocotools

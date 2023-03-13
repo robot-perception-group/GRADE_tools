@@ -55,8 +55,8 @@ camera: {
     "noise_model": "realsense", # kinect (not complete -- need to mask the rgb), gaussian, groundtruth
     "config":
       {
-        "maximum_depth": 3.5, # maximum depth used while adding noise, use negative value to disable. It will become nan
-        "time_correction_maximum_depth": 3.5, # maximum depth used while correcting the time, use negative value to disable. It will become nan
+        "maximum_depth": 5.0, # maximum depth used while adding noise, use negative value to disable. It will become nan
+        "time_correction_maximum_depth": 5.0, # maximum depth used while correcting the time, use negative value to disable. It will become nan
         "subpixel": 0.2,
         "maximum_depth_variance": 10.0,
         "flatten_distance": 0,
@@ -72,7 +72,7 @@ blur:
     "config":
       {
         "num_imu_sample": 10,
-        "exposure_time": [0, 0.1],
+        "exposure_time": 0.02, #[0, 0.1],
         "num_pose": 30,
         "readout_mean": 0.015, # rolling shutter params
         "readout_std": 0.006,

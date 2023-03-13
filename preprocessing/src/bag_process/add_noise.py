@@ -86,6 +86,7 @@ class AddNoise:
         self.rgb_ts = {}
         for i in range(len(self.rgb_topics)):
             self.rgb_ts[self.rgb_topics[i]] = []
+        
         self.odom_ts = []
         self.pose_ts = []
         
@@ -138,20 +139,20 @@ class AddNoise:
                     self.camera_poses.append(rot)
         
         '''Interpolte IMU data for each RGB Frame'''
-        for idx, blur in enumerate(self.rgb_topics):
-            self.blur_proc[blur].generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_ts[self.rgb_topics[idx]])
+        for rgb_topic in self.rgb_topics:
+            self.blur_proc[rgb_topic].generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_ts[rgb_topic])
 
         # Update the rgb timestamps: deleting the ignored index
-        for idx, blur in enumerate(self.rgb_topics):
-            for i in self.blur_proc[blur].rgb_ignore:
+        for rgb_topic in self.rgb_topics:
+            for i in self.blur_proc[rgb_topic].rgb_ignore:
                 print('Image Blur: Ignore RGB_IMAGE at time: %.4f' %(i))
-                self.rgb_ts[self.rgb_topics[idx]].remove(i)
+                self.rgb_ts[rgb_topic].remove(i)
 
         if self.blur_save_enable:
-            for idx, blur in enumerate(self.rgb_topics):
-                self.blur_proc[blur].output_dir = os.path.join(self.noisy_bag_dir, self.config['blur']['save']['output_dirs'][idx].get())
-                if not os.path.exists(self.blur_proc[blur].output_dir):
-                    os.makedirs(self.blur_proc[blur].output_dir)
+            for idx, rgb_topic in enumerate(self.rgb_topics):
+                self.blur_proc[rgb_topic].output_dir = os.path.join(self.noisy_bag_dir, self.config['blur']['save']['output_dirs'][idx].get())
+                if not os.path.exists(self.blur_proc[rgb_topic].output_dir):
+                    os.makedirs(self.blur_proc[rgb_topic].output_dir)
                     
                     
     def blur_image(self, msg, t_img, blur, rgb_ts):

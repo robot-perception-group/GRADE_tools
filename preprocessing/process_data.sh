@@ -33,7 +33,7 @@ do
           mv $FILE ${FILE:0:-7} #notice it is .bag.active
           rosbag reindex ${FILE:0:-7}
           sleep 5
-	  rm ${FILE:0:-11}.orig.bag
+          rm ${FILE:0:-11}.orig.bag
      fi
      if [[ "$FILE" =~ ".orig.bag" ]];
      then
