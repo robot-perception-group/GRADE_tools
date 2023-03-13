@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 from instance import Instances
 from bbox import Bboxes
+from blur import Blur
 
 def detect_occlusion(rgb, depth, depth_thr): # todo add segmentation perhaps
     rgb_mask = np.zeros(rgb.shape, dtype=np.uint8)
@@ -24,7 +25,7 @@ def detect_occlusion(rgb, depth, depth_thr): # todo add segmentation perhaps
     
     return perc_rgb, perc_depth
 
-def visualize_mask(rgb, masks):
+def visualize(rgb, masks):
     # masks shape: [rgb.shape[0], rgb.shape[1]]
     rgb = rgb.astype(float)
 
@@ -39,8 +40,7 @@ def visualize_mask(rgb, masks):
     background = cv2.multiply(alpha_bg-alpha_mask, rgb)
     rgb = cv2.add(foreground[...,:3], background)
 
-    plt.imshow(rgb/255)
-    plt.show()
+    return rgb/255
 
 def main(config):
     # Define input variables
@@ -85,15 +85,15 @@ def main(config):
     OBJ_FLAG = None
     INSTANCE_FLAG = config['instance'].get()
     BBOX_FLAG = config['bbox'].get()
-    NOISY_FLAG = config['noisy'].get()
+    NOISY_FLAG = config['noisy'].get() # Generate Blur datasets
 
     # Transform Data into desired dataset
-    f1 = open(os.path.join(output_path, "wrong_labels.txt"), "w")
-    
     for path in main_paths:
         # list all experiments in one of the main path
         dirs = os.listdir(path)
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
+        
+        # loop through each complete experiment [60s with 1801 images]
         for d in dirs:             
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
@@ -108,16 +108,15 @@ def main(config):
                 continue
             
             if NOISY_FLAG:
-                rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
-                blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'blur')
-                if not os.path.exists(rgb_blur_path) or not os.path.exists(blur_path):
-                    print(d, ' HAVE INCOMPLETE DATA...')
+                blur_path = os.path.join('/home/cxu', exp_n, d, viewport, 'blur')
+                if not os.path.exists(blur_path):
+                    print(d, ' MISSING BLUR DATA ...')
                     continue
             
             # initialize ignored data list
             wrong_labels = []
-            f2 = open(os.path.join(output_path,f"{d}_ignored_ids.txt"), "w")
-            f3 = open(os.path.join(output_path,f"{d}_mapping.txt"), "w")
+            f2 = open(os.path.join(output_path, f"{d}_ignored_ids.txt"), "w")
+            f3 = open(os.path.join(output_path, f"{d}_mapping.txt"), "w")
 
             # initial the instance mapping dictionary
             if INSTANCE_FLAG:
@@ -127,8 +126,10 @@ def main(config):
                 wrong_labels = instance.convert_instance(instances, wrong_labels)
                 
                 if wrong_labels != []:
+                    f1 = open(os.path.join(output_path, f"{d}_wrong_labels.txt"), "w")
                     for label in wrong_labels:
-                        f1.write('%s : %s \n' %(d, label))
+                        f1.write('%s\n' %(label))
+                    f1.close()
             
             # initial the bbox mapping dictionary 
             if BBOX_FLAG:
@@ -145,10 +146,6 @@ def main(config):
                 fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn]]
                 if np.any(fns):
                     continue
-                
-                if NOISY_FLAG:
-                    rgb_blur_fn = os.path.join(rgb_blur_path, f'{i}.png')
-                    blur_fn = os.path.join(blur_path, f'{i}.npy')
                     
                 # load rgb and depth image
                 rgb = cv2.imread(rgb_fn)
@@ -165,17 +162,24 @@ def main(config):
                     continue
                 
                 # resize image to output format size
-                # rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
-                # rgb_ = rgb_resized.copy()
+                rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
+                
+                # Generate blur rgb image
+                if NOISY_FLAG:
+                    blur_fn = os.path.join(blur_path, f'{i}.npy')
+                    blur = Blur(blur_fn, output_img_size)
+                    rgb_blur = blur.blur_image(rgb_resized)
+                    
+                #rgb_ = rgb_resize.copy()
                 
                 # Load instance
                 if INSTANCE_FLAG:
                     instances =  np.load(instance_fn, allow_pickle = True)
                     
                     if NOISY_FLAG:
-                        masks, classes, bboxes = instance.load_mask(instance, blur_fn)  # generate mask and detected classes
+                        masks, classes, bboxes = instance.load_mask(instances, blur)  # generate mask and detected classes
                     else:
-                        masks, classes, bboxes = instance.load_mask(instance)
+                        masks, classes, bboxes = instance.load_mask(instances)
                         
                     if len(classes) == 0:
                         OBJ_FLAG = False # negative sample
@@ -187,13 +191,15 @@ def main(config):
                     # save mask data
                     instance.generate_mask_data(data_ids, OBJ_FLAG, masks, bboxes)
                     
-                    # # # visualiza semantic mask
-                    # for j in range(masks.shape[2]):
-                    #     rgb_[np.where((masks[:,:,j] > 0))] = [255,255,255]
+                    # # visualiza semantic mask
+                    masks_ = np.zeros((output_img_size[1],output_img_size[0]))
+                    for j in range(masks.shape[2]):
+                        masks_[masks[:,:,j] > 0] = 255
                         
                 # Load bboxes
-                if NOISY_FLAG:
+                if BBOX_FLAG and NOISY_FLAG:
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, bboxes)
+                    
                 elif BBOX_FLAG:
                     bboxes = np.load(bbox_fn, allow_pickle = True)
             
@@ -213,8 +219,6 @@ def main(config):
                     # save bbox data
                     bbox.generate_bbox_data(output_path, data_ids, OBJ_FLAG, filtered_bboxes)
                     
-                    # bbox visualization
-                    # rgb_ = bbox.colorize_bboxes(filtered_bboxes, rgb_)
                 
                 
                 # Save RGB images
@@ -225,29 +229,26 @@ def main(config):
                     folder = 'non_object'
                     data_id = data_ids['non_obj_id']
                 
-                # write the rgb and rgb_static images
-                # fn = os.path.join(output_path, folder, 'images', f"{data_id}.png")
-                # cv2.imwrite(fn, rgb_resized)
-                
                 # write the blur images
-                rgb_fn_new = os.path.join(output_path, folder, 'images', f"{data_id}.png")
+                rgb_fn_new = os.path.join(output_path, folder, 'images', f"{data_id}.jpg")
                 
-                if not NOISY_FLAG or not os.path.exists(rgb_blur_fn):
-                    rgb_resized = cv2.resize(rgb, dsize=(output_img_size[0], output_img_size[1]))
-                    cv2.imwrite(rgb_fn_new, rgb_resized)
+                if NOISY_FLAG:
+                    cv2.imwrite(rgb_fn_new, rgb_blur)
                 else:
-                    shutil.copyfile(rgb_blur_fn, rgb_fn_new)
+                    cv2.imwrite(rgb_fn_new, rgb_resized)
                 
                 # Record the mapping relations
                 f3.write('%s  %s\n' %(os.path.join(d, f'{i}.png'), os.path.join(folder, f"{data_id}.png")))
                 print(os.path.join(d, f'{i}.png'), " -> ", os.path.join(folder, f"{data_id}.png"))
                 
                 del instances, bboxes, masks
-                del rgb, depth
+                del rgb, depth, rgb_resized
                 
-                # # visualize the image result
-                # cv2.imshow('bbox + mask', rgb_)
-                # cv2.waitKey(1)
+                # visualize the image result
+                rgb_ = visualize(rgb_, masks_)
+                rgb_ = bbox.colorize_bboxes(bboxes, rgb_)
+                cv2.imshow('bbox + mask', rgb_)
+                cv2.waitKey(1)
             
             # Close the files for mapping relations and ignored ids
             f2.close()
@@ -258,15 +259,13 @@ def main(config):
             anno_path_non_object = os.path.join(output_path, 'non_object','masks', f"{d}_annos_gt.json")
             json.dump(instance.annotations_obj, open(anno_path_object, "w+"))
             json.dump(instance.annotations_non_obj, open(anno_path_non_object, "w+"))
-            
-    f1.close()
 
 
 
 if __name__ == '__main__':
     # Define parser arguments
     parser = argparse.ArgumentParser(description="Dataset Generation")
-    parser.add_argument("--config", type=str, default="mapping_and_visualization/convert_classes.yaml", help="Path to Config File")
+    parser.add_argument("--config", type=str, default="convert_classes.yaml", help="Path to Config File")
     args, _ = parser.parse_known_args()
     
     # load configuration file

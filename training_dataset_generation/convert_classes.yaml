@@ -2,12 +2,12 @@ bbox: True # generate bbox labels
 instance: True # generate instance mask labels
 noisy: True # generate the dataset with blurry images
 
-main_path: ['/ps/project/irotate/DE_cam0/',
+main_path: ['/ps/project/irotate/DE_cam1_horiz/',
             '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
 
-output_path: "/home/cxu/Datasets_new"
+output_path: "/home/cxu/Test_BLUR"
 
-mapping_file: "mapping_and_visualization/mapping.pkl" # Relatiave path to mapping.pkl
+mapping_file: "mapping.pkl" # Relatiave path to mapping.pkl
 
 viewport_name: "Viewport0_occluded"
 

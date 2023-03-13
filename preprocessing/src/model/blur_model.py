@@ -212,6 +212,7 @@ class Blur(object):
         # calculate the average matrix for generating masks for blurred images
         H_mean = np.matmul(np.matmul(K, rotation_mean + np.matmul(translation_mean, norm_v)), np.linalg.inv(K))
         self.H_mean = H_mean/H_mean[2][2]
+        self.Hs = Hs
 
         self.extrinsic_mats = np.array(extrinsic_mats).reshape(self.num_pose+1, 9)
         return Hs
@@ -262,11 +263,6 @@ class Blur(object):
         return img_blur_rs
         
     def interp_rot(self, t):
-        """
-        :param t: current timestamp: Float
-        :param acc: acc of a specific axis: Array([float])
-        :return: nearest acc: Float
-        """
         h_array = self.extrinsic_mats
         exposure_ts= np.array([i * self.interval for i in range(self.num_pose+1)])
         if t >= exposure_ts[-1]:
@@ -286,6 +282,7 @@ class Blur(object):
         blur_params['readout_time'] = self.t_readout
         blur_params['interval'] = self.interval
         blur_params['num_pose'] = self.num_pose
+        blur_params['Hs'] = self.Hs
         blur_params['H_mean'] = self.H_mean
         blur_params['extrinsic_mats'] = self.extrinsic_mats
         blur_params['intrinsic_mat'] = self.intrinsic_mat

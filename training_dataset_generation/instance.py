@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from pycocotools import mask
 
+from blur import Blur
+
 class Instances(object):
     '''
     The mapping dictionary of the `Instances` Class remains the same among all frames for each experiment.
@@ -53,7 +55,7 @@ class Instances(object):
         return wrong_labels
 
 
-    def load_mask(self, instances, blur_fn=None):
+    def load_mask(self, instances, blur=None):
         '''
         Generate mask matrix for each instance for Mask-RCNN
         '''
@@ -71,14 +73,10 @@ class Instances(object):
             
             # Transform mask for blurry images
             if masks.any() and self.noisy_flag:
-                blur = np.load(blur_fn).item()
-                masks = self.blur_mask(masks, blur)
+                masks = blur.blur_mask(masks)
             
             # objects exist in this image
-            if masks.any():     
-                # resize the full size image mask
-                masks = cv2.resize(masks, dsize=self.imgsz)
-                
+            if masks.any():
                 # Filter object with very small area
                 rows = np.any(masks, axis=1)
                 cols = np.any(masks, axis=0)
@@ -102,53 +100,6 @@ class Instances(object):
                     semantic_mask = np.concatenate((semantic_mask, masks),axis=2)
             
         return semantic_mask, classes, bboxes
-
-    def blur_mask(self, masks, blur):
-        H_mean = blur['H_mean']
-
-        masks = cv2.resize(masks, dsize=(640, 480))
-        masks = cv2.warpPerspective(masks, H_mean, (640, 480), flags=cv2.INTER_LINEAR+cv2.WARP_FILL_OUTLIERS, borderMode=cv2.BORDER_REPLICATE)
-
-        # add rolling shutter effect
-        t_readout = blur['readout_time']
-        extrinsic_mats = blur['extrinsic_mats']
-        H_last = extrinsic_mats[-1,:]
-        H_last = H_last.reshape((3,3))
-        K = blur['intrinsic_mat']
-        
-        piece_H = int(1)
-        y = piece_H  # y-1 is the row index
-
-        new_pieces = []
-        while y <= 480:
-            # time and approximated rotation for y th row
-            t_y = t_readout * y / 480
-            H_y = self.interp_rot(extrinsic_mats, blur['interval'], blur['num_pose'], t_y)
-            H_new = np.matmul(H_y, np.linalg.inv(H_last))
-            W_y = np.matmul(np.matmul(K, H_new), np.linalg.inv(K))
-
-            old_piece = masks[y-piece_H:y, :]
-            new_piece = cv2.warpPerspective(old_piece, W_y, (640, piece_H), flags=cv2.INTER_NEAREST+cv2.WARP_FILL_OUTLIERS, borderMode=cv2.BORDER_REPLICATE)
-            new_pieces.append(new_piece)
-            y += piece_H
-
-        mask_blur_rs = np.concatenate(np.array(new_pieces), axis=0)
-
-        return mask_blur_rs
-    
-    def interp_rot(self, extrinsic_mats, interval, num_pose, t):
-        h_array = extrinsic_mats
-        exposure_ts= np.array([i * interval for i in range(num_pose+1)])
-        if t >= exposure_ts[-1]:
-            H_last = h_array[-1, :]
-            return H_last.reshape((3,3))
-
-        rot_t = np.array([0.]*9)
-        for i in range(9):
-            rot_t[i] = np.interp(t, exposure_ts, h_array[:, i])
-
-        return rot_t.reshape((3, 3))
-    
     
     def generate_mask_data(self, data_ids, OBJ_FLAG, masks, bboxes):
         if OBJ_FLAG == True:
