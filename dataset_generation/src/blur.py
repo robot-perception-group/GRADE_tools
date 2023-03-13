@@ -2,10 +2,17 @@ import numpy as np
 import cv2 as cv
 
 class Blur(object):
-    def __init__(self, blur_fn, output_img_size):
+    def __init__(self, blur_fn, output_img_size, BLUR_IMG_FLAG):
         blur = np.load(blur_fn).item()
-        self.img_w = output_img_size[0]
-        self.img_h = output_img_size[1]
+        self.blur_img_flag = BLUR_IMG_FLAG
+        if self.blur_img_flag:
+            self.img_w = 640
+            self.img_h = 480
+            self.output_img_w = output_img_size[0]
+            self.output_img_h = output_img_size[1]
+        else:
+            self.img_w = output_img_size[0]
+            self.img_h = output_img_size[1]
         self.Hs = blur['Hs']
         self.H_mean = blur['H_mean']
         self.exposure_time = blur['exposure_time']
@@ -16,6 +23,10 @@ class Blur(object):
         self.K = blur['intrinsic_mat']
     
     def blur_mask(self, masks):
+        # consistent with the rosbag processing format
+        if self.blur_img_flag:
+            masks = cv.resize(masks, dsize=(self.img_w, self.img_h))
+        
         masks = cv.warpPerspective(masks, self.H_mean, (self.img_w, self.img_h), flags=cv.INTER_LINEAR+cv.WARP_FILL_OUTLIERS, borderMode=cv.BORDER_REPLICATE)
 
         # add rolling shutter effect
@@ -39,6 +50,9 @@ class Blur(object):
             y += piece_H
 
         mask_blur_rs = np.concatenate(np.array(new_pieces), axis=0)
+        
+        if self.blur_img_flag:
+            mask_blur_rs = cv.resize(mask_blur_rs, dsize=(self.output_img_w, self.output_img_h))
         
         return mask_blur_rs
     

@@ -2,6 +2,10 @@ bbox: True # generate bbox labels
 instance: True # generate instance mask labels
 noise: True # generate the dataset with blurry images
 
+# if True, please provide the blur images path in `generate.py`
+# if False, it will automatically generete blur images
+blur_img_exist: False 
+
 main_path: ['/ps/project/irotate/DE_few_obs_cam0_horiz/',
             '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
 

@@ -22,12 +22,14 @@ DATASET_FOLDER/
 ```
 - `*_wrong_labels.txt` contains the object labels that cannot be mapped into NYU40 using `mapping.pkl`, which can be used to update the `mapping.pkl`.
 - `*_mapping.txt` contains the mapping relations between input original data and output dataset. 
-    > For example, `EXPERIMENT_ID/1500.png  object/1.png` refers that `1.png` in `object` folder is generated from `1500.png` in `EXPERIMENT_ID` folder.
+    > For example, `EXPERIMENT_ID/1500.png  object/1.png` refers that `1.png` in `/object` folder is generated from `1500.png` in `/EXPERIMENT_ID` folder.
 - `*_ignored_ids.txt` contains the image IDs that are identified as **bad frame** with possible occlusion or darkness. These images will not be processed or added to the output dataset.
 - `/object` includes the images and labels which contain the desired objects. The generated masks and labels will only involve detection of desired objects and do not involve other objects.
 - `/non_object` includes the images and labels which **do not** contain the desired objects (also called background images). The generated masks and labels are empty.
     > Desired object classes can be defined in `object_classes` in `config.yaml`.
 
+
+### Dataset Generation
 
 ```
 cd GRADE_tools/dataset_generation
@@ -35,7 +37,3 @@ cd GRADE_tools/dataset_generation
 ```
 
 Please save the blur params when generating the noisy bags in [here](../preprocessing/config/bag_process.yaml#L72)
-
-Masks and image should be the same size
-
-Mask will be resize to 640,480 and then resize to 960 720

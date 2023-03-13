@@ -12,7 +12,7 @@ Find more information about the GRADE by looking at the [paper](), the [video]()
 - To obtain **rosbags** with reordered timestamps or noise, please refer to [bag processing](preprocessing/PREPROCESSING.md#L74) part
 - To obtain (noisy) **rgb/depth images (640X480)**, etc., please refer to [data extraction](preprocessing/PREPROCESSING.md#L88) part
 - To obtain **noisy rgb/depth images (1920X1080)**, etc., please refer to [file processing](preprocessing/PREPROCESSING.md#L88) part
-- To obtain **training dataset** with bbox labels and instance masks, please refer to [dataset generation](training_dataset_generation/MAPPING.md) part
+- To obtain **training dataset** with bbox labels and instance masks, please refer to [dataset generation](dataset_generation/GENERATION.md) part
 ___
 ## (Pre)Processing  -  Add Noise, Reorder Timestamps...
 The first step you need to do is the pre-processing of the experiment data.
@@ -24,7 +24,7 @@ Then you can run evaluation scripts. You can find all the information [here](SLA
 Those are the settings used in the evaluations that you can find in the paper.
 ___
 ## Semantic mapping
-The semantic information output by ISAAC differs from the NYUv2-40 mapping.
+The semantic information output by Issac differs from the NYUv2-40 mapping.
 Therefore, we made a script (which is appliable to bboxes, instance, semantic info) to get the correct mappings [here]().
 ___
 ## Identify bad frames

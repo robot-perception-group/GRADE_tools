@@ -84,6 +84,7 @@ def main(config):
     INSTANCE_FLAG = config['instance'].get()
     BBOX_FLAG = config['bbox'].get()
     NOISY_FLAG = config['noise'].get() # Generate Blur datasets
+    BLUR_IMG_FLAG = config['blur_img_exist'].get() # if already exist blur images
 
     # Transform Data into desired dataset
     for path in main_paths:
@@ -92,9 +93,7 @@ def main(config):
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
         
         # loop through each complete experiment [60s with 1801 images]
-        for d in dirs:
-            if not 'd94ec' in d:
-                continue             
+        for d in dirs:           
             print(f"processing {path}{d}")
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             depth_path = os.path.join(path, d, viewport, 'depthLinear')
@@ -110,8 +109,14 @@ def main(config):
             if NOISY_FLAG:
                 blur_path = os.path.join('/home/cxu', exp_n, d, viewport, 'blur')
                 if not os.path.exists(blur_path):
-                    print(d, ' MISSING BLUR DATA ...')
+                    print(d, ' MISSING BLUR PARAMETER FILES ...')
                     continue
+                
+                if BLUR_IMG_FLAG: # input blur images
+                    blur_img_path = os.path.join('/home/cxu', exp_n, d, viewport, 'rgb')
+                    if not os.path.exists(blur_img_path):
+                        print(d, ' MISSING BLUR IMAGES ...')
+                        continue
             
             # initialize ignored data list
             f2 = open(os.path.join(output_path, f"{d}_ignored_ids.txt"), "w")
@@ -144,6 +149,7 @@ def main(config):
                 
                 fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn]]
                 if np.any(fns):
+                    print('MISSING DATA')
                     continue
                     
                 # load rgb and depth image
@@ -167,8 +173,12 @@ def main(config):
                 if NOISY_FLAG:
                     blur_fn = os.path.join(blur_path, f'{i}.npy')
                     if os.path.exists(blur_fn):
-                        blur = Blur(blur_fn, output_img_size)
-                        rgb_blur = blur.blur_image(rgb_resized)
+                        blur = Blur(blur_fn, output_img_size, BLUR_IMG_FLAG)
+                        if not BLUR_IMG_FLAG:
+                            rgb_blur = blur.blur_image(rgb_resized)
+                        else:
+                            rgb_blur_fn = os.path.join(blur_img_path, f'{i}.png')
+                            rgb_blur = cv2.imread(rgb_blur_fn)
                     else:
                         blur = None
                         rgb_blur = rgb_resized
