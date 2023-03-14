@@ -138,6 +138,9 @@ class AddNoise:
                     rot = Quaternion([msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]).rotation_matrix
                     self.camera_poses.append(rot)
         
+        # keep reference of the image publish timestamp
+        self.img_ts = self.rgb_ts[self.rgb_topics[0]].copy()
+        
         '''Interpolte IMU data for each RGB Frame'''
         for rgb_topic in self.rgb_topics:
             self.blur_proc[rgb_topic].generate_IMU(self.camera_imus, self.imu_cam_ts, self.rgb_ts[rgb_topic])
@@ -176,7 +179,8 @@ class AddNoise:
             
             # output blur params
             if self.blur_save_enable:
-                blur.save_params(index)
+                index_ = self.img_ts.index(t_img)
+                blur.save_params(index_)
         else:
             blur_img = img
         

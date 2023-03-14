@@ -289,3 +289,4 @@ class Blur(object):
         blur_params['intrinsic_mat'] = self.intrinsic_mat
         
         np.save(os.path.join(self.output_dir,f"{index+1}.npy"), blur_params)
+        del blur_params, self.Hs, self.H_mean, self.t_readout
