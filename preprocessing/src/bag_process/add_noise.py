@@ -174,25 +174,27 @@ class AddNoise:
             index = rgb_ts.index(t_img)
         
             Hs, H_mean = blur.blur_homography(index, v_init)
+            
             # Create blur images
             img0 = blur.create_blur_image(img0, Hs)
+            
+            blur_data = {}
+            blur_data['exposure_time'] = blur.exposure_time
+            blur_data['readout_time'] = blur.t_readout
+            blur_data['interval'] = blur.interval
+            blur_data['num_pose'] = blur.num_pose
+            blur_data['H_mean'] = H_mean
+            blur_data['extrinsic_mats'] = blur.extrinsic_mats
+            blur_data['intrinsic_mat'] = blur.intrinsic_mat
+            
+            # Save Output Files
+            np.save(os.path.join(self.blur_dir,f"{self.idx}.npy"), blur_data)
+            
+            del blur_data
         
         rgb_resized = cv2.resize(img0, dsize=(960, 720))
         
-        idx = self.idx
-        fn = os.path.join(self.noisy_dir,f"{idx}.jpg")
-        
-        blur_data = {}
-        blur_data['exposure_time'] = blur.exposure_time
-        blur_data['readout_time'] = blur.t_readout
-        blur_data['interval'] = blur.interval
-        blur_data['num_pose'] = blur.num_pose
-        blur_data['H_mean'] = H_mean
-        blur_data['extrinsic_mats'] = blur.extrinsic_mats
-        blur_data['intrinsic_mat'] = blur.intrinsic_mat
-        
-        # Save Output Files
-        np.save(os.path.join(self.blur_dir,f"{idx}.npy"), blur_data)
+        fn = os.path.join(self.noisy_dir,f"{self.idx}.jpg")
         Image.fromarray(rgb_resized).save(fn)
         
         self.idx += 1

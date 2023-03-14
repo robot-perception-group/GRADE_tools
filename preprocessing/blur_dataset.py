@@ -1,6 +1,5 @@
 import os
 import shutil
-import subprocess
 
 if __name__ == '__main__':
     # Extract the noisy images from the bags

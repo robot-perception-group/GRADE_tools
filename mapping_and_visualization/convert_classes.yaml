@@ -1,6 +1,6 @@
 bbox: True
 instance: True
-main_path: ['/ps/project/irotate/DE_lot_obs_cam0/', '/ps/project/irotate/DE_horiz_flight_lot_obs_cam0/']
+main_path: ['/ps/project/irotate/DE_horiz_flight_lot_obs_cam0/','/ps/project/irotate/DE_lot_obs_cam0/']
 
 output_path: "/home/cxu/Datasets_Blur_3"
 

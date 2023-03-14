@@ -421,11 +421,11 @@ def main(config):
     
     '''Pass Occlusion Check'''
     ignored_ids = {}
-    for path in os.listdir('/home/cxu'):
+    for path in os.listdir('/home/cxu/DE_OLD_PNG_BLUR'):
         if 'Datasets' in path:
-            for file in os.listdir('/home/cxu/' + path):
+            for file in os.listdir('/home/cxu/DE_OLD_PNG_BLUR/' + path):
                 if 'ignored' in file:
-                    ignored_fn = os.path.join('/home/cxu', path, file)
+                    ignored_fn = os.path.join('/home/cxu/DE_OLD_PNG_BLUR', path, file)
                     with open(ignored_fn, 'r') as f:
                         data = f.readlines()
                     ignored_ids[file.split('ignored')[0][:-1]] = [int(x) for x in data]
@@ -464,8 +464,8 @@ def main(config):
     
     # initialize data file id
     data_ids = {}
-    data_ids['obj_id'] =  20511 # data with desired objects (positive data)
-    data_ids['non_obj_id'] = 15640 # data with no object (background/negative data)
+    data_ids['obj_id'] =  0 # data with desired objects (positive data)
+    data_ids['non_obj_id'] = 0 # data with no object (background/negative data)
     
     OBJ_FLAG = None
     INSTANCE_FLAG = config['instance'].get()
@@ -481,10 +481,7 @@ def main(config):
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
         
         for d in dirs:        
-            print(f"processing {path}{d}")
-            if f'{d}_mapping.txt' in os.listdir('/home/cxu/Datasets_Blur_3'):
-                continue
-            
+            print(f"processing {path}{d}")            
             rgb_path = os.path.join(path, d, viewport, 'rgb')
             rgb_blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'rgb')
             blur_path = os.path.join('/home/cxu',exp_n, d, viewport, 'blur')
