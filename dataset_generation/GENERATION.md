@@ -30,10 +30,43 @@ DATASET_FOLDER/
 
 
 ### Dataset Generation
+#### **Generating Default Dataset (non-blur/non-noisy)**
+Input data structrue should as follows:
+```
+DATA_FOLDER/
+    ├── EXP1/
+        └── VIEWPORT/
+                ├─── rgb/           # full size RGB image (1920X1080)
+                ├─── depthLinear/   # full size depth npy file (1920X1080)
+                ├─── instance/      # instance npy files
+                └─── bbox_2d_tight/ # bbox npy files
+    ├── EXP2/
+    └── .../
+```
+Please specify the params in `config.yaml` to customize your dataset:
+- Turn `noise` as `False` since it will generate the blur dataset
+- Choose `bbox` and `instance` based on your desired output
+- Choose specific classes in  `object_classes` to filter other classes in output
+- Specify the `main_path`, `output_path`, `viewport_name` and `output_image_size`
+#### **Generating Blur Image Dataset**
+You have two options to generate blur image dataset with ground truth labels. Both of them require **blur parameter files** which you can generate in `preprocessing/bag_process`. The bbox labels will be generated using instance information in blur dataset. Thus, please always provide instance data in this genereation.
+- Option 1: Extract blur images(640X480) from rosbag, then formulate the blur datasets
+    - Turn `blur/save/enable` in `preprocessing/config/bag_process.yaml` as `True`. Then start `bag_process` in [here](../preprocessing/PREPROCESSING.md) to save blur params in `/noisy_bags/data`. 
+    - Extract images from rosbag using `preprocessing/extract_data` in [here](../preprocessing/PREPROCESSING.md).
+    - Specify the `blur_param_path` [here](src/generate.py#L110) and `blur_img_path` [here](src/generate.py#L116)
+    - Turn `noise` as `True` and `blur_img_exist` as `True`
+- Option 2: Generate blur images from full-size RGB images(1920X1080) during formulation
+    - Turn `blur/save/enable` in `preprocessing/config/bag_process.yaml` as `True`. Then start `bag_process` in [here](../preprocessing/PREPROCESSING.md) to save blur params in `/noisy_bags/data`. 
+    - Specify the `blur_param_path` [here](src/generate.py#L110)
+    - Turn `noise` as `True` and `blur_img_exist` as `False`
 
+> NOTE 1: Two options may generate different blur images since the same homography matrix results in different blur effects on images with different sizes.
+
+> NOTE 2: If you want to reproduce the result in our paper, please set `blur/config/exposure_time` as 0.02 in `bag_process.yaml` and apply **option 1**. You can find more information in branch `mask_blur` [here](https://github.com/robot-perception-group/GRADE_tools/tree/mask_blur).
+
+#### **RUN**
 ```
 cd GRADE_tools/dataset_generation
 ./generate.sh
 ```
-
-Please save the blur params when generating the noisy bags in [here](../preprocessing/config/bag_process.yaml#L72)
+> Please check input data folders [here](src/generate.py#L98) before running.

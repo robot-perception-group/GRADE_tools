@@ -179,6 +179,7 @@ def main(config):
                         else:
                             rgb_blur_fn = os.path.join(blur_img_path, f'{i}.png')
                             rgb_blur = cv2.imread(rgb_blur_fn)
+                            rgb_blur = cv2.resize(rgb_blur, dsize=(output_img_size[0], output_img_size[1]))
                     else:
                         blur = None
                         rgb_blur = rgb_resized
