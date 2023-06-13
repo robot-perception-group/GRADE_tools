@@ -38,21 +38,16 @@ ___
   
 - Timestamp verification script that will output plots and stats to check whether the original bags have sorted timestamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/timestamp_verification.py).
   
-___
-## Citation
-Please, if you find this work useful, cite us:
-```
-@misc{https://doi.org/10.48550/arxiv.2303.04466,
-  doi = {10.48550/ARXIV.2303.04466},
-  url = {https://arxiv.org/abs/2303.04466},
-  author = {Bonetto, Elia and Xu, Chenghao and Ahmad, Aamir},
-  keywords = {Robotics (cs.RO), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  title = {GRADE: Generating Realistic Animated Dynamic Environments for Robotics Research},
-  publisher = {arXiv},
-  year = {2023},
-  copyright = {arXiv.org perpetual, non-exclusive license}
-}
-```
+
+_______
+
+### LICENSING
+
+For licensing information, please refer to the main repository located [here](https://github.com/eliabntt/GRADE-RR/).
+__________
+### CITATION
+If you find this work useful please cite our work based on [this](https://github.com/eliabntt/GRADE-RR#citation) information
+
 _____
 
 ## Acknowledgments
