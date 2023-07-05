@@ -220,7 +220,7 @@ if __name__=="__main__":
             ts_ = float((d.split(' ')[0]).replace(",","."))
             
             # Start from the "start_time"
-            if ts_ < ts:
+            if ts_ < ts or ts_ > ts_end:
                 continue
             
             ts_diff = ts_ - ts # difference between nearest recorded timestamp

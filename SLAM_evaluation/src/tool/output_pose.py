@@ -115,7 +115,7 @@ def output_dynavins_rgbd(args):
                 T_w2m = Quaternion(w=float(pose[7]), x=float(pose[4]), y=float(pose[5]),
                                 z=float(pose[6])).transformation_matrix
                 T_w2m[:3, 3] = [float(pose[1]),float(pose[2]),float(pose[3])]
-        ts_init = ts
+                ts_init = ts
 
     print('Initialization Started at :', ts_init)
 
