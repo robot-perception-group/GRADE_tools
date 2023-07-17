@@ -107,13 +107,13 @@ def main(config):
                 continue
             
             if NOISY_FLAG:
-                blur_path = os.path.join(path, d, viewport, 'blur_param')
+                blur_path = os.path.join(path, d, viewport, 'blur_param') # ..DE_cam0/{EXP}/Viewport_0/blur_parm
                 if not os.path.exists(blur_path):
                     print(d, ' MISSING BLUR PARAMETER FILES ...')
                     continue
                 
                 if BLUR_IMG_FLAG: # input blur images
-                    blur_img_path = os.path.join(path, d, viewport, 'rgb_blur')
+                    blur_img_path = os.path.join(path, d, viewport, 'rgb_blur') # ..DE_cam0/{EXP}/Viewport_0/rgb_blur
                     if not os.path.exists(blur_img_path):
                         print(d, ' MISSING BLUR IMAGES ...')
                         continue
