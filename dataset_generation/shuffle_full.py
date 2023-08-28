@@ -26,6 +26,16 @@ categories = [{"name": "person", "id": 1, "supercategory": "person"},
                            {'supercategory': 'animal', 'id': 23, 'name': 'zebra'},
                            {'supercategory': 'vehicle', 'id': 5, 'name': 'airplane'}]
 
+annots_train = {
+    "images": [],
+    "annotations": [],
+    "categories": categories,}
+
+annots_valid = {
+    "images": [],
+    "annotations": [],
+    "categories": categories}
+
 train_folder = os.path.join(out_path, 'train/')
 val_folder = os.path.join(out_path, 'val/')
 test_folder = os.path.join(out_path, 'test/')
@@ -142,16 +152,6 @@ random.shuffle(ids)
 f1 = open(os.path.join(out_path,f"train_object{'' if not is_blur else '_blur'}.txt"), "w")
 f2 = open(os.path.join(out_path,f"valid_object{'' if not is_blur else '_blur'}.txt"), "w")
 f3 = open(os.path.join(out_path,f"test_object{'' if not is_blur else '_blur'}.txt"), "w")
-
-annots_train = {
-    "images": [],
-    "annotations": [],
-    "categories": categories,}
-
-annots_valid = {
-    "images": [],
-    "annotations": [],
-    "categories": categories}
 
 id_counter = 0
 
