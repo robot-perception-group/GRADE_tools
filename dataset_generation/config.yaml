@@ -1,28 +1,29 @@
 bbox: True # generate bbox labels
 instance: True # generate instance mask labels
+kp: True # generate keypoint labels
 noise: True # generate the dataset with blurry images
-
 # if True, please provide the blur images path in `generate.py`
 # if False, it will automatically generete blur images
 blur_img_exist: False 
 
-main_path: ['/ps/project/irotate/DE_few_obs_cam0_horiz/',
-            '/ps/project/irotate/DE_cam0_horiz/'] # specify data path
+main_path: ['/ps/project/irotate/syn_zebras/zebra_close/'] # specify data path
 
-output_path: "/home/cxu/Test_BLUR"
+output_path: "/media/ebonetto/WindowsData/ZEBRA_PROCESSED_leg_hidden"
 
 mapping_file: "mapping.pkl" # Relatiave path to mapping.pkl
 
-viewport_name: "Viewport0_occluded"
+viewport_name: ["Viewport0","Viewport1","Viewport2"]
 
 input_image_size: [1920, 1080] # input image size in /rgb folder
-output_image_size: [960, 720] # output image size
+output_image_size: [1920, 1080] # output image size
 
-allow_40_plus: False
+allow_40_plus: True
 additional: {'robot':41,
             'flying-object':42,
-            'clothes':43}
+            'clothes':43,
+            'zebra':44,
+            'world':45}
 
-object_classes: ['human'] # Objects we want to detect
+object_classes: ['zebra','robot'] # Objects we want to detect
 
 filtered_classes: ['wallinner', 'baseboard', 'cabinet'] # classes we  want to ignore
