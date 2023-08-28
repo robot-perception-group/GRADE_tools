@@ -19,10 +19,12 @@ def extract_data(config):
     imu_topics = []
     depth_topics = []
     odom_topics = []
+    pose_topics = []
     save_rgb_topics = []
     save_imu_topics = []
     save_depth_topics = []
     save_odom_topics = []
+    save_pose_topics = []
 
     '''Define Directories'''
     bag_dir = config['path'].get()
@@ -55,6 +57,9 @@ def extract_data(config):
     imu_map_tmp = config['save_files']['imu_topics'].get()
     odom_map = {}
     odom_map_tmp = config['save_files']['odom_topics'].get()
+    pose_map = {}
+    pose_map_tmp = config['save_files']['pose_topics'].get()
+    
     for k,v,s in imu_map_tmp:
         imu_map[k] = v
         imu_topics.append(k)
@@ -67,6 +72,13 @@ def extract_data(config):
         odom_topics.append(k)
         if s:
             save_odom_topics.append(k)
+            dirs.append(os.path.join(out_dir,f'data/{v}'))
+            print('Topic [%s] will be saved in: [%s]' %(k, os.path.join(out_dir,f'data/{v}')))
+    for k,v,s in pose_map_tmp:
+        pose_map[k] = v
+        pose_topics.append(k)
+        if s:
+            save_pose_topics.append(k)
             dirs.append(os.path.join(out_dir,f'data/{v}'))
             print('Topic [%s] will be saved in: [%s]' %(k, os.path.join(out_dir,f'data/{v}')))
 
@@ -133,6 +145,7 @@ def extract_data(config):
     
     imu_img_idx = [1] * len(save_imu_topics)
     odom_counter = [1] * len(save_odom_topics)
+    pose_counter = [1] * len(save_pose_topics)
     imu_counter = [1] * len(save_imu_topics)
 
     for bag in bags:
@@ -144,7 +157,7 @@ def extract_data(config):
         bag_path = os.path.join(bag_dir, bag)
         bag = rosbag.Bag(bag_path)
         new_idx = -1
-        for topic, msg, t in bag.read_messages(topics = save_imu_topics + [imu_reference_topic] + save_odom_topics):
+        for topic, msg, t in bag.read_messages(topics = save_imu_topics + [imu_reference_topic] + save_odom_topics + save_pose_topics):
             if topic in save_imu_topics:
                 imu_t = t.to_sec()
 
@@ -193,4 +206,19 @@ def extract_data(config):
                 # Save Message
                 d = os.path.join(out_dir,"data", odom_map[topic]) # directory
                 np.save(os.path.join(d,fn), odom)
+            elif topic in save_pose_topics:
+                pose_t = t.to_sec()
+
+                # Define File Name
+                fn = str(pose_counter[save_pose_topics.index(topic)]) + ".npy"
+                pose_counter[save_pose_topics.index(topic)] += 1
+
+                pose = {}
+                pose["time"] = pose_t
+                pose["position"] = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
+                pose["orientation"] = [msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w]
+
+                # Save Message
+                d = os.path.join(out_dir,"data", pose_map[topic]) # directory
+                np.save(os.path.join(d,fn), pose)
         bag.close()

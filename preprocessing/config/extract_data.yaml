@@ -19,6 +19,9 @@ save_files:
       [
         ["/my_robot_0/odom","odom", True],
       ],
+    "pose_topics":[
+        ["/my_robot_0/camera/pose","camera_pose", True],
+      ],
     "imu_topics": # [topic_name, output_folder_name, FLAG]
         [
             ["/my_robot_0/imu_camera","imu_camera", True],
