@@ -1,9 +1,9 @@
+[submodule "mrcnn/DynaSLAM"]
+	path = mrcnn/DynaSLAM
+	url = https://github.com/eliabntt/DynaSLAM.git
+[submodule "mrcnn/detectron2"]
+	path = mrcnn/detectron2
+	url = https://github.com/facebookresearch/detectron2.git
 [submodule "yolov5"]
 	path = yolov5
 	url = https://github.com/ultralytics/yolov5.git
-[submodule "detectron2"]
-	path = mrcnn/detectron2
-	url = https://github.com/facebookresearch/detectron2.git
-[submodule "DynaSLAM"]
-	path = mrcnn/DynaSLAM
-	url = https://github.com/eliabntt/DynaSLAM.git
