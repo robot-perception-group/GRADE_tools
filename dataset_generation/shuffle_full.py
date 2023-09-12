@@ -14,17 +14,38 @@ random.seed(42)
 
 # Define the original dataset
 # todo change folders
-parent_path = '/media/ebonetto/WindowsData/ZEBRA_PROCESSED_leg_hidden'
+parent_path = '/media/ebonetto/WindowsData/ZEBRA_PROCESSED_KP_new'
 exp_names = ["Bliss","Grasslands","Meadow", "Savana", 'L_Terrain', "Woodland", "Forest", "Iceland", "Moorlands", "Windmills"]
 # output formulated dataset
-out_path = '/media/ebonetto/WindowsData/ZEBRA_leg_hidden/'
+out_path = '/media/ebonetto/WindowsData/ZEBRA_syn_kps/'
 
 main_paths = [os.path.join(parent_path, exp_name) for exp_name in exp_names]
 has_subviewport = True
 
 categories = [{"name": "person", "id": 1, "supercategory": "person"},
-                           {'supercategory': 'animal', 'id': 23, 'name': 'zebra'},
-                           {'supercategory': 'vehicle', 'id': 5, 'name': 'airplane'}]
+              {'supercategory': 'animal', 'id': 23, 'name': 'zebra', 'keypoints': [
+                        'left_back_paw','left_back_knee','left_back_thigh',
+                        'right_back_paw','right_back_knee','right_back_thigh',
+                        'right_front_paw','right_front_knee','right_front_thigh',
+                        'left_front_paw','left_front_knee', 'left_front_thigh',
+                        'tail_end','tail_base',
+                        'right_ear_tip','right_ear_base','left_ear_tip','left_ear_base',
+                        'right_eye','left_eye','nose',
+                        'neck_start','neck_end','skull','body_middle',
+                        'back_end','back_front'],
+                    'skeleton': [
+                                [1, 2], [2, 3], [3, 26],
+                                [4, 5], [5, 6], [6, 26],
+                                [7, 8], [8, 9],
+                                [10,11], [11,12],
+                                [13, 14],
+                                [15, 16], [17,18],
+                                [16, 19], [19, 20], [18, 20],
+                                [19, 21], [20, 21], [19, 24], [20, 24],
+                                [21, 24], [24, 23], [23, 22], [22, 27], [27, 9], [27, 12], [27, 25], [25, 26], [26, 14]
+                                ]
+                     },
+           {'supercategory': 'vehicle', 'id': 5, 'name': 'airplane'}]
 
 annots_train = {
     "images": [],
