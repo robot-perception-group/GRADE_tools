@@ -1,8 +1,8 @@
-[submodule "mrcnn/DynaSLAM"]
-	path = mrcnn/DynaSLAM
+[submodule "detectron2-mrcnn/DynaSLAM"]
+	path = detectron2-mrcnn/DynaSLAM
 	url = https://github.com/eliabntt/DynaSLAM.git
-[submodule "mrcnn/detectron2"]
-	path = mrcnn/detectron2
+[submodule "detectron2-mrcnn/detectron2"]
+	path = detectron2-mrcnn/detectron2
 	url = https://github.com/facebookresearch/detectron2.git
 [submodule "yolov5"]
 	path = yolov5
