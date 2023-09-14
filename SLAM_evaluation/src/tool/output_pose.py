@@ -385,17 +385,25 @@ def output_vdo_gt(args):
     f1 = open(os.path.join(outdir,"pose_gt.txt"), "w")
     f3 = open(os.path.join(outdir, "times.txt"), "w")
 
-
+    reference_topic = None
     ts_list = []
 
     '''Generating Timestamps List'''
     for bag in bags:
         if not bag.endswith(".bag"):
             continue
+        print("Playing bag", bag)
         bag_path = os.path.join(bag_dir, bag)
         bag = rosbag.Bag(bag_path)
-
-        for topic, msg, t in bag.read_messages(topics=["/my_robot_0/camera_link/0/rgb/image_raw"]):
+        
+        # Check rosbag topics
+        if reference_topic is None:
+            for topic, _, _ in bag.read_messages():
+                if '/rgb/image_raw' in topic:
+                    reference_topic = topic
+                    break
+        
+        for topic, msg, t in bag.read_messages(topics=reference_topic):
             ts = msg.header.stamp.to_sec()
             ts_list.append(ts)
             f3.write('%.6e\n' % (ts))
