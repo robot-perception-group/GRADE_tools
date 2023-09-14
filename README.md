@@ -37,7 +37,16 @@ ___
   For this script you need to specify `[data,imu,imu_noisy]_dir` in lines 6:8 of the python code.
   
 - Timestamp verification script that will output plots and stats to check whether the original bags have sorted timestamps as expected. Note that this is an error of  `isaac_sim` itself. You can find the script [here](https://github.com/robot-perception-group/GRADE-eval/blob/main/additional_scripts/timestamp_verification.py).
-  
+
+- Ap36K converter notebook to convert the APT-36K dataset into usable filtered sets.
+
+- convert COCO to npy, COCO to YOLO, and npy to COCO scripts to convert the dataset into the desired format.
+
+- filter coco dataset to remove classes that are not desired from the original COCO annotations and be able to reduce the original data/create annotations which have only the desired class. e.g. `ython filter_coco_json.py -i ./coco_ds/annotations/instances_val2017.json -o ./val_people.json -c person`
+
+- Visualize COCO json to be able to quickly load and see annotated in a notebook the COCO annotations generated.
+
+- Get Keypoints show how the data generated with GRADE can be processed to get the keypoints. 
 
 _______
 
