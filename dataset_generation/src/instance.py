@@ -87,7 +87,7 @@ class Instances(object):
                 wrong_labels.append(label)        
         
             if label.lower() in self.object_classes:
-                if label.lower() == 'human' or label.lower() == 'zebra' or label.lower()== 'robot':
+                if label.lower() == 'human' or label.lower == 'clothes' or label.lower() == 'zebra' or label.lower()== 'robot':
                     obj_name = name.split('/')[1]
                 else:
                     obj_name = name.split('/')[-1]
@@ -111,11 +111,12 @@ class Instances(object):
         if kps == None:
             new_kps = None
 
-        orig_shape = instances[0].shape
+        img_size_org = instances[0].shape
+
 
         for index, obj_name in enumerate(self.object_ids):
             # merge several components into one object
-            masks = np.zeros(instances[0].shape, dtype=np.uint8)
+            masks = np.zeros(img_size_org, dtype=np.uint8)
             
             ids = self.object_ids[obj_name]
             for idx in ids:
@@ -152,12 +153,12 @@ class Instances(object):
                 else:
                     semantic_mask = np.concatenate((semantic_mask, masks),axis=2)
             
-                if obj_name in kps.keys():
+                if kps and obj_name in kps.keys():
                     tmp = []
                     for k in kps[obj_name]:
                         scaled_kp = kps[obj_name][k]
-                        scaled_kp[0] = int(scaled_kp[0] * self.imgsz[0] / orig_shape[1])
-                        scaled_kp[1] = int(scaled_kp[1] * self.imgsz[1] / orig_shape[0])
+                        scaled_kp[0] = int(scaled_kp[0] * self.imgsz[0] / img_size_org[1])
+                        scaled_kp[1] = int(scaled_kp[1] * self.imgsz[1] / img_size_org[0])
                         tmp.extend(scaled_kp)
                     new_kps[semantic_mask.shape[2]-1] = tmp
     
@@ -194,7 +195,7 @@ class Instances(object):
                 instance_anno = {
                     "id": instance_id,
                     "image_id": data_id,
-                    "category_id": self.categories_id_map[classnames[val]], # todo use data['class'] to map. check index
+                    # "category_id": self.categories_id_map[classnames[val]], # todo use data['class'] to map. check index
                     "segmentation": encode_mask,
                     "area": size,
                     "bbox": [x, y, w, h],

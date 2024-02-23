@@ -1,6 +1,7 @@
 import os
 import cv2
 import json
+import glob
 import confuse
 import argparse
 import numpy as np
@@ -42,7 +43,7 @@ def visualize(rgb, masks):
 
 def main(config):
     # Define input variables
-    main_paths = config['main_path'].get()
+    main_path = config['main_path'].get()
     base_output_path = config['output_path'].get()
     viewports = config['viewport_name'].get()
     
@@ -74,12 +75,15 @@ def main(config):
     KP_FLAG = config['kp'].get()
 
     # Transform Data into desired dataset
-    for path in main_paths:
+    for path in os.listdir(main_path):
         # list all experiments in one of the main path
+        path = os.path.join(main_path, path)
         dirs = os.listdir(path)
         exp_n = path.split('/')[-2] # experiment name, eg: DE_cam0, DE_cam1
+        
         # loop through each complete experiment [60s with 1801 images]
         for d in dirs:
+            if d[:5] not in ['75bf6', '53bfe', 'b13a4', 'd94ec', 'd8c14', '23aae']: continue
             for viewport in viewports:
                 output_path = os.path.join(base_output_path, d, viewport)
                 # Create output directories
@@ -104,7 +108,8 @@ def main(config):
                 kp_path = os.path.join(path, d, viewport, 'keypoints')
 
                 # Check repository
-                sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path, kp_path]]
+                # sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path, kp_path]]
+                sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path]]
                 if np.any(sub_dirs):
                     print(d, ' HAVE INCOMPLETE DATA...')
                     continue
@@ -137,26 +142,25 @@ def main(config):
                         for label in wrong_labels:
                             f1.write('%s\n' %(label))
                         f1.close()
-                
+
                 # initial the bbox mapping dictionary 
                 if BBOX_FLAG:
                     bbox = Bboxes(mapping, object_classes, filtered_classes, input_img_size, output_img_size, allow_40_plus)
-                import glob
+                
                 # list pngs on the folder
                 pngs = glob.glob(os.path.join(rgb_path, '*.png'))
-                # sort pngs by name
-                pngs.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-                nfiles = len(pngs)
+                pngs.sort(key=lambda f: int(''.join(filter(str.isdigit, f)))) # sort pngs by name
 
                 for i, rgb_fn in enumerate(pngs):
-                    print(f"{i}/{nfiles}", end='\r')
+                    print(f"{i+1}/{len(pngs)}", end='\r')
                     # check if all data exist
-                    depth_fn = os.path.join(depth_path, f'{i}.npy')
-                    instance_fn = os.path.join(instance_path, f'{i}.npy')
-                    bbox_fn = os.path.join(bbox_path, f'{i}.npy')
-                    kp_fn = os.path.join(kp_path, f'{i}.npy')
+                    depth_fn = os.path.join(depth_path, f'{i+1}.npy')
+                    instance_fn = os.path.join(instance_path, f'{i+1}.npy')
+                    bbox_fn = os.path.join(bbox_path, f'{i+1}.npy')
+                    kp_fn = os.path.join(kp_path, f'{i+1}.npy')
 
-                    fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn, kp_fn]]
+                    # fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn, kp_fn]]
+                    fns = [not os.path.exists(fn) for fn in [rgb_fn, depth_fn, instance_fn, bbox_fn]]
                     if np.any(fns):
                         print('MISSING DATA')
                         continue
@@ -254,27 +258,28 @@ def main(config):
                     if NOISY_FLAG:
                         cv2.imwrite(rgb_fn_new, rgb_blur)
                     else:
-                        cv2.imwrite(rgb_fn_new, rgb_resized)
+                        cv2.imwrite(rgb_fn_new, rgb_resized, [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
                     # Record the mapping relations
                     f3.write('%s  %s\n' %(os.path.join(d, f'{i}.jpg'), os.path.join(folder, f"{data_id}.jpg")))
                     print(os.path.join(d, f'{i}.jpg'), " -> ", os.path.join(folder, f"{data_id}.jpg"))
                     
-                # # visualize the image result
-                # masks_ = np.zeros((output_img_size[1],output_img_size[0]))
-                # for j in range(masks.shape[2]):
-                #     masks_[masks[:,:,j] > 0] = 255
-                # if NOISY_FLAG:
-                #     rgb_ = rgb_blur.copy()
-                #     rgb_mask = visualize(rgb_, masks_)
-                #     rgb_bbox = bbox.colorize_bboxes(bboxes, rgb_)
-                # else:
-                #     rgb_ = rgb_resized.copy()
-                #     rgb_mask = visualize(rgb_, masks_)
-                #     rgb_bbox = bbox.colorize_bboxes(filtered_bboxes, rgb_)
-                # cv2.imshow('bbox', rgb_bbox)
-                # cv2.imshow('mask', rgb_mask)
-                # cv2.waitKey(1)
+                    ## visualize the image result
+                    # masks_ = np.zeros((output_img_size[1],output_img_size[0]))
+                    # for j in range(masks.shape[2]):
+                    #     masks_[masks[:,:,j] > 0] = 255
+                    # if NOISY_FLAG:
+                    #     rgb_ = rgb_blur.copy()
+                    #     rgb_mask = visualize(rgb_, masks_)
+                    #     rgb_bbox = bbox.colorize_bboxes(bboxes, rgb_)
+                    # else:
+                    #     rgb_ = rgb_resized.copy()
+                    #     rgb_mask = visualize(rgb_, masks_)
+                        # rgb_bbox = bbox.colorize_bboxes(filtered_bboxes, rgb_)
+                    # cv2.imshow('bbox', rgb_bbox)
+                    # cv2.imshow('masks',masks_.astype(np.uint8))
+                    # cv2.imshow('mask', rgb_mask)
+                    # cv2.waitKey(0)
 
                     del instances, bboxes, masks
                     del rgb, depth, rgb_resized
