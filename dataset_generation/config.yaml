@@ -1,14 +1,14 @@
 bbox: True # generate bbox labels
 instance: True # generate instance mask labels
 kp: True # generate keypoint labels
-noise: True # generate the dataset with blurry images
+noise: False # generate the dataset with blurry images
 # if True, please provide the blur images path in `generate.py`
 # if False, it will automatically generete blur images
 blur_img_exist: False 
 
-main_path: ['/ps/project/irotate/syn_zebras/zebra_close/'] # specify data path
+main_path: ['/media/ebonetto/WindowsData/superclose_DS3'] # specify data path
 
-output_path: "/media/ebonetto/WindowsData/ZEBRA_PROCESSED_leg_hidden"
+output_path: "/media/ebonetto/WindowsData/superclose_DS3/proc2" # specify output path
 
 mapping_file: "mapping.pkl" # Relatiave path to mapping.pkl
 

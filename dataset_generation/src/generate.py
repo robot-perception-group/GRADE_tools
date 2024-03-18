@@ -104,7 +104,15 @@ def main(config):
                 kp_path = os.path.join(path, d, viewport, 'keypoints')
 
                 # Check repository
-                sub_dirs = [not os.path.exists(sub_d) for sub_d in [rgb_path, depth_path, instance_path, bbox_path, kp_path]]
+                checked_paths = [rgb_path, depth_path]
+                if INSTANCE_FLAG:
+                    checked_paths.append(instance_path)
+                if BBOX_FLAG:
+                    checked_paths.append(bbox_path)
+                if KP_FLAG:
+                    checked_paths.append(kp_path)
+
+                sub_dirs = [not os.path.exists(sub_d) for sub_d in checked_paths]
                 if np.any(sub_dirs):
                     print(d, ' HAVE INCOMPLETE DATA...')
                     continue
@@ -288,7 +296,6 @@ def main(config):
                 anno_path_non_object = os.path.join(output_path, f'non_object','masks', f"{d}_annos_gt.json")
                 json.dump(instance.annotations_obj, open(anno_path_object, "w+"))
                 json.dump(instance.annotations_non_obj, open(anno_path_non_object, "w+"))
-
 
 
 if __name__ == '__main__':

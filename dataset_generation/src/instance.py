@@ -73,7 +73,6 @@ class Instances(object):
         self.labels = []
         
         wrong_labels = []
-    
         for idx, name, label in zip(self.instance_dict['uniqueId'], self.instance_dict['name'], self.instance_dict['semanticLabel']):
             if self.allow_40_plus and "human" == label and "body" not in name:
                 label = "clothes"
@@ -87,8 +86,15 @@ class Instances(object):
                 wrong_labels.append(label)        
         
             if label.lower() in self.object_classes:
-                if label.lower() == 'human' or label.lower() == 'zebra' or label.lower()== 'robot':
+                print("check this processing in instance.py", end="\r")
+                if label.lower() == 'human' or label.lower()== 'robot':
                     obj_name = name.split('/')[1]
+                elif label.lower() == 'zebra':
+                    try:
+                        obj_name = ''.join(name.split('/')[1:])
+                    except:
+                        if name == '/World/home/zebras':
+                            continue
                 else:
                     obj_name = name.split('/')[-1]
 

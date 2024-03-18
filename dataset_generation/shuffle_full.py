@@ -14,10 +14,10 @@ random.seed(42)
 
 # Define the original dataset
 # todo change folders
-parent_path = '/media/ebonetto/WindowsData/ZEBRA_PROCESSED_KP_new'
-exp_names = ["Bliss","Grasslands","Meadow", "Savana", 'L_Terrain', "Woodland", "Forest", "Iceland", "Moorlands", "Windmills"]
+parent_path = '/media/ebonetto/WindowsData/superclose_DS3/proc'
+exp_names = ["Windmills_populated"]
 # output formulated dataset
-out_path = '/media/ebonetto/WindowsData/ZEBRA_syn_kps/'
+out_path = '/media/ebonetto/WindowsData/superclose_DS3/DS'
 
 main_paths = [os.path.join(parent_path, exp_name) for exp_name in exp_names]
 has_subviewport = True

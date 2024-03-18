@@ -144,6 +144,8 @@ class Bboxes(object):
         f1 = open(os.path.join(output_path, folder, 'labels', f"{data_id}.txt"), "w")
         for bbox in bboxes_data:
             obj_label = bbox[2]
+            if 'Zebra_motions' in bbox[1] or bbox[1] == "/World/home/zebras":
+                continue
             if obj_label.lower() in self.object_classes:
                 index = self.object_classes.index(obj_label.lower())
                 width    = (bbox[8] - bbox[6]) / img_width
