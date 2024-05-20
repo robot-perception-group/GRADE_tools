@@ -93,6 +93,8 @@ source devel/setup.bash
 When you launch the estimator you need to wait to see `service mode : yolo_service` appearing in the terminal.
 That indicates that yolo has been loaded and is ready.
 
+Note that since we are playing bags, one should ensure that `use_sim_time` parameter is set to True.
+
 Estimation process may be delayed. Slowing down the rosbag play speed may improve it.
 
 - Visual Inertial Odometry:
