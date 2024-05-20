@@ -95,16 +95,16 @@ That indicates that yolo has been loaded and is ready.
 
 Note that since we are playing bags, one should ensure that `use_sim_time` parameter is set to True.
 
-Estimation process may be delayed. Slowing down the rosbag play speed may improve it.
+**Since the estimation process depends on the speed of your PC, slowing down the `rosbag play` (`-r 0.5` may improve results.**
 
-- Visual Inertial Odometry:
+- Visual Inertial Odometry (GRADE):
   ```bash
   roslaunch vins_estimator openloris_vio_pytorch_mpi.launch \
                   rgb:="/my_robot_0/camera_link/0/rgb/image_raw" \
                   depth:="/my_robot_0/camera_link/0/depth/image_raw" \
                   imu:="/my_robot_0/imu_body"
   roslaunch vins_estimator vins_rviz.launch
-  rosbag play /dataset/*.bag --clock
+  rosbag play /dataset/*.bag --clock -r 0.2
   ```
 - Visual Odometry (GRADE Dataset):
   ```bash
@@ -112,13 +112,13 @@ Estimation process may be delayed. Slowing down the rosbag play speed may improv
   rgb:="/my_robot_0/camera_link/0/rgb/image_raw" \
   depth:="/my_robot_0/camera_link/0/depth/image_raw"
   roslaunch vins_estimator vins_rviz.launch
-  rosbag play /dataset/*.bag --clock
+  rosbag play /dataset/*.bag --clock  -r 0.2
   ```
-- Visual Odometry (Default TUM RGBD-Dataset):
+- Visual Odometry (Default TUM RGBD-Dataset). For this, please follow the DynaVINS instructions in the [repo](github.com:robot-perception-group/Dynamic-VINS.git) and change the intrinsic parameters (i.e. 325.9 -> 460 in .cpp and .h files):
   ```bash
   roslaunch vins_estimator tum_rgbd_pytorch.launch
   roslaunch vins_estimator vins_rviz.launch
-  rosbag play /dataset/*.bag --clock
+  rosbag play /dataset/*.bag --clock -r 0.2
   ```
 - To save Estimated Result during experiments:
   ```bash
