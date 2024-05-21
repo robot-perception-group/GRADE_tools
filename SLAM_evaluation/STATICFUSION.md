@@ -101,7 +101,7 @@ else{
   break;
 }
 ```
-  - With the above edit, you can also run our script [`TestSF.py`](https://github.com/robot-perception-group/GRADE_tools/tree/main/SLAM_evaluation/src/TestSF.py). Be sure to run `export DISPLAY=...` (e.g. `:1`) to be able to run it.
+  - With the above edit, you can also run our script [`TestSF.py`](https://github.com/robot-perception-group/GRADE_tools/tree/main/SLAM_evaluation/src/TestSF.py). Be sure to run `export DISPLAY=...` (e.g. `export DISPLAY=:1`) to be able to run it as the program requires a working display in the current version.
 
 ### 4.Evaluation
 
