@@ -17,7 +17,7 @@ pip3 install matplotlib scipy torch==1.4.0 opencv-python==4.2.0.32 cupy-cuda92==
 ### 2. Pretrained Model
 
 ```bash
-git clone git@github.com:robot-perception-group/tartanvo.git
+git clone https://github.com/robot-perception-group/tartanvo.git
 cd tartanvo
 mkdir models
 wget https://cmu.box.com/shared/static/t1a5u4x6dxohl89104dyrsiz42mvq2sz.pkl -O models/tartanvo_1914.pkl
