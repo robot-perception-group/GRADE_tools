@@ -11,7 +11,7 @@
 Use the following command to install all dependencies (as always we suggest a venv):
 
 ```bash
-pip3 install matplotlib scipy torch==1.4.0 opencv-python==4.2.0.32 cupy-cuda92==9.6.0 numpy==1.21.6
+pip3 install matplotlib scipy torch==1.4.0 opencv-python==4.2.0.32 cupy-cuda92==9.6.0 numpy==1.21.6 pyyaml pycryptodomex gnupg rospkg pyquaternion
 ```
 
 ### 2. Pretrained Model
