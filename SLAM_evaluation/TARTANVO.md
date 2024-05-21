@@ -25,6 +25,7 @@ wget https://cmu.box.com/shared/static/t1a5u4x6dxohl89104dyrsiz42mvq2sz.pkl -O m
 
 ### 3. Run
 
+Step by step follows. Alternatively, in the tartan repository you just cloned there is a script to automate this process.
 - The organisational structure of the dataset should be:
   ```
   /dataset/rgb/   # folder containing all color images
