@@ -50,6 +50,15 @@ make
                float cy = 240 / 2.);
   ```
   These are the width, heigth... of the resized images, irrespective of the input size.
+
+  As of Version 2.12.0: Released March 17th, 2024 of MRPT, you will also need to change
+  ```cpp
+  Utils/Datasets.cpp
+  // from
+  timestamp_obs = mrpt::system::timestampTotime_t(obs3D->timestamp);
+  // to
+  timestamp_obs = mrpt::Clock::toDouble(obs3D->timestamp); 
+  ```
   
 - Build
   ```bash
