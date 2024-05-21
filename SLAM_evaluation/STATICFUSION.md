@@ -93,6 +93,15 @@ make
 - #### USE `./StaticFusion-ImageSeqAssoc PATH_TO_DATASET` [from the build folder]
     - Run `sudo ldconfig` if error occurs when loading shared libraries: `libpango_windowing.so`
     - Click **SAVE** button after completing entire experiment to generate **estimated pose** `sf-mesh.txt` and **pointcloud** `st-mesh.ply` results in `/build` folder.
+      Alternatively, edit `StaticFusion-imagesequenceassoc.cpp` and at line 189 the following to automatically save the trajectory and close the GUI.
+```cpp
+else{
+  staticFusion.reconstruction->savePly();
+  std::cout << "Model saved" << std::endl;
+  break;
+}
+```
+  - With the above edit, you can also run our script [`TestSF.py`](https://github.com/robot-perception-group/GRADE_tools/tree/main/SLAM_evaluation/src/TestSF.py). Be sure to run `export DISPLAY=...` (e.g. `:1`) to be able to run it.
 
 ### 4.Evaluation
 
