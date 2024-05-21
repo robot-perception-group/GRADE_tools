@@ -40,13 +40,13 @@ wget https://cmu.box.com/shared/static/t1a5u4x6dxohl89104dyrsiz42mvq2sz.pkl -O m
 - Generate `gt_pose_tartan.txt` by running:
     - Generate Default Pose Ground Truth File `gt_pose.txt`
       ```bash
-      python3 GRADE-eval/SLAM_evaluation/src/tool/output_pose.py --type groundtruth \
+      python3 GRADE_tools/SLAM_evaluation/src/tool/output_pose.py --type groundtruth \
                               --path BAG_SEQUENCE_FOLDER[reindex_bags_folder] \
                               --topic /my_robot_0/camera/pose
       ```
     - Transform `gt_pose.txt` to generate `gt_pose_tartan.txt`
       ```bash
-      python3 GRADE-eval/SLAM_evaluation/src/tool/output_pose.py --type tartan_gt --path gt_pose.txt
+      python3 GRADE_tools/SLAM_evaluation/src/tool/output_pose.py --type tartan_gt --path gt_pose.txt
       ```
 - Run:
   ```bash
