@@ -90,9 +90,9 @@ make
   You have to copy that file to the corresponding dataset folder. 
   
 
-- #### USE `./StaticFusion-ImageSeqAssoc PATH_TO_DATASET` [from the build folder]
+- Finally Use `./path-to-build-folder/StaticFusion-ImageSeqAssoc PATH_TO_DATASET`
     - Run `sudo ldconfig` if error occurs when loading shared libraries: `libpango_windowing.so`
-    - Click **SAVE** button after completing entire experiment to generate **estimated pose** `sf-mesh.txt` and **pointcloud** `st-mesh.ply` results in `/build` folder.
+    - Click **SAVE** button after completing entire experiment to generate **estimated pose** `sf-mesh.txt` and **pointcloud** `st-mesh.ply` results in the *location from which you launched the program*.
       Alternatively, edit `StaticFusion-imagesequenceassoc.cpp` and at line 189 the following to automatically save the trajectory and close the GUI.
 ```cpp
 else{
