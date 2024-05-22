@@ -46,7 +46,8 @@
 
 ### 3. Run
 
-Assuming roscore is running and `use_sim_time` is `True`
+Assuming roscore is running and `use_sim_time` is `True`, as we will be playing rosbags.
+Please edit the parameters of  `rgbdslam_datasets.launch` (the topics) according to your needs.
 - Launch RTAB-Map Node:
   ```bash
   roslaunch rtabmap_ros rtabmap_test.launch
