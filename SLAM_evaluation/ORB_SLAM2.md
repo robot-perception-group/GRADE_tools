@@ -51,6 +51,20 @@ cmake .. # to install locally [-D CMAKE_INSTALL_PREFIX=../install]
 make -j && sudo make install
 ```
 
+#### Installing OpenCV-2.4.11/2.4.13
+
+- Install Successfully with **gcc/g++ 4.8**
+  ```bash
+  wget https://github.com/opencv/opencv/archive/refs/tags/2.4.11.zip
+  unzip 2.4.11.zip
+  rm 2.4.11.zip
+  cd opencv-2.4.11 # or OpenCV-2.4.13
+  mkdir build && cd build
+  cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=../install -D WITH_CUDA=OFF -D WITH_FFMPEG=OFF -D ENABLE_PRECOMPILED_HEADERS=OFF -D BUILD_OPENEXR=ON ..
+  make -j && sudo make install
+  ```
+  Use can use future versions, it should work out of the box.
+  
 ### 2.Installation
 
 - Compile ORB-SLAM2 with **gcc/g++ 4.8**
