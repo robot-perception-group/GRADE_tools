@@ -51,8 +51,8 @@ cmake .. # to install locally [-D CMAKE_INSTALL_PREFIX=../install]
 make -j && sudo make install
 ```
 
-#### Installing OpenCV-2.4.11/2.4.13
-
+#### Installing OpenCV. 
+You can use any version. We used 3.4.16. If you install another version/multiple versions you can do that by following the next snippet
 - Install Successfully with **gcc/g++ 4.8**
   ```bash
   wget https://github.com/opencv/opencv/archive/refs/tags/2.4.11.zip
@@ -63,7 +63,7 @@ make -j && sudo make install
   cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=../install -D WITH_CUDA=OFF -D WITH_FFMPEG=OFF -D ENABLE_PRECOMPILED_HEADERS=OFF -D BUILD_OPENEXR=ON ..
   make -j && sudo make install
   ```
-  Use can use future versions, it should work out of the box.
+  This will install opencv in the `install` folder specified. Then, in the `CMakeLists.txt` of ORBSLAM2 you need to specify `require_package(OpenCV 2.4.11 EXACT REQUIRED /path)`
   
 ### 2.Installation
 
