@@ -60,20 +60,20 @@ make -j && sudo make install
   git clone https://github.com/raulmur/ORB_SLAM2.git ORB_SLAM2
   cd ORB_SLAM2
   chmod +x build.sh
-  ./build.sh
   ```
-
-  **Error 1** - Static Assertion Failed about allocator: Change **Line 50** of `include/LoopClosing.h` as:
+  - Change **Line 50** of `include/LoopClosing.h` as:
 
   ```cpp
   Eigen::aligned_allocator<std::pair<KeyFrame *const, g2o::Sim3> > > KeyFrameAndPose;
   ```
 
-  **Error 2** - 'usleep' was not declared in this cope: Add following line to the head of `include/Viewer.h`:
+  - Add following line to the head of `include/Viewer.h`:
 
   ```cpp
   #include <unistd.h>
   ```
+  - Run `./build.sh`
+
 
 ### 3. Run
 
