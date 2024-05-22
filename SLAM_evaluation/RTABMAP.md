@@ -11,7 +11,8 @@
 - Set up your ROS workspace with:
   ```bash
   source /opt/ros/noetic/setup.bash
-  cd ~/catkin_ws/src # Your workspace
+  mkdir -p ~/catkin_ws/src  # Your workspace
+  cd ~/catkin_ws/src 
   catkin_init_workspace
   ```
 - Install from apt **this limits a bit the usage**:
@@ -41,7 +42,7 @@
   source devel/setup.bash
   ```
 
-- Copy/move the `GRADE-eval/SLAM_evaluation/launch/rtabmap_test.launch` in `your_catkin_ws/src/rtabmap_ros/launch/`
+- Copy/move the `GRADE_tools/SLAM_evaluation/launch/rgbdslam_datasets.launch` in `your_catkin_ws/src/rtabmap_ros/launch/`
 
 ### 3. Run
 
