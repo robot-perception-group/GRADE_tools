@@ -44,10 +44,10 @@
 ```bash
 sudo apt install libglew-dev cmake libpython2.7-dev
 # clone modified pangolin repo
-git clone git@github.com:robot-perception-group/Pangolin.git
+git clone https://github.com/robot-perception-group/Pangolin.git
 cd Pangolin
 mkdir build && cd build
-cmake ..
+cmake .. # to install locally [-D CMAKE_INSTALL_PREFIX=../install]
 make -j && sudo make install
 ```
 
