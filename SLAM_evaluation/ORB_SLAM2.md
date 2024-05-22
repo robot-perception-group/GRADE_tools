@@ -57,7 +57,7 @@ make -j && sudo make install
 
   ```bash
   sudo apt install libboost-all-dev
-  git clone git@github.com:raulmur/ORB_SLAM2.git ORB_SLAM2
+  git clone https://github.com/raulmur/ORB_SLAM2.git ORB_SLAM2
   cd ORB_SLAM2
   chmod +x build.sh
   ./build.sh
