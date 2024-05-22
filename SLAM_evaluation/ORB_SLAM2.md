@@ -28,9 +28,9 @@
 
   ```bash
   sudo apt update
-  sudo apt install g++-4.8 gcc-4.8
+  sudo apt install g++-4.8 gcc-4.8 -y
   sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
-  sudd update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
+  sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
   ```
 
 - Change gcc and g++ version to 4.8
