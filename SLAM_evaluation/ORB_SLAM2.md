@@ -63,7 +63,7 @@ You can use any version. We used 3.4.16. If you install another version/multiple
   cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=../install -D WITH_CUDA=OFF -D WITH_FFMPEG=OFF -D ENABLE_PRECOMPILED_HEADERS=OFF -D BUILD_OPENEXR=ON ..
   make -j && sudo make install
   ```
-  This will install opencv in the `install` folder specified. Then, in the `CMakeLists.txt` of ORBSLAM2 you need to remove line 31 to 37 and add `find_package(OpenCV 2.4.11 EXACT REQUIRED PATHS /your_install_path)`
+  This will install opencv in the `install` folder specified. Then, in the `CMakeLists.txt` of ORBSLAM2 you need to remove line 31 to 37 and add `find_package(OpenCV 2.4.11 EXACT REQUIRED PATHS /your_install_path)`. You need to do the same for `Thirdparty/DBoW2/CMakeLists.txt`.
   
 ### 2.Installation
 
