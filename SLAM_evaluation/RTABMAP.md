@@ -5,6 +5,7 @@
 - Ubuntu 20.04
 - OpenCV-3.4.16 (**with non-free modules**), optional if building from source
 - ROS Noetic
+- RTAB_ROS was used at the commit 5024574e4ab8df16d3b9d9731ea86761fbbeeb54
 
 ### 2. Installation
 
@@ -36,7 +37,7 @@
 - Install RTAB-Map ROS Package in your catkin workspace:
   ```bash
   cd your_catkin_ws/src
-  git clone https://github.com/introlab/rtabmap_ros.git
+  git clone https://github.com/introlab/rtabmap_ros.git # we used commit 5024574e4ab8df16d3b9d9731ea86761fbbeeb54
   cd ..
   catkin_make
   source devel/setup.bash
