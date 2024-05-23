@@ -95,7 +95,9 @@ That indicates that yolo has been loaded and is ready.
 
 Note that since we are playing bags, one should ensure that `use_sim_time` parameter is set to True.
 
-**Since the estimation process depends on the speed of your PC, slowing down the `rosbag play` (`-r 0.5` may improve results.**
+**Since the estimation process depends on the speed of your PC, slowing down the `rosbag play` (`-r 0.5`) may improve results.**
+
+Remember to check the config yaml file (`config/tum_rgbd/...`) for the maximum distance of the depth map.
 
 - Visual Inertial Odometry (GRADE):
   ```bash
