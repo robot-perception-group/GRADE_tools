@@ -99,6 +99,7 @@ Note that since we are playing bags, one should ensure that `use_sim_time` param
 
 Remember to check the config yaml file (`config/tum_rgbd/...`) for the maximum distance of the depth map.
 
+You can either launch the various parts separatedly or, as done for testing, use the `grade_pytorch.launch` and the `tum_pytorch.launch` files with the rosbag play, vins_estimator and rosbag record running together.
 - Visual Inertial Odometry (GRADE):
   ```bash
   roslaunch vins_estimator openloris_vio_pytorch_mpi.launch \
@@ -116,7 +117,7 @@ Remember to check the config yaml file (`config/tum_rgbd/...`) for the maximum d
   roslaunch vins_estimator vins_rviz.launch
   rosbag play /dataset/*.bag --clock  -r 0.2
   ```
-- Visual Odometry (Default TUM RGBD-Dataset). For this, please follow the DynaVINS instructions in the [repo](github.com:robot-perception-group/Dynamic-VINS.git) and change the intrinsic parameters (i.e. 325.9 -> 460 in .cpp and .h files). OR checkout the `tum_rgbd` branch:
+- Visual Odometry (Default TUM RGBD-Dataset). For this, please follow the DynaVINS instructions in the [repo](github.com:robot-perception-group/Dynamic-VINS.git) and change the intrinsic parameters (i.e. 325.9 -> 460 in .cpp and .h files). OR checkout the `tum_params` branch:
   ```bash
   roslaunch vins_estimator tum_rgbd_pytorch.launch
   roslaunch vins_estimator vins_rviz.launch
