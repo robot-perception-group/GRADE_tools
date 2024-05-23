@@ -116,7 +116,7 @@ Remember to check the config yaml file (`config/tum_rgbd/...`) for the maximum d
   roslaunch vins_estimator vins_rviz.launch
   rosbag play /dataset/*.bag --clock  -r 0.2
   ```
-- Visual Odometry (Default TUM RGBD-Dataset). For this, please follow the DynaVINS instructions in the [repo](github.com:robot-perception-group/Dynamic-VINS.git) and change the intrinsic parameters (i.e. 325.9 -> 460 in .cpp and .h files):
+- Visual Odometry (Default TUM RGBD-Dataset). For this, please follow the DynaVINS instructions in the [repo](github.com:robot-perception-group/Dynamic-VINS.git) and change the intrinsic parameters (i.e. 325.9 -> 460 in .cpp and .h files). OR checkout the `tum_rgbd` branch:
   ```bash
   roslaunch vins_estimator tum_rgbd_pytorch.launch
   roslaunch vins_estimator vins_rviz.launch
