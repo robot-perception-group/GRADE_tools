@@ -148,17 +148,15 @@ if __name__ == '__main__':
     MetadataCatalog.get("tum_val").thing_classes = ["person"]
 
     cfg = custom_config(1, "fullcoco", train_name, val_name, weights_path)
-    # import ipdb; ipdb.set_trace()
-    #
-    #trainer = CocoTrainer(cfg)
-    #trainer.resume_or_load(resume=(weights_path != ''))
-    #trainer.train()
+
+    trainer = CocoTrainer(cfg)
+    trainer.resume_or_load(resume=(weights_path != ''))
+    trainer.train()
 
     from detectron2.data import build_detection_test_loader
 
     cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")
     predictor = DefaultPredictor(cfg)
-    import ipdb; ipdb.set_trace()
 
     evaluator = COCOEvaluator("coco_val_full_filtered", output_dir=os.path.join(cfg.OUTPUT_DIR, "val_full"))
     val_loader = build_detection_test_loader(cfg, "coco_val_full_filtered")
