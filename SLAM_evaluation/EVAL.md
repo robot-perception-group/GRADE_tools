@@ -50,6 +50,8 @@ Each link contains all the edits that we made (or the forks that we used), and h
 Most of the edits were necessary to run the projects in the latest Ubuntu version and address many of the difficulties that we encountered during testing.
 Some of them were made to avoid crashes of the selected methods, especially when no features were detected.
 
+Some bulk-test scripts can be found either in `SLAM_evaluation/additional_scripts` or in the specific forked repositories.
+
 - [RTAB-Map](https://github.com/introlab/rtabmap_ros.git) from [Multi-Session Visual SLAM for Illumination-Invariant Re-Localization in Indoor Environments](https://arxiv.org/abs/2103.03827)
 - [Dynamic-VINS](https://github.com/robot-perception-group/Dynamic-VINS) from [RGB-D Inertial Odometry for a Resource-Restricted Robot in Dynamic Environments](https://ieeexplore.ieee.org/document/9830851/)
 - [VDO SLAM](https://github.com/robot-perception-group/VDO_SLAM) from [VDO-SLAM: A Visual Dynamic Object-aware SLAM System](https://arxiv.org/abs/2005.11052)
