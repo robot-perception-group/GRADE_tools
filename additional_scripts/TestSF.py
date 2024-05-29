@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 import socket
 
+# export DISPLAY=your_display if you want to run this remotely
 if __name__ == '__main__':
 	DEVICE = socket.gethostname()
 	PATH = '/home/ebonetto/GRADE_rgbs'

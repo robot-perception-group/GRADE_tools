@@ -94,6 +94,8 @@ def output_dynavins_rgbd(args):
 
             ts_init = ts
             break
+    if ts_init == None:
+        import ipdb; ipdb.set_trace()
 
     '''Find the Initialization Position of Map Frame'''
     if ts_init < ts_start:
@@ -514,3 +516,5 @@ if __name__ == '__main__':
         output_vdo_gt(args)
     elif args.type == 'vdo':
         output_vdo(args)
+    else:
+        raise NotImplementedError

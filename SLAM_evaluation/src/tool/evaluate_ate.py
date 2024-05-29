@@ -200,17 +200,24 @@ if __name__=="__main__":
     parser.add_argument('--umeyama', help='Another Umeyama Alignment Method',type=bool, default=False)
     parser.add_argument('--start_time', type=float, default=0.0)
     parser.add_argument('--end_time', type=float, default=60.0)
+    parser.add_argument('--time_thr', type=float, default=1/30. + 10**(-5))
     args = parser.parse_args()
     
     # Define the stop timestamp
     with open(args.first_file) as f:
         data = f.readlines()
+        if "#" in data[0]:
+            data = data[1:]
         ts_gt_start = float((data[0].split(' ')[0]).replace(",","."))
         ts_gt_final = float((data[-1].split(' ')[0]).replace(",","."))
     
     ts = max(args.start_time, ts_gt_start)  # initilize the first timestamp
+    if args.end_time < ts_gt_start:
+        # print("The end time is smaller than the start time.")
+        args.end_time = ts_gt_final
     ts_end = min(args.end_time, ts_gt_final) # initilize the final timestamp
-        
+    
+    threshold = args.time_thr
     with open(args.second_file) as f:
         data = f.readlines()
         total_time_missing = 0.
@@ -224,7 +231,7 @@ if __name__=="__main__":
                 continue
             
             ts_diff = ts_ - ts # difference between nearest recorded timestamp
-            if ts_diff > 1/30. + 10**(-5):
+            if ts_diff > threshold:# 1/30. + 10**(-5):
                 total_time_missing += ts_diff
             
             # update the timestamp
@@ -232,7 +239,7 @@ if __name__=="__main__":
         
         # Compared with the stop timestamp
         ts_diff = ts_end - ts
-        if ts_diff > 1/30. + 10**(-5):
+        if ts_diff > threshold:#  1/30. + 10**(-5):
             total_time_missing += ts_diff
             
         print("Estimated Pose: Missing %.3f seconds." %total_time_missing)
@@ -240,7 +247,13 @@ if __name__=="__main__":
     first_list = associate.read_file_list(args.first_file)
     second_list = associate.read_file_list(args.second_file)
 
-    matches = associate.associate(first_list, second_list,float(args.offset),float(args.max_difference), args.start_time, args.end_time)    
+    ts = max(args.start_time, ts_gt_start)  # initilize the first timestamp
+    if args.end_time < ts_gt_start:
+        # print("The end time is smaller than the start time.")
+        args.end_time = ts_gt_final
+    ts_end = min(args.end_time, ts_gt_final)
+
+    matches = associate.associate(first_list, second_list,float(args.offset),float(args.max_difference), ts, ts_end)
     if len(matches)<2:
         sys.exit("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory! Did you choose the correct sequence?")
 
