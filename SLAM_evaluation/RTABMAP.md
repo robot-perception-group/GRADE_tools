@@ -3,7 +3,7 @@
 ### 1. Prerequisites
 
 - Ubuntu 20.04
-- OpenCV-3.4.16 (**with non-free modules**), optional if building from source
+- OpenCV
 - ROS Noetic
 - RTAB_ROS was used at the commit 5024574e4ab8df16d3b9d9731ea86761fbbeeb54, RTABMAP at 467dc738c707c7dc6370a03f39df541cf9347b3e. Without GTSAM.
 <details>
