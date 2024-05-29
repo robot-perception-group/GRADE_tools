@@ -99,7 +99,8 @@ Note that since we are playing bags, one should ensure that `use_sim_time` param
 
 Remember to check the config yaml file (`config/tum_rgbd/...`) for the maximum distance of the depth map.
 
-You can either launch the various parts separatedly or, as done for testing, use the `grade_pytorch.launch` and the `tum_pytorch.launch` files with the rosbag play, vins_estimator and rosbag record running together.
+You can either launch the various parts separatedly or, as done for testing, use the `grade_pytorch.launch` and the `tum_pytorch.launch` files with the rosbag play, vins_estimator and rosbag record running together. Similar launch files have been made for the VIO version. The yaml configuration files have been adapted for both the 3.5m and the 5m depth ranges. Please take care of using the correct one based on your data. See the automated scripts for bulk testing (either in this repo or in the forked repository).
+
 - Visual Inertial Odometry (GRADE):
   ```bash
   roslaunch vins_estimator openloris_vio_pytorch_mpi.launch \
